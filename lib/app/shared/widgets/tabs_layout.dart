@@ -1,100 +1,99 @@
-// tabs_layout.dart - Versión corregida
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:go_router/go_router.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
-import 'package:pixel_retro_app/app/config/router/app_router.dart';
 
 class TabsLayout extends StatefulWidget {
-  const TabsLayout({super.key});
+  const TabsLayout({
+    super.key,
+    required this.currentIndex,
+    required this.onTabTapped,
+    required this.pages,
+  });
+
+  final int currentIndex;
+  final Function(int) onTabTapped;
+  final List<Widget> pages;
 
   @override
   State<TabsLayout> createState() => _TabsLayoutState();
 }
 
 class _TabsLayoutState extends State<TabsLayout> {
-  final List<String> pageRoutes = [
-    '/home',
-    '/leaderboard',
-    '/rewards',
-    '/shop',
-  ];
-
-  int _getCurrentIndex(String location) {
-    for (int i = 0; i < pageRoutes.length; i++) {
-      if (location == pageRoutes[i] ||
-          location.startsWith('${pageRoutes[i]}/')) {
-        return i;
-      }
-    }
-    return 0;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final currentIndex = _getCurrentIndex(
-      GoRouterState.of(context).uri.toString(),
-    );
-
     return Container(
       decoration: BoxDecoration(
         color: AppColors.backgroundDark,
         border: Border(top: BorderSide(color: AppColors.orange, width: 2)),
       ),
       height: 80,
-      child: BottomNavigationBar(
-        elevation: 0,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.backgroundDark,
-        onTap: (value) {
-          AppRouter.go(pageRoutes[value]);
-        },
-        currentIndex: currentIndex,
-        selectedItemColor: Colors.transparent, // Transparente para ocultar
-        unselectedItemColor: Colors.transparent, // Transparente para ocultar
-        selectedLabelStyle: const TextStyle(height: 0, fontSize: 0),
-        unselectedLabelStyle: const TextStyle(height: 0, fontSize: 0),
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        iconSize: 0,
-        items: [
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
           _buildNavItem(
-            'assets/icons/home.svg',
-            'assets/icons/home-selected.svg',
-            currentIndex == 0,
+            index: 0,
+            size: 48,
+            currentIndex: widget.currentIndex,
+            normalAsset: 'assets/icons/home.svg',
+            selectedAsset: 'assets/icons/home-selected.svg',
           ),
           _buildNavItem(
-            'assets/icons/leaderboard.svg',
-            'assets/icons/leaderboard-selected.svg',
-            currentIndex == 1,
+            index: 1,
+            size: 54,
+            currentIndex: widget.currentIndex,
+            normalAsset: 'assets/icons/leaderboard.svg',
+            selectedAsset: 'assets/icons/leaderboard-selected.svg',
           ),
           _buildNavItem(
-            'assets/icons/chest.svg',
-            'assets/icons/chest-selected.svg',
-            currentIndex == 2,
+            index: 2,
+            size: 48,
+            currentIndex: widget.currentIndex,
+            normalAsset: 'assets/icons/chest.svg',
+            selectedAsset: 'assets/icons/chest-selected.svg',
           ),
           _buildNavItem(
-            'assets/icons/shop.svg',
-            'assets/icons/shop-selected.svg',
-            currentIndex == 3,
+            index: 3,
+            size: 48,
+            currentIndex: widget.currentIndex,
+            normalAsset: 'assets/icons/shop.svg',
+            selectedAsset: 'assets/icons/shop-selected.svg',
           ),
         ],
       ),
     );
   }
 
-  BottomNavigationBarItem _buildNavItem(
-    String normalAsset,
-    String selectedAsset,
-    bool isSelected,
-  ) {
-    return BottomNavigationBarItem(
-      icon: SvgPicture.asset(
-        isSelected ? selectedAsset : normalAsset,
-        height: 48, // Reducido para evitar overflow
-        width: 48,
+  Widget _buildNavItem({
+    required int index,
+    required int currentIndex,
+    required double size,
+    required String normalAsset,
+    required String selectedAsset,
+  }) {
+    final isSelected = currentIndex == index;
+
+    return GestureDetector(
+      onTap: () {
+        widget.onTabTapped(index);
+      },
+      child: Container(
+        padding: EdgeInsets.all(size == 48 ? 8 : 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          color: isSelected
+              ? AppColors.orange.withOpacity(0.2)
+              : Colors.transparent,
+          border: Border.all(
+            color: isSelected ? AppColors.orange : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: SvgPicture.asset(
+          isSelected ? selectedAsset : normalAsset,
+          height: size,
+          width: size,
+        ),
       ),
-      label: '',
     );
   }
 }
