@@ -21,39 +21,41 @@ class TabsLayout extends StatefulWidget {
 class _TabsLayoutState extends State<TabsLayout> {
   @override
   Widget build(BuildContext context) {
+    EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.backgroundDark,
         border: Border(top: BorderSide(color: AppColors.orange, width: 2)),
       ),
-      height: 80,
+      height: 62 + safeAreaPadding.bottom,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(
+          _navItem(
             index: 0,
-            size: 48,
+            size: 36,
             currentIndex: widget.currentIndex,
             normalAsset: 'assets/icons/home.svg',
             selectedAsset: 'assets/icons/home-selected.svg',
           ),
-          _buildNavItem(
+          _navItem(
             index: 1,
-            size: 54,
+            size: 42,
             currentIndex: widget.currentIndex,
             normalAsset: 'assets/icons/leaderboard.svg',
             selectedAsset: 'assets/icons/leaderboard-selected.svg',
           ),
-          _buildNavItem(
+          _navItem(
             index: 2,
-            size: 48,
+            size: 36,
             currentIndex: widget.currentIndex,
             normalAsset: 'assets/icons/chest.svg',
             selectedAsset: 'assets/icons/chest-selected.svg',
           ),
-          _buildNavItem(
+          _navItem(
             index: 3,
-            size: 48,
+            size: 36,
             currentIndex: widget.currentIndex,
             normalAsset: 'assets/icons/shop.svg',
             selectedAsset: 'assets/icons/shop-selected.svg',
@@ -63,7 +65,7 @@ class _TabsLayoutState extends State<TabsLayout> {
     );
   }
 
-  Widget _buildNavItem({
+  Widget _navItem({
     required int index,
     required int currentIndex,
     required double size,
@@ -77,9 +79,9 @@ class _TabsLayoutState extends State<TabsLayout> {
         widget.onTabTapped(index);
       },
       child: Container(
-        padding: EdgeInsets.all(size == 48 ? 8 : 6),
+        padding: EdgeInsets.all(size == 36 ? 4 : 3),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
+          shape: BoxShape.circle,
           color: isSelected
               ? AppColors.orange.withOpacity(0.2)
               : Colors.transparent,

@@ -8,7 +8,7 @@ class AppTheme {
         accentColor: AppColors.orange,
         backgroundColor: AppColors.backgroundDark,
       ),
-      fontFamily: 'Poppins',
+      fontFamily: 'Inter',
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.backgroundDark,
       pageTransitionsTheme: const PageTransitionsTheme(

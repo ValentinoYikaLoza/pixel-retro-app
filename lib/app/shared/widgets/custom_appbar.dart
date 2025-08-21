@@ -10,144 +10,84 @@ class CustomAppbar extends ConsumerWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
+
     return AppBar(
+      automaticallyImplyLeading: false,
       backgroundColor: AppColors.backgroundDark,
       surfaceTintColor: AppColors.backgroundDark,
-      leading: isShopView
-          ? SizedBox(height: 0)
-          : Container(
-              constraints: const BoxConstraints(maxWidth: 150),
-              padding: const EdgeInsets.only(left: 20),
-              child: GestureDetector(
-                onTap: () {
-                  ref.read(navigationProvider.notifier).navigateTo(3);
-                },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: 10,
-                  children: [
-                    SvgPicture.asset(
-                      'assets/icons/coin.svg',
-                      height: 32,
-                      width: 32,
-                    ),
-                    Text(
-                      '100',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.yellow,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                  ],
-                ),
+      flexibleSpace: Container(
+        padding: EdgeInsets.only(left: 20, right: 20, top: safeAreaPadding.top),
+        height: 62 + safeAreaPadding.top,
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppColors.orange, width: 2)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            GestureDetector(
+              onTap: () {
+                ref.read(navigationProvider.notifier).navigateTo(3);
+              },
+              child: AppBarRow(
+                asset: 'assets/icons/coin.svg',
+                text: '100',
+                color: AppColors.yellow,
               ),
             ),
-      leadingWidth: isShopView ? null : 150,
-      centerTitle: true,
-      title: isShopView
-          ? Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SvgPicture.asset(
-                  'assets/icons/coin.svg',
-                  height: 32,
-                  width: 32,
-                ),
-                SizedBox(width: 10),
-                Text(
-                  '100',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.yellow,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-                SizedBox(width: 20),
-                SvgPicture.asset(
-                  'assets/icons/heart.svg',
-                  height: 32,
-                  width: 32,
-                ),
-                SizedBox(width: 10),
-                Text(
-                  '5',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.red,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-              ],
-            )
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 10,
-              children: [
-                SvgPicture.asset(
-                  'assets/icons/fire.svg',
-                  height: 32,
-                  width: 32,
-                ),
-                Text(
-                  '1',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.orange,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-              ],
+            AppBarRow(
+              asset: 'assets/icons/fire.svg',
+              text: '1',
+              color: AppColors.orange,
             ),
-      actions: [
-        isShopView
-            ? SizedBox(height: 0)
-            : Container(
-                constraints: const BoxConstraints(maxWidth: 80),
-                padding: const EdgeInsets.only(right: 20),
-                child: GestureDetector(
-                  onTap: () {
-                    ref.read(navigationProvider.notifier).navigateTo(3);
-                  },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: 10,
-                    children: [
-                      SvgPicture.asset(
-                        'assets/icons/heart.svg',
-                        height: 32,
-                        width: 32,
-                      ),
-                      Text(
-                        '5',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.red,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+            GestureDetector(
+              onTap: () {
+                ref.read(navigationProvider.notifier).navigateTo(3);
+              },
+              child: AppBarRow(
+                asset: 'assets/icons/heart.svg',
+                text: '5',
+                color: AppColors.red,
               ),
-      ],
-
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1.0),
-        child: Container(
-          color: AppColors.orange, // Color del borde
-          height: 2.0, // Grosor del borde
+            ),
+          ],
         ),
       ),
-      toolbarHeight: 80,
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(80);
+  final Size preferredSize = const Size(double.infinity, 62);
+}
+
+class AppBarRow extends StatelessWidget {
+  const AppBarRow({
+    super.key,
+    required this.asset,
+    required this.text,
+    required this.color,
+  });
+
+  final String asset;
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SvgPicture.asset(asset, height: 32, width: 32),
+        const SizedBox(width: 10),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
 }
