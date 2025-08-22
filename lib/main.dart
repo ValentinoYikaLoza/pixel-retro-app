@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/app.dart';
@@ -12,13 +11,6 @@ void main() async {
   await Environment.initEnvironment();
   WidgetsFlutterBinding.ensureInitialized();
   setup();
-
-  SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      systemNavigationBarColor: Colors.blue.shade500,
-    ),
-  );
 
   runApp(const ProviderScope(child: MainApp()));
 }

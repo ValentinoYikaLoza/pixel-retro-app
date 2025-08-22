@@ -1,9 +1,9 @@
-import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/providers/leaderboard_provider.dart';
+import 'package:pixel_retro_app/app/shared/widgets/time_widget.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
   const LeaderboardScreen({super.key});
@@ -24,13 +24,14 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   @override
   Widget build(BuildContext context) {
     final leaderboardState = ref.watch(leaderboardProvider);
+    EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
 
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.only(top: 60, bottom: 30),
+            padding: EdgeInsets.only(top: 30 + safeAreaPadding.top, bottom: 30),
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(color: AppColors.orange, width: 2),
@@ -54,30 +55,10 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                           color: AppColors.white,
                         ),
                       ),
-                      Row(
-                        spacing: 10,
-                        children: [
-                          Spin(
-                            infinite: true,
-                            child: SvgPicture.asset(
-                              'assets/icons/clock.svg',
-                              width: 20,
-                              height: 20,
-                              colorFilter: const ColorFilter.mode(
-                                AppColors.orange,
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            '${leaderboardState.daysTillSunday} DÍAS',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.orange,
-                            ),
-                          ),
-                        ],
+                      TimeWidget(
+                        time: leaderboardState.daysLeftUntilSunday,
+                        unit: 'DÍAS',
+                        color: AppColors.orange,
                       ),
                     ],
                   ),
@@ -127,7 +108,7 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             spacing: 20,
                             children: [
-                              _UserRow(
+                              _UserRowWidget(
                                 leaderboardState: leaderboardState,
                                 user: user,
                               ),
@@ -141,7 +122,7 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                       width: 32,
                                       height: 32,
                                     ),
-                                    Text(
+                                    const Text(
                                       'ZONA DE ASCENSO',
                                       style: TextStyle(
                                         fontSize: 20,
@@ -167,7 +148,7 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                                       width: 32,
                                       height: 32,
                                     ),
-                                    Text(
+                                    const Text(
                                       'ZONA DE DESCENSO',
                                       style: TextStyle(
                                         fontSize: 20,
@@ -204,8 +185,8 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   }
 }
 
-class _UserRow extends StatelessWidget {
-  const _UserRow({required this.leaderboardState, required this.user});
+class _UserRowWidget extends StatelessWidget {
+  const _UserRowWidget({required this.leaderboardState, required this.user});
 
   final LeaderboardState leaderboardState;
   final UserModel user;
@@ -242,7 +223,7 @@ class _UserRow extends StatelessWidget {
                         height: 45,
                         child: Center(
                           child: Text(
-                            user.rank.toString(),
+                            '${user.rank}',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -278,7 +259,7 @@ class _UserRow extends StatelessWidget {
                           fit: BoxFit.contain,
                         ),
                         Text(
-                          user.timesRankedFirst.toString(),
+                          '${user.timesRankedFirst}',
                           style: TextStyle(
                             fontSize: 15,
                             height: 15 / 15,

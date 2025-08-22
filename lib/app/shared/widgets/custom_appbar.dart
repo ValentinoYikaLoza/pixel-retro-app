@@ -3,14 +3,33 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/shared/providers/navigation_provider.dart';
+import 'package:pixel_retro_app/app/shared/providers/user_provider.dart';
 
-class CustomAppbar extends ConsumerWidget implements PreferredSizeWidget {
+class CustomAppbar extends ConsumerStatefulWidget
+    implements PreferredSizeWidget {
   final bool isShopView;
   const CustomAppbar({super.key, this.isShopView = false});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  final Size preferredSize = const Size(double.infinity, 62);
+
+  @override
+  CustomAppbarState createState() => CustomAppbarState();
+}
+
+class CustomAppbarState extends ConsumerState<CustomAppbar> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(userProvider.notifier).initData();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
+    final userState = ref.watch(userProvider);
 
     return AppBar(
       automaticallyImplyLeading: false,
@@ -31,22 +50,23 @@ class CustomAppbar extends ConsumerWidget implements PreferredSizeWidget {
               },
               child: AppBarRow(
                 asset: 'assets/icons/coin.svg',
-                text: '100',
+                text: '${userState.coins}',
                 color: AppColors.yellow,
               ),
             ),
-            AppBarRow(
-              asset: 'assets/icons/fire.svg',
-              text: '1',
-              color: AppColors.orange,
-            ),
+            if (!widget.isShopView)
+              AppBarRow(
+                asset: 'assets/icons/fire.svg',
+                text: '${userState.streak}',
+                color: AppColors.orange,
+              ),
             GestureDetector(
               onTap: () {
                 ref.read(navigationProvider.notifier).navigateTo(3);
               },
               child: AppBarRow(
                 asset: 'assets/icons/heart.svg',
-                text: '5',
+                text: '${userState.lives}',
                 color: AppColors.red,
               ),
             ),
@@ -55,9 +75,6 @@ class CustomAppbar extends ConsumerWidget implements PreferredSizeWidget {
       ),
     );
   }
-
-  @override
-  final Size preferredSize = const Size(double.infinity, 62);
 }
 
 class AppBarRow extends StatelessWidget {

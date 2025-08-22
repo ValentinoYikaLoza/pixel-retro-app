@@ -1,45 +1,360 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
-import 'package:pixel_retro_app/app/shared/providers/navigation_provider.dart';
+import 'package:pixel_retro_app/app/features/reward/presentation/providers/reward_provider.dart';
+import 'package:pixel_retro_app/app/shared/widgets/time_widget.dart';
 
-class RewardScreen extends ConsumerWidget {
+class RewardScreen extends ConsumerStatefulWidget {
   const RewardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  RewardScreenState createState() => RewardScreenState();
+}
+
+class RewardScreenState extends ConsumerState<RewardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(rewardProvider.notifier).initData();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
+    final rewardState = ref.watch(rewardProvider);
+
     return Scaffold(
-      body: Center(
-        child: Column(
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Container(
+              height: 300 + safeAreaPadding.top,
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 30 + safeAreaPadding.top,
+              ),
+              decoration: BoxDecoration(color: AppColors.orange),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 20,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 120,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: AppColors.white,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            rewardState.monthName.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 20,
+                              height: 20 / 15,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.orange,
+                            ),
+                          ),
+                        ),
+                      ),
+                      TimeWidget(
+                        time: rewardState.daysLeftUntilNextMonth,
+                        unit: 'DÍAS',
+                        color: AppColors.purple,
+                      ),
+                    ],
+                  ),
+                  rewardState.monthlyReward != null
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          spacing: 20,
+                          children: [
+                            Text(
+                              rewardState.monthlyReward!.description,
+                              style: TextStyle(
+                                fontSize: 20,
+                                height: 20 / 15,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.white,
+                              ),
+                            ),
+                            Container(
+                              height: 100,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.backgroundDark,
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: GoalWidget(
+                                current:
+                                    rewardState.monthlyReward!.currentPoints,
+                                total: rewardState.monthlyReward!.totalPoints,
+                                imagePath: rewardState.monthlyReward!.imageUrl,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.orange,
+                          ),
+                        ),
+                ],
+              ),
+            ),
+          ),
+
+          SliverToBoxAdapter(
+            child: rewardState.weeklyReward != null
+                ? Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundDark,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      spacing: 20,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          spacing: 5,
+                          children: [
+                            const Text(
+                              'Desafíos de la semana',
+                              style: TextStyle(
+                                fontSize: 24,
+                                height: 24 / 20,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.white,
+                              ),
+                            ),
+                            TimeWidget(
+                              time: rewardState.daysLeftUntilSunday,
+                              unit: 'DÍAS',
+                              color: AppColors.orange,
+                              fontSize: 15,
+                              showTheTextComplete: true,
+                            ),
+                          ],
+                        ),
+                        Container(
+                          height: 120,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundDark,
+                            borderRadius: BorderRadius.circular(15),
+                            border: Border.all(
+                              color: AppColors.orange,
+                              width: 2,
+                            ),
+                          ),
+                          child: GoalWidget(
+                            current: rewardState.weeklyReward!.currentPoints,
+                            total: rewardState.weeklyReward!.totalPoints,
+                            imagePath: rewardState.weeklyReward!.imageUrl,
+                            label: rewardState.weeklyReward!.description,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : Center(
+                    child: CircularProgressIndicator(color: AppColors.orange),
+                  ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.only(bottom: 30),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final reward = rewardState.dailyRewards[index];
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    spacing: index == 0 ? 20 : 0,
+                    children: [
+                      if (index == 0)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          spacing: 5,
+                          children: [
+                            const Text(
+                              'Desafíos del día',
+                              style: TextStyle(
+                                fontSize: 24,
+                                height: 24 / 20,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.white,
+                              ),
+                            ),
+                            TimeWidget(
+                              time: rewardState.hoursLeftUntilEndOfDay,
+                              unit: 'HORAS',
+                              color: AppColors.orange,
+                              fontSize: 15,
+                              showTheTextComplete: true,
+                            ),
+                          ],
+                        ),
+                      Container(
+                        height: 120,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundDark,
+                          borderRadius: BorderRadius.only(
+                            topLeft: index == 0
+                                ? Radius.circular(15)
+                                : Radius.zero,
+                            topRight: index == 0
+                                ? Radius.circular(15)
+                                : Radius.zero,
+                            bottomLeft: index == 2
+                                ? Radius.circular(15)
+                                : Radius.zero,
+                            bottomRight: index == 2
+                                ? Radius.circular(15)
+                                : Radius.zero,
+                          ),
+                          border: Border(
+                            top: index == 0
+                                ? BorderSide(color: AppColors.orange, width: 2)
+                                : BorderSide.none,
+                            bottom: BorderSide(
+                              color: AppColors.orange,
+                              width: 2,
+                            ),
+                            left: BorderSide(color: AppColors.orange, width: 2),
+                            right: BorderSide(
+                              color: AppColors.orange,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        child: GoalWidget(
+                          current: reward.currentPoints,
+                          total: reward.totalPoints,
+                          imagePath: reward.imageUrl,
+                          label: reward.description,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }, childCount: rewardState.dailyRewards.length),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class GoalWidget extends StatelessWidget {
+  const GoalWidget({
+    super.key,
+    required this.current,
+    required this.total,
+    required this.imagePath,
+    this.label = '',
+  });
+
+  final int current;
+  final int total;
+  final String imagePath;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final containerWidth = constraints.maxWidth - 28;
+        final progressWidth = (current / total) * containerWidth;
+        final minProgressWidth = containerWidth * 0.04;
+        final stackHeight = 46.0;
+
+        return Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          spacing: 20,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 5,
           children: [
-            Text(
-              'Welcome to the Rewards Screen!',
-              style: TextStyle(
-                fontSize: 24.0,
-                color: AppColors.orange,
-                fontWeight: FontWeight.bold,
+            if (label.isNotEmpty)
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 14 / 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.white,
+                ),
               ),
-            ),
-            Text(
-              'Here you can view your rewards.',
-              style: TextStyle(
-                fontSize: 16.0,
-                color: AppColors.orange,
-                fontWeight: FontWeight.w400,
+            SizedBox(
+              height: stackHeight,
+              width: constraints.maxWidth,
+              child: Stack(
+                alignment: Alignment.centerLeft,
+                children: [
+                  // Fondo de la barra de progreso
+                  Container(
+                    height: 30,
+                    width: containerWidth,
+                    decoration: BoxDecoration(
+                      color: AppColors.selector,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(11),
+                        bottomLeft: Radius.circular(11),
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$current / $total',
+                        style: TextStyle(
+                          fontSize: 16,
+                          height: 16 / 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.gray,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Barra de progreso
+                  Container(
+                    width: (current < total * 0.04 && current != 0
+                        ? minProgressWidth
+                        : progressWidth),
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: AppColors.emerald,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(11),
+                        bottomLeft: Radius.circular(11),
+                      ),
+                    ),
+                  ),
+
+                  // Icono
+                  Positioned(
+                    right: 0,
+                    child: SizedBox(
+                      width: 56,
+                      height: 56,
+                      child: SvgPicture.asset(imagePath, width: 56, height: 56),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            TextButton(
-              onPressed: () {
-                ref.read(navigationProvider.notifier).navigateTo(3);
-              },
-              child: const Text('Go to shop'),
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 }

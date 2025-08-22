@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/data/status_data.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/data/user_data.dart';
@@ -18,7 +19,7 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
       status: statusData,
       users: userData,
       currentUser: userData[0],
-      daysTillSunday: 3,
+      today: () => DateTime.now(),
     );
   }
 }
@@ -28,14 +29,21 @@ class LeaderboardState {
   final LeaderboardModel? currentStatus;
   final List<UserModel> users;
   final UserModel? currentUser;
-  final int daysTillSunday;
+  final DateTime? today;
+
+  int get daysLeftUntilSunday {
+    if (today == null) return 0;
+
+    final daysLeft = DateTime.sunday - today!.weekday;
+    return daysLeft;
+  }
 
   LeaderboardState({
     this.status = const [],
     this.currentStatus,
     this.users = const [],
-    this.daysTillSunday = 0,
     this.currentUser,
+    this.today,
   });
 
   LeaderboardState copyWith({
@@ -43,14 +51,14 @@ class LeaderboardState {
     LeaderboardModel? currentStatus,
     List<UserModel>? users,
     UserModel? currentUser,
-    int? daysTillSunday,
+    ValueGetter<DateTime>? today,
   }) {
     return LeaderboardState(
       status: status ?? this.status,
       currentStatus: currentStatus ?? this.currentStatus,
       users: users ?? this.users,
       currentUser: currentUser ?? this.currentUser,
-      daysTillSunday: daysTillSunday ?? this.daysTillSunday,
+      today: today != null ? today() : this.today,
     );
   }
 }
