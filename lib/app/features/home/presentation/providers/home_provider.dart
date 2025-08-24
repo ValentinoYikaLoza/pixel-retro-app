@@ -39,7 +39,7 @@ enum Game { snake, tetris, pixelInvader, pacman }
 class GameModel {
   final Game game;
   final String title;
-  final String imagePath;
+  final String name;
 
-  GameModel({required this.game, required this.title, required this.imagePath});
+  GameModel({required this.game, required this.title, required this.name});
 }

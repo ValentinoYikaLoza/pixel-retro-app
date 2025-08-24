@@ -1,6 +1,8 @@
 // Crea un nuevo widget para manejar el PageView con navegación
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/features/home/presentation/screens/home_screen.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/screens/leaderboard_screen.dart';
 import 'package:pixel_retro_app/app/features/reward/presentation/screens/reward_screen.dart';
@@ -28,9 +30,20 @@ class LayoutViewState extends ConsumerState<LayoutView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setScreenConfig();
+    });
     // Obtener el estado inicial del provider
     final initialIndex = ref.read(navigationProvider).currentRoute;
     _pageController = PageController(initialPage: initialIndex);
+  }
+
+  void setScreenConfig() {
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(systemNavigationBarColor: AppColors.orange),
+    );
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   }
 
   @override

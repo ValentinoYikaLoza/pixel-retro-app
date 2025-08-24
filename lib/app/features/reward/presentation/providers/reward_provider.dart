@@ -53,28 +53,62 @@ class RewardState {
     return format.format(today!);
   }
 
-  int get daysLeftUntilSunday {
-    if (today == null) return 0;
+  String get timeLeftUntilEndOfSunday {
+    if (today == null) return '0 SEGUNDOS';
 
-    final daysLeft = DateTime.sunday - today!.weekday;
-    return daysLeft;
+    final now = DateTime.now();
+    final endOfSunday = DateTime(
+      now.year,
+      now.month,
+      now.day + (7 - now.weekday),
+      23,
+      59,
+      59,
+    );
+
+    final duration = endOfSunday.difference(now);
+    if (duration.inDays > 0) {
+      return '${duration.inDays} DÍA${duration.inDays > 1 ? 'S' : ''}';
+    } else if (duration.inHours > 0) {
+      return '${duration.inHours} HORA${duration.inHours > 1 ? 'S' : ''}';
+    } else if (duration.inMinutes > 0) {
+      return '${duration.inMinutes} MINUTO${duration.inMinutes > 1 ? 'S' : ''}';
+    } else {
+      return '${duration.inSeconds} SEGUNDO${duration.inSeconds > 1 ? 'S' : ''}';
+    }
   }
 
-  int get daysLeftUntilNextMonth {
-    if (today == null) return 0;
+  String get timeLeftUntilNextMonth {
+    if (today == null) return '';
 
     final nextMonth = DateTime(today!.year, today!.month + 1, 1);
-    final daysLeft = nextMonth.difference(today!).inDays;
-    return daysLeft;
+    final duration = nextMonth.difference(today!);
+
+    if (duration.inDays > 0) {
+      return '${duration.inDays} DÍA${duration.inDays > 1 ? 'S' : ''}';
+    } else if (duration.inHours > 0) {
+      return '${duration.inHours} HORA${duration.inHours > 1 ? 'S' : ''}';
+    } else if (duration.inMinutes > 0) {
+      return '${duration.inMinutes} MINUTO${duration.inMinutes > 1 ? 'S' : ''}';
+    } else {
+      return '${duration.inSeconds} SEGUNDO${duration.inSeconds > 1 ? 'S' : ''}';
+    }
   }
 
-  int get hoursLeftUntilEndOfDay {
-    if (today == null) return 0;
+  String get timeLeftUntilEndOfDay {
+    if (today == null) return '0 SEGUNDOS';
 
     final now = DateTime.now();
     final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
-    final hoursLeft = endOfDay.difference(now).inHours;
-    return hoursLeft;
+    final duration = endOfDay.difference(now);
+
+    if (duration.inHours > 0) {
+      return '${duration.inHours} HORA${duration.inHours > 1 ? 'S' : ''}';
+    } else if (duration.inMinutes > 0) {
+      return '${duration.inMinutes} MINUTO${duration.inMinutes > 1 ? 'S' : ''}';
+    } else {
+      return '${duration.inSeconds} SEGUNDO${duration.inSeconds > 1 ? 'S' : ''}';
+    }
   }
 
   const RewardState({

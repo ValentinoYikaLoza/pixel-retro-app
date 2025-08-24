@@ -65,8 +65,7 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                         ),
                       ),
                       TimeWidget(
-                        time: rewardState.daysLeftUntilNextMonth,
-                        unit: 'DÍAS',
+                        time: rewardState.timeLeftUntilNextMonth,
                         color: AppColors.purple,
                       ),
                     ],
@@ -138,8 +137,7 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                               ),
                             ),
                             TimeWidget(
-                              time: rewardState.daysLeftUntilSunday,
-                              unit: 'DÍAS',
+                              time: rewardState.timeLeftUntilEndOfSunday,
                               color: AppColors.orange,
                               fontSize: 15,
                               showTheTextComplete: true,
@@ -196,8 +194,7 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                               ),
                             ),
                             TimeWidget(
-                              time: rewardState.hoursLeftUntilEndOfDay,
-                              unit: 'HORAS',
+                              time: rewardState.timeLeftUntilEndOfDay,
                               color: AppColors.orange,
                               fontSize: 15,
                               showTheTextComplete: true,

@@ -28,6 +28,7 @@ class _TabsLayoutState extends State<TabsLayout> {
         color: AppColors.backgroundDark,
         border: Border(top: BorderSide(color: AppColors.orange, width: 2)),
       ),
+      padding: EdgeInsets.only(bottom: safeAreaPadding.bottom),
       height: 62 + safeAreaPadding.bottom,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,

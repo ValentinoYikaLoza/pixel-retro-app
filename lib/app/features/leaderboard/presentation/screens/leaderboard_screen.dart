@@ -56,8 +56,7 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                         ),
                       ),
                       TimeWidget(
-                        time: leaderboardState.daysLeftUntilSunday,
-                        unit: 'DÍAS',
+                        time: leaderboardState.timeLeftUntilEndOfSunday,
                         color: AppColors.orange,
                       ),
                     ],
