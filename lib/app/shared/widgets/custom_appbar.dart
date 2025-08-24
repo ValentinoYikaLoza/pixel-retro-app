@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/shared/providers/navigation_provider.dart';
-import 'package:pixel_retro_app/app/shared/providers/user_provider.dart';
+import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
 
 class CustomAppbar extends ConsumerStatefulWidget
     implements PreferredSizeWidget {

@@ -8,7 +8,7 @@ import 'package:pixel_retro_app/app/features/leaderboard/presentation/screens/le
 import 'package:pixel_retro_app/app/features/reward/presentation/screens/reward_screen.dart';
 import 'package:pixel_retro_app/app/features/shop/presentation/screens/shop_screen.dart';
 import 'package:pixel_retro_app/app/shared/providers/navigation_provider.dart';
-import 'package:pixel_retro_app/app/shared/widgets/tabs_layout.dart';
+import 'package:pixel_retro_app/app/shared/layouts/presentation/widgets/tabs_layout.dart';
 
 class LayoutView extends ConsumerStatefulWidget {
   const LayoutView({super.key});

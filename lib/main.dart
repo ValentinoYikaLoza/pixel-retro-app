@@ -9,7 +9,7 @@ import 'package:pixel_retro_app/app/config/constants/environment.dart';
 import 'package:pixel_retro_app/app/config/theme/app_theme.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/level_snake_game_screen.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/snake_game_screen.dart';
-import 'package:pixel_retro_app/app/shared/layouts/layout_view.dart';
+import 'package:pixel_retro_app/app/shared/layouts/presentation/screens/layout_view.dart';
 import 'package:pixel_retro_app/app/shared/screens/wait_to_home_screen.dart';
 import 'package:pixel_retro_app/app/shared/screens/wait_to_welcome_screen.dart';
 import 'package:pixel_retro_app/app/shared/screens/welcome_screen.dart';
