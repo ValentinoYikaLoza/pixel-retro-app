@@ -50,7 +50,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
       // Pequeño delay antes de la navegación
       Future.delayed(Duration(milliseconds: 300), () {
         Get.toNamed(
-          '/wait-screen',
+          '/wait-to-welcome-screen',
           arguments: {'nextScreen': '/welcome-screen', 'gameMode': gameMode},
         );
       });

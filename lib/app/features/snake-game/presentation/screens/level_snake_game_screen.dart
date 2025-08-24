@@ -40,7 +40,7 @@ class _LevelSnakeGameScreenState extends State<LevelSnakeGameScreen> {
         canPop: false,
         onPopInvokedWithResult: (didPop, result) {
           if (!didPop) {
-            Get.toNamed('/');
+            Get.toNamed('/wait-to-home-screen');
           }
         },
         child: Scaffold(
@@ -59,7 +59,7 @@ class _LevelSnakeGameScreenState extends State<LevelSnakeGameScreen> {
                   left: 0,
                   child: CustomIconButton(
                     onPressed: () {
-                      Get.toNamed('/');
+                      Get.toNamed('/wait-to-home-screen');
                     },
                     width: 48,
                     height: 48,

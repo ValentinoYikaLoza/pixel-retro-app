@@ -21,95 +21,87 @@ class GameControl extends ConsumerWidget {
     final gameState = ref.watch(snakeGameProvider);
 
     return Container(
-      height: double.infinity,
+      width: 160,
+      height: 160,
       decoration: BoxDecoration(
-        border: Border(left: BorderSide(color: AppColors.neonPurple, width: 2)),
+        color: AppColors.purple,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.neonPurple, width: 2),
       ),
-      child: Center(
-        child: Container(
-          width: 160,
-          height: 160,
-          decoration: BoxDecoration(
-            color: AppColors.purple,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.neonPurple, width: 2),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Center circle
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: AppColors.purple,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.neonPurple, width: 2),
+            ),
           ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Center circle
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: AppColors.purple,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.neonPurple, width: 2),
-                ),
-              ),
-              // Up button
-              Positioned(
-                top: 10,
-                child: _ControlButton(
-                  iconPath: 'assets/icons/arrow-up-2.svg',
-                  onPressed: () => onDirectionChanged(Direction.up),
-                  shape: BoxShape.rectangle,
-                  borderRadius: BorderRadius.circular(8),
-                  direction: Direction.up,
-                ),
-              ),
-              // Left button
-              Positioned(
-                left: 10,
-                child: _ControlButton(
-                  iconPath: 'assets/icons/arrow-left-2.svg',
-                  onPressed: () => onDirectionChanged(Direction.left),
-                  shape: BoxShape.rectangle,
-                  borderRadius: BorderRadius.circular(8),
-                  direction: Direction.left,
-                ),
-              ),
-              if (!gameState.hasLost)
-                // Pause button
-                Positioned(
-                  child: _PauseButton(
-                    isPaused: gameState.isPaused,
-                    onPressed: () => onPauseChanged(),
-                  ),
-                ),
-              if (gameState.hasLost)
-                // Retry button
-                Positioned(
-                  child: _RetryButton(
-                    hasLost: gameState.hasLost,
-                    onPressed: () => onLostChanged(),
-                  ),
-                ),
-              // Right button
-              Positioned(
-                right: 10,
-                child: _ControlButton(
-                  iconPath: 'assets/icons/arrow-right-2.svg',
-                  onPressed: () => onDirectionChanged(Direction.right),
-                  shape: BoxShape.rectangle,
-                  borderRadius: BorderRadius.circular(8),
-                  direction: Direction.right,
-                ),
-              ),
-              // Down button
-              Positioned(
-                bottom: 10,
-                child: _ControlButton(
-                  iconPath: 'assets/icons/arrow-down-2.svg',
-                  onPressed: () => onDirectionChanged(Direction.down),
-                  shape: BoxShape.rectangle,
-                  borderRadius: BorderRadius.circular(8),
-                  direction: Direction.down,
-                ),
-              ),
-            ],
+          // Up button
+          Positioned(
+            top: 10,
+            child: _ControlButton(
+              iconPath: 'assets/icons/arrow-up-2.svg',
+              onPressed: () => onDirectionChanged(Direction.up),
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.circular(8),
+              direction: Direction.up,
+            ),
           ),
-        ),
+          // Left button
+          Positioned(
+            left: 10,
+            child: _ControlButton(
+              iconPath: 'assets/icons/arrow-left-2.svg',
+              onPressed: () => onDirectionChanged(Direction.left),
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.circular(8),
+              direction: Direction.left,
+            ),
+          ),
+          if (!gameState.hasLost)
+            // Pause button
+            Positioned(
+              child: _PauseButton(
+                isPaused: gameState.isPaused,
+                onPressed: () => onPauseChanged(),
+              ),
+            ),
+          if (gameState.hasLost)
+            // Retry button
+            Positioned(
+              child: _RetryButton(
+                hasLost: gameState.hasLost,
+                onPressed: () => onLostChanged(),
+              ),
+            ),
+          // Right button
+          Positioned(
+            right: 10,
+            child: _ControlButton(
+              iconPath: 'assets/icons/arrow-right-2.svg',
+              onPressed: () => onDirectionChanged(Direction.right),
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.circular(8),
+              direction: Direction.right,
+            ),
+          ),
+          // Down button
+          Positioned(
+            bottom: 10,
+            child: _ControlButton(
+              iconPath: 'assets/icons/arrow-down-2.svg',
+              onPressed: () => onDirectionChanged(Direction.down),
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.circular(8),
+              direction: Direction.down,
+            ),
+          ),
+        ],
       ),
     );
   }

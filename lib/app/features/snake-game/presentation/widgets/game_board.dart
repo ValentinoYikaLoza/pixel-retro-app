@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/providers/snake_game_provider.dart';
+import 'package:pixel_retro_app/app/shared/widgets/custom_icon_button.dart';
 
 class GameBoard extends ConsumerStatefulWidget {
   const GameBoard({super.key});
@@ -153,20 +154,15 @@ class GameBoardState extends ConsumerState<GameBoard> {
                     Positioned(
                       top: 0,
                       left: 0,
-                      child: GestureDetector(
-                        onTap: () {
-                          Get.toNamed('/');
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 20, left: 20),
-                          child: SvgPicture.asset(
-                            'assets/icons/back.svg',
-                            width: 48,
-                            colorFilter: ColorFilter.mode(
-                              AppColors.neonPurple,
-                              BlendMode.srcIn,
-                            ),
-                          ),
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 20, left: 20),
+                        child: CustomIconButton(
+                          onPressed: () {
+                            Get.toNamed('/wait-to-home-screen');
+                          },
+                          width: 48,
+                          height: 48,
+                          imagePath: 'assets/icons/back.svg',
                         ),
                       ),
                     ),

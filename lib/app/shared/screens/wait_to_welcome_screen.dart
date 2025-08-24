@@ -3,14 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 
-class WaitScreen extends StatefulWidget {
-  const WaitScreen({super.key});
+class WaitToWelcomeScreen extends StatefulWidget {
+  const WaitToWelcomeScreen({super.key});
 
   @override
-  State<WaitScreen> createState() => _WaitScreenState();
+  State<WaitToWelcomeScreen> createState() => _WaitToWelcomeScreenState();
 }
 
-class _WaitScreenState extends State<WaitScreen> {
+class _WaitToWelcomeScreenState extends State<WaitToWelcomeScreen> {
   Map<String, dynamic> arguments = {};
 
   @override
@@ -22,13 +22,10 @@ class _WaitScreenState extends State<WaitScreen> {
       arguments = Get.arguments as Map<String, dynamic>;
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setScreenConfig();
-    });
-
     Future.delayed(const Duration(seconds: 1), () {
       final nextScreen = arguments['nextScreen']?.toString() ?? '/';
       final gameMode = arguments['gameMode']?.toString() ?? '';
+      setScreenConfig();
 
       Get.toNamed(
         nextScreen,
@@ -57,11 +54,6 @@ class _WaitScreenState extends State<WaitScreen> {
       },
       child: PopScope(
         canPop: false,
-        onPopInvokedWithResult: (didPop, result) {
-          if (!didPop) {
-            Get.toNamed('/');
-          }
-        },
         child: Scaffold(
           body: Center(
             child: Container(

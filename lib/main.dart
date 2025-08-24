@@ -10,7 +10,8 @@ import 'package:pixel_retro_app/app/config/theme/app_theme.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/level_snake_game_screen.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/snake_game_screen.dart';
 import 'package:pixel_retro_app/app/shared/layouts/layout_view.dart';
-import 'package:pixel_retro_app/app/shared/screens/wait_screen.dart';
+import 'package:pixel_retro_app/app/shared/screens/wait_to_home_screen.dart';
+import 'package:pixel_retro_app/app/shared/screens/wait_to_welcome_screen.dart';
 import 'package:pixel_retro_app/app/shared/screens/welcome_screen.dart';
 import 'package:pixel_retro_app/di.dart';
 
@@ -23,8 +24,8 @@ void main() async {
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(systemNavigationBarColor: AppColors.orange),
     );
-    SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   });
 
   runApp(const ProviderScope(child: MainApp()));
@@ -42,12 +43,20 @@ class MainApp extends StatelessWidget {
         GetPage(
           name: '/',
           page: () => LayoutView(),
-          transitionDuration: Duration(milliseconds: 800),
+          transitionDuration: Duration(milliseconds: 1500),
+          transition: Transition.downToUp,
         ),
         GetPage(
-          name: '/wait-screen',
-          page: () => const WaitScreen(),
+          name: '/wait-to-welcome-screen',
+          page: () => const WaitToWelcomeScreen(),
           transitionDuration: Duration(milliseconds: 800),
+          transition: Transition.cupertino,
+        ),
+        GetPage(
+          name: '/wait-to-home-screen',
+          page: () => const WaitToHomeScreen(),
+          transitionDuration: Duration(milliseconds: 800),
+          transition: Transition.cupertino,
         ),
         GetPage(
           name: '/welcome-screen',

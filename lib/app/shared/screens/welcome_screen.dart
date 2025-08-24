@@ -45,11 +45,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       },
       child: PopScope(
         canPop: false,
-        onPopInvokedWithResult: (didPop, result) {
-          if (!didPop) {
-            Get.toNamed('/');
-          }
-        },
         child: Scaffold(
           body: Container(
             width: double.infinity,
