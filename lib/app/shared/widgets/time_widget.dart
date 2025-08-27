@@ -6,12 +6,14 @@ class TimeWidget extends StatelessWidget {
   const TimeWidget({
     super.key,
     required this.time,
+    required this.unit,
     required this.color,
     this.fontSize = 18,
     this.showTheTextComplete = false,
   });
 
-  final String time;
+  final int time;
+  final String unit;
   final Color color;
   final double fontSize;
   final bool showTheTextComplete;
@@ -31,7 +33,7 @@ class TimeWidget extends StatelessWidget {
           ),
         ),
         Text(
-          '${showTheTextComplete ? "QUEDAN " : ""}$time',
+          '${showTheTextComplete ? "QUEDAN " : ""}$time $unit',
           style: TextStyle(
             fontSize: fontSize,
             fontWeight: FontWeight.bold,

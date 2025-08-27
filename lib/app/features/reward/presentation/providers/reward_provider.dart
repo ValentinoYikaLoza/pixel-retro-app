@@ -1,7 +1,14 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:pixel_retro_app/app/features/reward/presentation/data/reward_data.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/time_entity.dart';
+import 'package:pixel_retro_app/app/features/reward/domain/entities/reward_entity.dart';
+import 'package:pixel_retro_app/app/features/reward/domain/models/get_reward_list_response_model.dart';
+import 'package:pixel_retro_app/app/features/reward/domain/models/get_time_left_list_response_model.dart';
+import 'package:pixel_retro_app/app/features/reward/domain/repositories/reward_repository.dart';
+import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
+import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
+import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
+import 'package:pixel_retro_app/app/shared/widgets/loader.dart';
+import 'package:pixel_retro_app/di.dart';
 
 final rewardProvider = StateNotifierProvider<RewardNotifier, RewardState>((
   ref,
@@ -13,150 +20,114 @@ class RewardNotifier extends StateNotifier<RewardState> {
   RewardNotifier(this.ref) : super(const RewardState());
 
   final Ref ref;
+  final RewardRepository repository = getIt<RewardRepository>();
 
-  void initData() {
-    final List<RewardModel> rewards = rewardData;
+  Future<void> getRewards() async {
+    Loader.show();
+    try {
+      final GetRewardListResponseModel response = await repository.getRewards();
+      state = state.copyWith(
+        monthlyReward: response.monthlyReward,
+        weeklyReward: response.weeklyReward,
+        dailyReward: response.dailyRewards,
+      );
+      Loader.dissmiss();
+    } on ServiceException catch (_) {
+      SnackbarService.show(
+        'Error obteniendo la lista de recompensas',
+        type: SnackbarType.error,
+      );
+      Loader.dissmiss();
+    }
+  }
 
-    final RewardModel monthlyRewardData = rewards
-        .where((reward) => reward.type == RewardType.monthly)
-        .toList()
-        .first;
+  Future<void> getTimeLeftList() async {
+    Loader.show();
+    try {
+      final GetTimeLeftListResponseModel response = await repository
+          .getTimeLeftList();
+      state = state.copyWith(
+        timeLeftUntilNextDay: response.timeLeftList[0],
+        timeLeftUntilNextWeek: response.timeLeftList[1],
+        timeLeftUntilNextMonth: response.timeLeftList[2],
+      );
+      Loader.dissmiss();
+    } on ServiceException catch (_) {
+      SnackbarService.show(
+        'Error obteniendo los tiempos restantes',
+        type: SnackbarType.error,
+      );
+      Loader.dissmiss();
+    }
+  }
 
-    final RewardModel weeklyRewardData = rewards
-        .where((reward) => reward.type == RewardType.weekly)
-        .toList()
-        .first;
+  Future<void> getCurrentMonth() async {
+    Loader.show();
+    try {
+      final String response = await repository.getCurrentMonth();
+      state = state.copyWith(currentMonth: response);
+      Loader.dissmiss();
+    } on ServiceException catch (_) {
+      SnackbarService.show(
+        'Error obteniendo el mes actual',
+        type: SnackbarType.error,
+      );
+      Loader.dissmiss();
+    }
+  }
 
-    final List<RewardModel> dailyRewardsData = rewards
-        .where((reward) => reward.type == RewardType.daily)
-        .toList();
-
-    state = state.copyWith(
-      today: () => DateTime.now(),
-      monthlyReward: monthlyRewardData,
-      weeklyReward: weeklyRewardData,
-      dailyRewards: dailyRewardsData,
-    );
+  String getRewardImage(int categoryId) {
+    switch (categoryId) {
+      case 1:
+        return 'assets/icons/gold-chest.svg';
+      case 2:
+        return 'assets/icons/silver-chest.svg';
+      case 3:
+        return 'assets/icons/bronze-chest.svg';
+      default:
+        return 'assets/icons/bronze-chest.svg';
+    }
   }
 }
 
 class RewardState {
-  final DateTime? today;
-  final RewardModel? monthlyReward;
-  final RewardModel? weeklyReward;
-  final List<RewardModel> dailyRewards;
-
-  String get monthName {
-    if (today == null) return '';
-
-    final format = DateFormat('MMMM', 'es_ES');
-    return format.format(today!);
-  }
-
-  String get timeLeftUntilEndOfSunday {
-    if (today == null) return '0 SEGUNDOS';
-
-    final now = DateTime.now();
-    final endOfSunday = DateTime(
-      now.year,
-      now.month,
-      now.day + (7 - now.weekday),
-      23,
-      59,
-      59,
-    );
-
-    final duration = endOfSunday.difference(now);
-    if (duration.inDays > 0) {
-      return '${duration.inDays} DÍA${duration.inDays > 1 ? 'S' : ''}';
-    } else if (duration.inHours > 0) {
-      return '${duration.inHours} HORA${duration.inHours > 1 ? 'S' : ''}';
-    } else if (duration.inMinutes > 0) {
-      return '${duration.inMinutes} MINUTO${duration.inMinutes > 1 ? 'S' : ''}';
-    } else {
-      return '${duration.inSeconds} SEGUNDO${duration.inSeconds > 1 ? 'S' : ''}';
-    }
-  }
-
-  String get timeLeftUntilNextMonth {
-    if (today == null) return '';
-
-    final nextMonth = DateTime(today!.year, today!.month + 1, 1);
-    final duration = nextMonth.difference(today!);
-
-    if (duration.inDays > 0) {
-      return '${duration.inDays} DÍA${duration.inDays > 1 ? 'S' : ''}';
-    } else if (duration.inHours > 0) {
-      return '${duration.inHours} HORA${duration.inHours > 1 ? 'S' : ''}';
-    } else if (duration.inMinutes > 0) {
-      return '${duration.inMinutes} MINUTO${duration.inMinutes > 1 ? 'S' : ''}';
-    } else {
-      return '${duration.inSeconds} SEGUNDO${duration.inSeconds > 1 ? 'S' : ''}';
-    }
-  }
-
-  String get timeLeftUntilEndOfDay {
-    if (today == null) return '0 SEGUNDOS';
-
-    final now = DateTime.now();
-    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
-    final duration = endOfDay.difference(now);
-
-    if (duration.inHours > 0) {
-      return '${duration.inHours} HORA${duration.inHours > 1 ? 'S' : ''}';
-    } else if (duration.inMinutes > 0) {
-      return '${duration.inMinutes} MINUTO${duration.inMinutes > 1 ? 'S' : ''}';
-    } else {
-      return '${duration.inSeconds} SEGUNDO${duration.inSeconds > 1 ? 'S' : ''}';
-    }
-  }
+  final RewardEntity? monthlyReward;
+  final RewardEntity? weeklyReward;
+  final List<RewardEntity> dailyRewards;
+  final TimeEntity? timeLeftUntilNextMonth;
+  final TimeEntity? timeLeftUntilNextWeek;
+  final TimeEntity? timeLeftUntilNextDay;
+  final String currentMonth;
 
   const RewardState({
-    this.today,
     this.monthlyReward,
     this.weeklyReward,
     this.dailyRewards = const [],
+    this.timeLeftUntilNextMonth,
+    this.timeLeftUntilNextWeek,
+    this.timeLeftUntilNextDay,
+    this.currentMonth = '',
   });
 
   RewardState copyWith({
-    ValueGetter<DateTime>? today,
-    RewardModel? monthlyReward,
-    RewardModel? weeklyReward,
-    List<RewardModel>? dailyRewards,
+    RewardEntity? monthlyReward,
+    RewardEntity? weeklyReward,
+    List<RewardEntity>? dailyReward,
+    TimeEntity? timeLeftUntilNextMonth,
+    TimeEntity? timeLeftUntilNextWeek,
+    TimeEntity? timeLeftUntilNextDay,
+    String? currentMonth,
   }) {
     return RewardState(
-      today: today != null ? today() : this.today,
       monthlyReward: monthlyReward ?? this.monthlyReward,
       weeklyReward: weeklyReward ?? this.weeklyReward,
-      dailyRewards: dailyRewards ?? this.dailyRewards,
+      dailyRewards: dailyReward ?? this.dailyRewards,
+      timeLeftUntilNextMonth:
+          timeLeftUntilNextMonth ?? this.timeLeftUntilNextMonth,
+      timeLeftUntilNextWeek:
+          timeLeftUntilNextWeek ?? this.timeLeftUntilNextWeek,
+      timeLeftUntilNextDay: timeLeftUntilNextDay ?? this.timeLeftUntilNextDay,
+      currentMonth: currentMonth ?? this.currentMonth,
     );
   }
-}
-
-enum RewardStatus { claimed, unclaimed }
-
-enum RewardType { daily, weekly, monthly }
-
-enum RewardCategory { bronze, silver, gold }
-
-class RewardModel {
-  final String id;
-  final String description;
-  final RewardType type;
-  final RewardCategory category;
-  final RewardStatus status;
-  final String imageUrl;
-  final int currentPoints;
-  final int totalPoints;
-
-  RewardModel({
-    required this.id,
-    required this.description,
-    required this.type,
-    required this.category,
-    required this.status,
-    required this.imageUrl,
-    required this.currentPoints,
-    required this.totalPoints,
-  });
 }

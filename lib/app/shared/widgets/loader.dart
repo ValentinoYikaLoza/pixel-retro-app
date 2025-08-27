@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:pixel_retro_app/app/shared/widgets/custom_title.dart';
+import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 
 final GlobalKey<_LoaderContentState> _loaderKey =
     GlobalKey<_LoaderContentState>();
 
 class Loader {
-  static show([String message = 'Cargando']) {
+  static show() {
     if (_loaderKey.currentState != null) {
-      _loaderKey.currentState!.show(message);
+      _loaderKey.currentState!.show();
     }
   }
 
@@ -40,30 +40,10 @@ class _LoaderContent extends StatefulWidget {
 class _LoaderContentState extends State<_LoaderContent>
     with SingleTickerProviderStateMixin {
   bool showLoader = false;
-  String message = 'Cargando';
-  late AnimationController _controller;
-  late Animation<int> _dotsAnimation;
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 1),
-      vsync: this,
-    )..repeat();
-    _dotsAnimation = IntTween(begin: 0, end: 3).animate(_controller);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  show([String message = 'Loading']) {
+  show() {
     setState(() {
       showLoader = true;
-      this.message = message;
     });
   }
 
@@ -81,25 +61,10 @@ class _LoaderContentState extends State<_LoaderContent>
         if (showLoader)
           Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.blue.shade50,
-                  Colors.lightBlue.shade100,
-                ], // Light pastel gradient
-              ),
+              color: AppColors.backgroundDark.withOpacity(0.8),
             ),
-          ),
-        if (showLoader)
-          Center(
-            child: AnimatedBuilder(
-              animation: _dotsAnimation,
-              builder: (context, child) {
-                String animatedMessage =
-                    message + '.' * (_dotsAnimation.value + 1);
-                return CustomTitle(title: animatedMessage, fontSize: 30);
-              },
+            child: Center(
+              child: CircularProgressIndicator(color: AppColors.orange),
             ),
           ),
       ],

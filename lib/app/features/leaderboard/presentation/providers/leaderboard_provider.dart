@@ -1,7 +1,18 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pixel_retro_app/app/features/leaderboard/presentation/data/status_data.dart';
-import 'package:pixel_retro_app/app/features/leaderboard/presentation/data/user_data.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/division_entity.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/time_entity.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/user_rank_entity.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_current_division_response_model.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_current_user_response_model.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_division_list_response_model.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_time_left_response_model.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_user_list_response_model.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/domain/repositories/leaderboard_repository.dart';
+import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
+import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
+import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
+import 'package:pixel_retro_app/app/shared/widgets/loader.dart';
+import 'package:pixel_retro_app/di.dart';
 
 final leaderboardProvider =
     StateNotifierProvider<LeaderboardNotifier, LeaderboardState>((ref) {
@@ -12,72 +23,155 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
   LeaderboardNotifier(this.ref) : super(LeaderboardState());
 
   final Ref ref;
+  final LeaderboardRepository repository = getIt<LeaderboardRepository>();
 
-  void initStatus() {
-    state = state.copyWith(
-      currentStatus: statusData[5],
-      status: statusData,
-      users: userData,
-      currentUser: userData[0],
-      today: () => DateTime.now(),
-    );
+  Future<void> getUsers() async {
+    Loader.show();
+    try {
+      final GetUserListResponseModel response = await repository.getUsers();
+      state = state.copyWith(users: response.users);
+      Loader.dissmiss();
+    } on ServiceException catch (_) {
+      SnackbarService.show(
+        'Error obteniendo los usuarios',
+        type: SnackbarType.error,
+      );
+      Loader.dissmiss();
+    }
+  }
+
+  Future<void> getDivisions() async {
+    Loader.show();
+    try {
+      final GetDivisionListResponseModel response = await repository
+          .getDivisions();
+      state = state.copyWith(divisions: response.divisions);
+      Loader.dissmiss();
+    } on ServiceException catch (_) {
+      SnackbarService.show(
+        'Error obteniendo las divisiones',
+        type: SnackbarType.error,
+      );
+      Loader.dissmiss();
+    }
+  }
+
+  Future<void> getCurrentUser() async {
+    Loader.show();
+    try {
+      final GetCurrentUserResponseModel response = await repository
+          .getCurrentUser();
+      state = state.copyWith(currentUser: response.currentUser);
+      Loader.dissmiss();
+    } on ServiceException catch (_) {
+      SnackbarService.show(
+        'Error obteniendo el usuario actual',
+        type: SnackbarType.error,
+      );
+      Loader.dissmiss();
+    }
+  }
+
+  Future<void> getCurrentDivision() async {
+    Loader.show();
+    try {
+      final GetCurrentDivisionResponseModel response = await repository
+          .getCurrentDivision();
+      state = state.copyWith(currentDivision: response.currentDivision);
+      Loader.dissmiss();
+    } on ServiceException catch (_) {
+      SnackbarService.show(
+        'Error obteniendo la division actual',
+        type: SnackbarType.error,
+      );
+      Loader.dissmiss();
+    }
+  }
+
+  Future<void> getTimeLeft() async {
+    Loader.show();
+    try {
+      final GetTimeLeftResponseModel response = await repository.getTimeLeft();
+      state = state.copyWith(timeLeft: response.timeLeft);
+      Loader.dissmiss();
+    } on ServiceException catch (_) {
+      SnackbarService.show(
+        'Error obteniendo el tiempo restante',
+        type: SnackbarType.error,
+      );
+      Loader.dissmiss();
+    }
+  }
+
+  String getDivisionImage(int index) {
+    if (state.currentDivision == null) {
+      return index < 3
+          ? 'assets/icons/trophy-1-empty.svg'
+          : 'assets/icons/trophy-2-empty.svg';
+    }
+
+    final List<String> divisionActiveImageList = [
+      'assets/icons/trophies/bronze.svg',
+      'assets/icons/trophies/silver.svg',
+      'assets/icons/trophies/gold.svg',
+      'assets/icons/trophies/sapphire.svg',
+      'assets/icons/trophies/ruby.svg',
+      'assets/icons/trophies/emerald.svg',
+      'assets/icons/trophies/amethyst.svg',
+      'assets/icons/trophy-2-empty.svg',
+      'assets/icons/trophy-2-empty.svg',
+      'assets/icons/trophy-2-empty.svg',
+    ];
+
+    final List<String> divisionInactiveImageList = [
+      'assets/icons/trophy-1-empty.svg',
+      'assets/icons/trophy-1-empty.svg',
+      'assets/icons/trophy-1-empty.svg',
+      'assets/icons/trophy-2-empty.svg',
+      'assets/icons/trophy-2-empty.svg',
+      'assets/icons/trophy-2-empty.svg',
+      'assets/icons/trophy-2-empty.svg',
+      'assets/icons/trophy-2-empty.svg',
+      'assets/icons/trophy-2-empty.svg',
+      'assets/icons/trophy-2-empty.svg',
+    ];
+
+    return index <= (state.currentDivision!.id)
+        ? divisionActiveImageList[index - 1]
+        : divisionInactiveImageList[index - 1];
+
+    // return divisionActiveImageList[index - 1];
   }
 }
 
 class LeaderboardState {
-  final List<LeaderboardModel> status;
-  final LeaderboardModel? currentStatus;
-  final List<UserModel> users;
-  final UserModel? currentUser;
-  final DateTime? today;
-
-  String get timeLeftUntilEndOfSunday {
-    if (today == null) return '0 SEGUNDOS';
-
-    // Find next Monday (weekday == 1)
-    final now = DateTime.now();
-    final endOfSunday = DateTime(
-      now.year,
-      now.month,
-      now.day + (7 - now.weekday),
-      23,
-      59,
-      59,
-    );
-
-    final duration = endOfSunday.difference(now);
-    if (duration.inDays > 0) {
-      return '${duration.inDays} DÍA${duration.inDays > 1 ? 'S' : ''}';
-    } else if (duration.inHours > 0) {
-      return '${duration.inHours} HORA${duration.inHours > 1 ? 'S' : ''}';
-    } else if (duration.inMinutes > 0) {
-      return '${duration.inMinutes} MINUTO${duration.inMinutes > 1 ? 'S' : ''}';
-    } else {
-      return '${duration.inSeconds} SEGUNDO${duration.inSeconds > 1 ? 'S' : ''}';
-    }
-  }
+  final DivisionEntity? currentDivision;
+  final List<DivisionEntity> divisions;
+  final List<UserDivisionEntity> users;
+  final UserDivisionEntity? currentUser;
+  final TimeEntity? timeLeft;
 
   LeaderboardState({
-    this.status = const [],
-    this.currentStatus,
+    this.divisions = const [],
+    this.currentDivision,
     this.users = const [],
     this.currentUser,
-    this.today,
+    this.timeLeft,
   });
 
   LeaderboardState copyWith({
-    List<LeaderboardModel>? status,
-    LeaderboardModel? currentStatus,
-    List<UserModel>? users,
-    UserModel? currentUser,
-    ValueGetter<DateTime>? today,
+    DivisionEntity? currentDivision,
+    List<DivisionEntity>? divisions,
+    List<UserDivisionEntity>? users,
+    UserDivisionEntity? currentUser,
+    TimeEntity? timeLeft,
   }) {
     return LeaderboardState(
-      status: status ?? this.status,
-      currentStatus: currentStatus ?? this.currentStatus,
+      divisions: divisions ?? this.divisions,
+      currentDivision: currentDivision ?? this.currentDivision,
       users: users ?? this.users,
       currentUser: currentUser ?? this.currentUser,
-      today: today != null ? today() : this.today,
+      timeLeft: timeLeft ?? this.timeLeft,
     );
   }
 }
@@ -93,36 +187,4 @@ enum LeaderboardStatus {
   pearl,
   obsidian,
   diamond,
-}
-
-class LeaderboardModel {
-  final LeaderboardStatus status;
-  final String title;
-  final String activePath;
-  final String inactivePath;
-
-  LeaderboardModel({
-    required this.status,
-    required this.title,
-    required this.activePath,
-    required this.inactivePath,
-  });
-}
-
-class UserModel {
-  final String id;
-  final String name;
-  final String avatarUrl;
-  final int score;
-  final int rank;
-  final int timesRankedFirst;
-
-  UserModel({
-    required this.id,
-    required this.name,
-    required this.avatarUrl,
-    required this.score,
-    required this.rank,
-    required this.timesRankedFirst,
-  });
 }

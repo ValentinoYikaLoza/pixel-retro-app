@@ -16,5 +16,6 @@ class AppColors {
   static const Color ruby = Color(0xFFD92727);
   static const Color emerald = Color(0xFF4FB700);
   static const Color selector = Color(0xFF202F36);
+  static const Color amethyst = Color(0xFFB55DE8);
   static const Color neonPurple = Color(0xFFE300FF);
 }

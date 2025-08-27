@@ -7,6 +7,7 @@ import 'package:pixel_retro_app/app/features/home/presentation/screens/home_scre
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/screens/leaderboard_screen.dart';
 import 'package:pixel_retro_app/app/features/reward/presentation/screens/reward_screen.dart';
 import 'package:pixel_retro_app/app/features/shop/presentation/screens/shop_screen.dart';
+import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
 import 'package:pixel_retro_app/app/shared/providers/navigation_provider.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/widgets/tabs_layout.dart';
 
@@ -30,7 +31,8 @@ class LayoutViewState extends ConsumerState<LayoutView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(userProvider.notifier).getUserData();
       setScreenConfig();
     });
     // Obtener el estado inicial del provider

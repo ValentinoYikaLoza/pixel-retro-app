@@ -17,7 +17,9 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(shopProvider.notifier).initShopItems();
+      ref.read(shopProvider.notifier).getAdvertisements();
+      ref.read(shopProvider.notifier).getCoinShopItems();
+      ref.read(shopProvider.notifier).getLiveShopItems();
     });
   }
 
@@ -45,16 +47,24 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
                       color: AppColors.white,
                     ),
                   ),
-                  AnuncioContainerWidget(
-                    title: 'Ver anuncio para obtener 10 monedas',
-                    imagePath: 'assets/icons/coins.svg',
-                    color: AppColors.orange,
-                  ),
-
-                  AnuncioContainerWidget(
-                    title: 'Ver anuncio para obtener 5 vidas adicionales',
-                    imagePath: 'assets/icons/heart.svg',
-                    color: AppColors.red,
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: shopState.advertisements.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final ad = shopState.advertisements[index];
+                      return AnuncioContainerWidget(
+                        title: ad.description,
+                        imagePath: ad.typeId == 1
+                            ? 'assets/icons/coin.svg'
+                            : 'assets/icons/heart.svg',
+                        color: ad.typeId == 1
+                            ? AppColors.yellow
+                            : AppColors.red,
+                      );
+                    },
                   ),
                 ],
               ),
@@ -78,7 +88,7 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
                     ),
                   ),
 
-                  shopState.shopMonedasItems.isNotEmpty
+                  shopState.coinShopItems.isNotEmpty
                       ? GridView.builder(
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
@@ -89,15 +99,20 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
                               ),
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          itemCount: shopState.shopMonedasItems.length,
+                          itemCount: shopState.coinShopItems.length,
                           itemBuilder: (context, index) {
-                            final item = shopState.shopMonedasItems[index];
+                            final item = shopState.coinShopItems[index];
 
                             return ShopItemWidget(
-                              imagePath: item.imagePath,
+                              imagePath: ref
+                                  .read(shopProvider.notifier)
+                                  .getItemImagePath(
+                                    index + 1,
+                                    TypeItemShop.coin,
+                                  ),
                               quantity: item.quantity,
                               price: item.price,
-                              unit: item.unit,
+                              unit: ShopItemUnit.usd,
                               color: AppColors.yellow,
                             );
                           },
@@ -133,7 +148,7 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
                       color: AppColors.white,
                     ),
                   ),
-                  shopState.shopVidasItemsUnitUsd.isNotEmpty
+                  shopState.liveShopItemsUnitUsd.isNotEmpty
                       ? GridView.builder(
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
@@ -144,15 +159,20 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
                               ),
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          itemCount: shopState.shopVidasItemsUnitUsd.length,
+                          itemCount: shopState.liveShopItemsUnitUsd.length,
                           itemBuilder: (context, index) {
-                            final item = shopState.shopVidasItemsUnitUsd[index];
+                            final item = shopState.liveShopItemsUnitUsd[index];
 
                             return ShopItemWidget(
-                              imagePath: item.imagePath,
+                              imagePath: ref
+                                  .read(shopProvider.notifier)
+                                  .getItemImagePath(
+                                    index + 1,
+                                    TypeItemShop.live,
+                                  ),
                               quantity: item.quantity,
                               price: item.price,
-                              unit: item.unit,
+                              unit: ShopItemUnit.usd,
                               color: AppColors.red,
                             );
                           },
@@ -162,7 +182,7 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
                             color: AppColors.orange,
                           ),
                         ),
-                  shopState.shopVidasItemsUnitCoin.isNotEmpty
+                  shopState.liveShopItemsUnitCoin.isNotEmpty
                       ? GridView.builder(
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
@@ -173,16 +193,20 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
                               ),
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          itemCount: shopState.shopVidasItemsUnitCoin.length,
+                          itemCount: shopState.liveShopItemsUnitCoin.length,
                           itemBuilder: (context, index) {
-                            final item =
-                                shopState.shopVidasItemsUnitCoin[index];
+                            final item = shopState.liveShopItemsUnitCoin[index];
 
                             return ShopItemWidget(
-                              imagePath: item.imagePath,
+                              imagePath: ref
+                                  .read(shopProvider.notifier)
+                                  .getItemImagePath(
+                                    index + 1,
+                                    TypeItemShop.live,
+                                  ),
                               quantity: item.quantity,
                               price: item.price,
-                              unit: item.unit,
+                              unit: ShopItemUnit.coin,
                               color: AppColors.yellow,
                             );
                           },
@@ -249,7 +273,7 @@ class ShopItemWidget extends StatelessWidget {
                 color: color,
               ),
             ),
-          if (unit == ShopItemUnit.coins)
+          if (unit == ShopItemUnit.coin)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               spacing: 5,

@@ -17,7 +17,9 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(rewardProvider.notifier).initData();
+      ref.read(rewardProvider.notifier).getRewards();
+      ref.read(rewardProvider.notifier).getTimeLeftList();
+      ref.read(rewardProvider.notifier).getCurrentMonth();
     });
   }
 
@@ -54,7 +56,7 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                         ),
                         child: Center(
                           child: Text(
-                            rewardState.monthName.toUpperCase(),
+                            rewardState.currentMonth,
                             style: TextStyle(
                               fontSize: 20,
                               height: 20 / 15,
@@ -65,7 +67,8 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                         ),
                       ),
                       TimeWidget(
-                        time: rewardState.timeLeftUntilNextMonth,
+                        time: rewardState.timeLeftUntilNextMonth?.time ?? 0,
+                        unit: rewardState.timeLeftUntilNextMonth?.unit ?? '',
                         color: AppColors.purple,
                       ),
                     ],
@@ -97,7 +100,11 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                                 current:
                                     rewardState.monthlyReward!.currentPoints,
                                 total: rewardState.monthlyReward!.totalPoints,
-                                imagePath: rewardState.monthlyReward!.imageUrl,
+                                imagePath: ref
+                                    .read(rewardProvider.notifier)
+                                    .getRewardImage(
+                                      rewardState.monthlyReward!.categoryId,
+                                    ),
                               ),
                             ),
                           ],
@@ -137,7 +144,10 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                               ),
                             ),
                             TimeWidget(
-                              time: rewardState.timeLeftUntilEndOfSunday,
+                              time:
+                                  rewardState.timeLeftUntilNextWeek?.time ?? 0,
+                              unit:
+                                  rewardState.timeLeftUntilNextWeek?.unit ?? '',
                               color: AppColors.orange,
                               fontSize: 15,
                               showTheTextComplete: true,
@@ -158,7 +168,11 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                           child: GoalWidget(
                             current: rewardState.weeklyReward!.currentPoints,
                             total: rewardState.weeklyReward!.totalPoints,
-                            imagePath: rewardState.weeklyReward!.imageUrl,
+                            imagePath: ref
+                                .read(rewardProvider.notifier)
+                                .getRewardImage(
+                                  rewardState.weeklyReward!.categoryId,
+                                ),
                             label: rewardState.weeklyReward!.description,
                           ),
                         ),
@@ -194,7 +208,9 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                               ),
                             ),
                             TimeWidget(
-                              time: rewardState.timeLeftUntilEndOfDay,
+                              time: rewardState.timeLeftUntilNextDay?.time ?? 0,
+                              unit:
+                                  rewardState.timeLeftUntilNextDay?.unit ?? '',
                               color: AppColors.orange,
                               fontSize: 15,
                               showTheTextComplete: true,
@@ -238,7 +254,9 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                         child: GoalWidget(
                           current: reward.currentPoints,
                           total: reward.totalPoints,
-                          imagePath: reward.imageUrl,
+                          imagePath: ref
+                              .read(rewardProvider.notifier)
+                              .getRewardImage(reward.categoryId),
                           label: reward.description,
                         ),
                       ),

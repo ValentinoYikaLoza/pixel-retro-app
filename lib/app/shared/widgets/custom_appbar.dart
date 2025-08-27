@@ -5,29 +5,11 @@ import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/shared/providers/navigation_provider.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
 
-class CustomAppbar extends ConsumerStatefulWidget
-    implements PreferredSizeWidget {
+class CustomAppbar extends ConsumerWidget implements PreferredSizeWidget {
   final bool isShopView;
   const CustomAppbar({super.key, this.isShopView = false});
-
   @override
-  final Size preferredSize = const Size(double.infinity, 62);
-
-  @override
-  CustomAppbarState createState() => CustomAppbarState();
-}
-
-class CustomAppbarState extends ConsumerState<CustomAppbar> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(userProvider.notifier).initData();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
     final userState = ref.watch(userProvider);
 
@@ -54,7 +36,7 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
                 color: AppColors.yellow,
               ),
             ),
-            if (!widget.isShopView)
+            if (!isShopView)
               AppBarRow(
                 asset: 'assets/icons/fire.svg',
                 text: '${userState.streak}',
@@ -75,6 +57,9 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
       ),
     );
   }
+
+  @override
+  final Size preferredSize = const Size(double.infinity, 62);
 }
 
 class AppBarRow extends StatelessWidget {

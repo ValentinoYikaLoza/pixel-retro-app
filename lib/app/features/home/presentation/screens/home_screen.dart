@@ -22,7 +22,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(homeProvider.notifier).initGames();
+      ref.read(homeProvider.notifier).getGames();
     });
   }
 
@@ -178,7 +178,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                 ],
               ),
             )
-          : Center(child: CircularProgressIndicator(color: AppColors.orange)),
+          : SizedBox(height: 0),
     );
   }
 }

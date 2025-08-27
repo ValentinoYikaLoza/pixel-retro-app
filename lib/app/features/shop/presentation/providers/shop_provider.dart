@@ -1,5 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pixel_retro_app/app/features/shop/presentation/data/shop_items_data.dart';
+import 'package:pixel_retro_app/app/features/shop/domain/entities/advertisement_entity.dart';
+import 'package:pixel_retro_app/app/features/shop/domain/entities/coin_shop_entity.dart';
+import 'package:pixel_retro_app/app/features/shop/domain/entities/live_shop_entity.dart';
+import 'package:pixel_retro_app/app/features/shop/domain/models/get_advertisement_list_response_model.dart';
+import 'package:pixel_retro_app/app/features/shop/domain/models/get_coin_shop_list_response_model.dart';
+import 'package:pixel_retro_app/app/features/shop/domain/models/get_live_shop_list_response_model.dart';
+import 'package:pixel_retro_app/app/features/shop/domain/repositories/shop_repository.dart';
+import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
+import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
+import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
+import 'package:pixel_retro_app/app/shared/widgets/loader.dart';
+import 'package:pixel_retro_app/di.dart';
 
 final shopProvider = StateNotifierProvider<ShopNotifier, ShopState>((ref) {
   return ShopNotifier(ref);
@@ -9,84 +20,139 @@ class ShopNotifier extends StateNotifier<ShopState> {
   ShopNotifier(this.ref) : super(ShopState());
 
   final Ref ref;
+  final ShopRepository repository = getIt<ShopRepository>();
 
-  void initShopItems() {
-    final List<ShopItemModel> shopItems = shopItemsData;
+  Future<void> getAdvertisements() async {
+    Loader.show();
+    try {
+      final GetAdvertisementListResponseModel response = await repository
+          .getAdvertisements();
+      state = state.copyWith(advertisements: response.advertisementList);
+      Loader.dissmiss();
+    } on ServiceException catch (_) {
+      SnackbarService.show(
+        'Error al cargar los anuncios',
+        type: SnackbarType.error,
+      );
+      Loader.dissmiss();
+    }
+  }
 
-    final List<ShopItemModel> monedasItems = shopItems
-        .where((item) => item.category == ShopItemCategory.monedas)
-        .toList();
+  Future<void> getCoinShopItems() async {
+    Loader.show();
+    try {
+      final GetCoinShopListResponseModel coinShopList = await repository
+          .getCoinShopList();
+      state = state.copyWith(coinShopItems: coinShopList.coinShopList);
+      Loader.dissmiss();
+    } on ServiceException catch (_) {
+      SnackbarService.show(
+        'Error al cargar los items de la tienda de monedas',
+        type: SnackbarType.error,
+      );
+      Loader.dissmiss();
+    }
+  }
 
-    final List<ShopItemModel> vidasItemsUnitCoin = shopItems
-        .where(
-          (item) =>
-              item.category == ShopItemCategory.vidas &&
-              item.unit == ShopItemUnit.coins,
-        )
-        .toList();
+  Future<void> getLiveShopItems() async {
+    Loader.show();
+    try {
+      final GetLiveShopListResponseModel liveShopList = await repository
+          .getLiveShopList();
+      final List<LiveShopEntity> liveShopItemsUnitUsd = liveShopList
+          .liveShopList
+          .where((item) => item.typeId == 1)
+          .toList();
+      final List<LiveShopEntity> liveShopItemsUnitCoin = liveShopList
+          .liveShopList
+          .where((item) => item.typeId == 2)
+          .toList();
 
-    final List<ShopItemModel> vidasItemsUnitUsd = shopItems
-        .where(
-          (item) =>
-              item.category == ShopItemCategory.vidas &&
-              item.unit == ShopItemUnit.usd,
-        )
-        .toList();
+      state = state.copyWith(
+        liveShopItemsUnitUsd: liveShopItemsUnitUsd,
+        liveShopItemsUnitCoin: liveShopItemsUnitCoin,
+      );
 
-    state = state.copyWith(
-      shopMonedasItems: monedasItems,
-      shopVidasItemsUnitCoin: vidasItemsUnitCoin,
-      shopVidasItemsUnitUsd: vidasItemsUnitUsd,
-    );
+      Loader.dissmiss();
+    } on ServiceException catch (_) {
+      SnackbarService.show(
+        'Error al cargar los items de la tienda de vidas',
+        type: SnackbarType.error,
+      );
+      Loader.dissmiss();
+    }
+  }
+
+  String getItemImagePath(int id, TypeItemShop type) {
+    if (type == TypeItemShop.coin) {
+      return _getCoinImagePath(id);
+    } else if (type == TypeItemShop.live) {
+      return _getLiveImagePath(id);
+    } else {
+      return 'assets/images/default.png';
+    }
+  }
+
+  String _getCoinImagePath(int id) {
+    switch (id) {
+      case 1:
+        return 'assets/icons/chest-shop-first.svg';
+      case 2:
+        return 'assets/icons/chest-shop-second.svg';
+      case 3:
+        return 'assets/icons/chest-shop-third.svg';
+      case 4:
+        return 'assets/icons/chest-shop-third.svg';
+      default:
+        return 'assets/icons/chest-shop-first.svg';
+    }
+  }
+
+  String _getLiveImagePath(int id) {
+    switch (id) {
+      case 1:
+        return 'assets/icons/heart.svg';
+      case 2:
+        return 'assets/icons/group-hearts-second.svg';
+      case 3:
+        return 'assets/icons/group-hearts-third.svg';
+      case 4:
+        return 'assets/icons/group-hearts-third.svg';
+      default:
+        return 'assets/icons/heart.svg';
+    }
   }
 }
 
+enum TypeItemShop { coin, live }
+
+enum ShopItemUnit { usd, coin }
+
 class ShopState {
-  final List<ShopItemModel> shopMonedasItems;
-  final List<ShopItemModel> shopVidasItemsUnitCoin;
-  final List<ShopItemModel> shopVidasItemsUnitUsd;
+  final List<AdvertisementEntity> advertisements;
+  final List<CoinShopEntity> coinShopItems;
+  final List<LiveShopEntity> liveShopItemsUnitUsd;
+  final List<LiveShopEntity> liveShopItemsUnitCoin;
 
   ShopState({
-    this.shopMonedasItems = const [],
-    this.shopVidasItemsUnitCoin = const [],
-    this.shopVidasItemsUnitUsd = const [],
+    this.advertisements = const [],
+    this.coinShopItems = const [],
+    this.liveShopItemsUnitUsd = const [],
+    this.liveShopItemsUnitCoin = const [],
   });
 
   ShopState copyWith({
-    List<ShopItemModel>? shopMonedasItems,
-    List<ShopItemModel>? shopVidasItemsUnitCoin,
-    List<ShopItemModel>? shopVidasItemsUnitUsd,
+    List<AdvertisementEntity>? advertisements,
+    List<CoinShopEntity>? coinShopItems,
+    List<LiveShopEntity>? liveShopItemsUnitUsd,
+    List<LiveShopEntity>? liveShopItemsUnitCoin,
   }) {
     return ShopState(
-      shopMonedasItems: shopMonedasItems ?? this.shopMonedasItems,
-      shopVidasItemsUnitCoin:
-          shopVidasItemsUnitCoin ?? this.shopVidasItemsUnitCoin,
-      shopVidasItemsUnitUsd:
-          shopVidasItemsUnitUsd ?? this.shopVidasItemsUnitUsd,
+      advertisements: advertisements ?? this.advertisements,
+      coinShopItems: coinShopItems ?? this.coinShopItems,
+      liveShopItemsUnitUsd: liveShopItemsUnitUsd ?? this.liveShopItemsUnitUsd,
+      liveShopItemsUnitCoin:
+          liveShopItemsUnitCoin ?? this.liveShopItemsUnitCoin,
     );
   }
-}
-
-enum ShopItemCategory { monedas, vidas }
-
-enum ShopItemUnit { coins, usd }
-
-enum AdViewStatus { claimed, unclaimed }
-
-class ShopItemModel {
-  final String id;
-  final int quantity;
-  final double price;
-  final String imagePath;
-  final ShopItemUnit unit;
-  final ShopItemCategory category;
-
-  ShopItemModel({
-    required this.id,
-    required this.quantity,
-    required this.price,
-    required this.imagePath,
-    required this.unit,
-    required this.category,
-  });
 }
