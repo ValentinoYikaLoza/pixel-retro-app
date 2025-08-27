@@ -47,9 +47,9 @@ class RewardNotifier extends StateNotifier<RewardState> {
       final GetTimeLeftListResponseModel response = await repository
           .getTimeLeftList();
       state = state.copyWith(
-        timeLeftUntilNextDay: response.timeLeftList[0],
-        timeLeftUntilNextWeek: response.timeLeftList[1],
-        timeLeftUntilNextMonth: response.timeLeftList[2],
+        timeLeftUntilNextMonth: response.timeLeftUntilNextMonth,
+        timeLeftUntilNextWeek: response.timeLeftUntilNextWeek,
+        timeLeftUntilNextDay: response.timeLeftUntilNextDay,
       );
       Loader.dissmiss();
     } on ServiceException catch (_) {

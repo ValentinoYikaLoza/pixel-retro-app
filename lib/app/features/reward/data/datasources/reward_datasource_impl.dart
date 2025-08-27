@@ -72,11 +72,9 @@ class RewardDataSourceImpl implements RewardDataSource {
   Future<GetTimeLeftListResponseModel> getTimeLeftList() {
     return Future.delayed(Duration(seconds: 2), () {
       return GetTimeLeftListResponseModel(
-        timeLeftList: [
-          TimeEntity(time: 5, unit: 'DÍAS'),
-          TimeEntity(time: 2, unit: 'HORAS'),
-          TimeEntity(time: 45, unit: 'MINUTOS'),
-        ],
+        timeLeftUntilNextMonth: TimeEntity(time: 5, unit: 'DÍAS'),
+        timeLeftUntilNextWeek: TimeEntity(time: 2, unit: 'HORAS'),
+        timeLeftUntilNextDay: TimeEntity(time: 45, unit: 'MINUTOS'),
       );
     });
   }
