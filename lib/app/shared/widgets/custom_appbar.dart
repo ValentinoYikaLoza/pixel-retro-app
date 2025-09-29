@@ -2,25 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
-import 'package:pixel_retro_app/app/shared/providers/navigation_provider.dart';
+import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-class CustomAppbar extends ConsumerWidget implements PreferredSizeWidget {
-  final bool isShopView;
-  const CustomAppbar({super.key, this.isShopView = false});
+class CustomAppbar extends ConsumerStatefulWidget
+    implements PreferredSizeWidget {
+  const CustomAppbar({super.key});
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  final Size preferredSize = const Size(double.infinity, 62);
+
+  @override
+  CustomAppbarState createState() => CustomAppbarState();
+}
+
+class CustomAppbarState extends ConsumerState<CustomAppbar> {
+  String? userName;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(userProvider.notifier).getUserData();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
     final userState = ref.watch(userProvider);
 
     return AppBar(
       automaticallyImplyLeading: false,
-      backgroundColor: AppColors.backgroundDark,
-      surfaceTintColor: AppColors.backgroundDark,
       flexibleSpace: Container(
         padding: EdgeInsets.only(left: 20, right: 20, top: safeAreaPadding.top),
         height: 62 + safeAreaPadding.top,
         decoration: BoxDecoration(
+          color: AppColors.backgroundDark,
           border: Border(bottom: BorderSide(color: AppColors.orange, width: 2)),
         ),
         child: Row(
@@ -28,7 +47,7 @@ class CustomAppbar extends ConsumerWidget implements PreferredSizeWidget {
           children: [
             GestureDetector(
               onTap: () {
-                ref.read(navigationProvider.notifier).navigateTo(3);
+                AppRoutes.go(AppRoutes.shop);
               },
               child: AppBarRow(
                 asset: 'assets/icons/coin.svg',
@@ -36,15 +55,14 @@ class CustomAppbar extends ConsumerWidget implements PreferredSizeWidget {
                 color: AppColors.yellow,
               ),
             ),
-            if (!isShopView)
-              AppBarRow(
-                asset: 'assets/icons/fire.svg',
-                text: '${userState.streak}',
-                color: AppColors.orange,
-              ),
+            AppBarRow(
+              asset: 'assets/icons/fire.svg',
+              text: '${userState.streak}',
+              color: AppColors.orange,
+            ),
             GestureDetector(
               onTap: () {
-                ref.read(navigationProvider.notifier).navigateTo(3);
+                AppRoutes.go(AppRoutes.shop);
               },
               child: AppBarRow(
                 asset: 'assets/icons/heart.svg',
@@ -57,9 +75,6 @@ class CustomAppbar extends ConsumerWidget implements PreferredSizeWidget {
       ),
     );
   }
-
-  @override
-  final Size preferredSize = const Size(double.infinity, 62);
 }
 
 class AppBarRow extends StatelessWidget {

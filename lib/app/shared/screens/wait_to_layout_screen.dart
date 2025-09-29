@@ -1,0 +1,43 @@
+import 'package:flutter/material.dart';
+import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
+import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
+import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
+
+class WaitToLayoutScreen extends StatefulWidget {
+  const WaitToLayoutScreen({super.key});
+
+  @override
+  State<WaitToLayoutScreen> createState() => _WaitToLayoutScreenState();
+}
+
+class _WaitToLayoutScreenState extends State<WaitToLayoutScreen> {
+  @override
+  void initState() {
+    super.initState();
+    setScreenConfig();
+
+    Future.delayed(const Duration(seconds: 1), () {
+      AppRoutes.go(AppRoutes.root);
+    });
+  }
+
+  void setScreenConfig() {
+    OrientationService.setOverlayColor(AppColors.orange);
+    OrientationService.setPortrait();
+    OrientationService.setEdgeToEdge();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        body: Center(
+          child: Container(
+            decoration: BoxDecoration(color: AppColors.backgroundDark),
+          ),
+        ),
+      ),
+    );
+  }
+}

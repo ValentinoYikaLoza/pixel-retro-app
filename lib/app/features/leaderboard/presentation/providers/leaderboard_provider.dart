@@ -139,8 +139,6 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
     return index <= (state.currentDivision!.id)
         ? divisionActiveImageList[index - 1]
         : divisionInactiveImageList[index - 1];
-
-    // return divisionActiveImageList[index - 1];
   }
 }
 

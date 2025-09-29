@@ -35,6 +35,7 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
+          // --- HEADER ---
           Container(
             padding: EdgeInsets.only(top: 30 + safeAreaPadding.top, bottom: 30),
             decoration: BoxDecoration(
@@ -44,7 +45,6 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
               spacing: 30,
               children: [
                 Padding(
@@ -54,7 +54,7 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                     children: [
                       Text(
                         leaderboardState.currentDivision?.name ?? '',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: AppColors.white,
@@ -68,120 +68,175 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                     ],
                   ),
                 ),
-                SizedBox(
-                  height: 75,
-                  child: CustomScrollView(
-                    scrollDirection: Axis.horizontal,
-                    slivers: [
-                      SliverPadding(padding: const EdgeInsets.only(left: 20)),
-                      SliverList.separated(
-                        itemBuilder: (context, index) {
-                          return SvgPicture.asset(
-                            ref
-                                .read(leaderboardProvider.notifier)
-                                .getDivisionImage(
-                                  leaderboardState.divisions[index].id,
-                                ),
-                            width: 75,
-                            height: 75,
-                          );
-                        },
-                        separatorBuilder: (context, index) {
-                          return const SizedBox(width: 20);
-                        },
-                        itemCount: leaderboardState.divisions.length,
-                      ),
-                      SliverPadding(padding: const EdgeInsets.only(right: 20)),
-                    ],
+                // --- Divisiones ---
+                if (leaderboardState.divisions.isNotEmpty)
+                  SizedBox(
+                    height: 75,
+                    child: CustomScrollView(
+                      scrollDirection: Axis.horizontal,
+                      slivers: [
+                        const SliverPadding(padding: EdgeInsets.only(left: 20)),
+                        SliverList.separated(
+                          itemBuilder: (context, index) {
+                            return SvgPicture.asset(
+                              ref
+                                  .read(leaderboardProvider.notifier)
+                                  .getDivisionImage(
+                                    leaderboardState.divisions[index].id,
+                                  ),
+                              width: 75,
+                              height: 75,
+                            );
+                          },
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: 20),
+                          itemCount: leaderboardState.divisions.length,
+                        ),
+                        const SliverPadding(
+                          padding: EdgeInsets.only(right: 20),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Stack(
+                      children: [
+                        Text(
+                          "No hay divisiones disponibles",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Pixel',
+                            foreground: Paint()
+                              ..style = PaintingStyle.stroke
+                              ..strokeWidth = 4
+                              ..color = AppColors.orange,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        Text(
+                          "No hay divisiones disponibles",
+                          style: TextStyle(
+                            color: AppColors.purple,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Pixel',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
           ),
-          leaderboardState.users.isNotEmpty
-              ? Expanded(
-                  child: CustomScrollView(
-                    slivers: [
-                      SliverList.builder(
-                        itemBuilder: (context, index) {
-                          final user = leaderboardState.users[index];
-                          return Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            spacing: 20,
-                            children: [
-                              _UserRowWidget(
-                                isCurrentUser:
-                                    leaderboardState.currentUser!.id == user.id,
-                                user: user,
-                                index: index + 1,
-                              ),
-                              if (index + 1 == 5)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 20),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    spacing: 15,
-                                    children: [
-                                      SvgPicture.asset(
-                                        'assets/icons/arrow-up.svg',
-                                        width: 32,
-                                        height: 32,
-                                      ),
-                                      const Text(
-                                        'ZONA DE ASCENSO',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          height: 20 / 15,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.emerald,
-                                        ),
-                                      ),
-                                      SvgPicture.asset(
-                                        'assets/icons/arrow-up.svg',
-                                        width: 32,
-                                        height: 32,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              if (index + 1 == 15)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 20),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    spacing: 15,
-                                    children: [
-                                      SvgPicture.asset(
-                                        'assets/icons/arrow-down.svg',
-                                        width: 32,
-                                        height: 32,
-                                      ),
-                                      const Text(
-                                        'ZONA DE DESCENSO',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          height: 20 / 15,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.ruby,
-                                        ),
-                                      ),
-                                      SvgPicture.asset(
-                                        'assets/icons/arrow-down.svg',
-                                        width: 32,
-                                        height: 32,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          );
-                        },
-                        itemCount: 20,
-                      ),
-                    ],
+
+          // --- LISTA DE USUARIOS ---
+          if (leaderboardState.users.isNotEmpty)
+            Expanded(
+              child: CustomScrollView(
+                slivers: [
+                  SliverList.builder(
+                    itemBuilder: (context, index) {
+                      final user = leaderboardState.users[index];
+                      return Column(
+                        spacing: 20,
+                        children: [
+                          _UserRowWidget(
+                            isCurrentUser:
+                                leaderboardState.currentUser?.id == user.id,
+                            user: user,
+                            index: index + 1,
+                          ),
+                          if (index + 1 == 5)
+                            _ZoneLabel(
+                              text: "ZONA DE ASCENSO",
+                              color: AppColors.emerald,
+                              icon: 'assets/icons/arrow-up.svg',
+                            ),
+                          if (index + 1 == 15)
+                            _ZoneLabel(
+                              text: "ZONA DE DESCENSO",
+                              color: AppColors.ruby,
+                              icon: 'assets/icons/arrow-down.svg',
+                            ),
+                        ],
+                      );
+                    },
+                    itemCount: leaderboardState.users.length,
                   ),
-                )
-              : SizedBox(height: 0),
+                ],
+              ),
+            )
+          else
+            Expanded(
+              child: Center(
+                child: Stack(
+                  children: [
+                    Text(
+                      "No hay usuarios en el ranking",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Pixel',
+                        foreground: Paint()
+                          ..style = PaintingStyle.stroke
+                          ..strokeWidth = 4
+                          ..color = AppColors.orange,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    Text(
+                      "No hay usuarios en el ranking",
+                      style: TextStyle(
+                        color: AppColors.purple,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Pixel',
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ZoneLabel extends StatelessWidget {
+  final String text;
+  final Color color;
+  final String icon;
+
+  const _ZoneLabel({
+    required this.text,
+    required this.color,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        spacing: 15,
+        children: [
+          SvgPicture.asset(icon, width: 32, height: 32),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          SvgPicture.asset(icon, width: 32, height: 32),
         ],
       ),
     );
@@ -194,11 +249,9 @@ class _UserRowWidget extends StatelessWidget {
     required this.user,
     required this.index,
   });
-
   final bool isCurrentUser;
   final UserDivisionEntity user;
   final int index;
-
   @override
   Widget build(BuildContext context) {
     return Container(

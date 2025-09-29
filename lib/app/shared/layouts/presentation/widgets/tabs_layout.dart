@@ -1,101 +1,120 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
+import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 
 class TabsLayout extends StatefulWidget {
-  const TabsLayout({
-    super.key,
-    required this.currentIndex,
-    required this.onTabTapped,
-    required this.pages,
-  });
-
-  final int currentIndex;
-  final Function(int) onTabTapped;
-  final List<Widget> pages;
+  const TabsLayout({super.key});
 
   @override
   State<TabsLayout> createState() => _TabsLayoutState();
 }
 
 class _TabsLayoutState extends State<TabsLayout> {
+  final List<String> pageRoutes = [
+    AppRoutes.root,
+    AppRoutes.leaderboard,
+    AppRoutes.reward,
+    AppRoutes.shop,
+  ];
+
   @override
   Widget build(BuildContext context) {
     EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
+    int currentIndex = pageRoutes.indexWhere((route) {
+      return route == Get.currentRoute;
+    });
 
     return Container(
       decoration: BoxDecoration(
         color: AppColors.backgroundDark,
         border: Border(top: BorderSide(color: AppColors.orange, width: 2)),
       ),
-      padding: EdgeInsets.only(bottom: safeAreaPadding.bottom),
-      height: 62 + safeAreaPadding.bottom,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _navItem(
-            index: 0,
-            size: 36,
-            currentIndex: widget.currentIndex,
-            normalAsset: 'assets/icons/home.svg',
-            selectedAsset: 'assets/icons/home-selected.svg',
+      height: 84 + safeAreaPadding.bottom,
+      child: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppColors.backgroundDark,
+        onTap: (value) {
+          AppRoutes.go(pageRoutes[value]);
+        },
+        currentIndex: currentIndex,
+        selectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          height: 14.4 / 12,
+          leadingDistribution: TextLeadingDistribution.even,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          height: 14.4 / 12,
+          leadingDistribution: TextLeadingDistribution.even,
+        ),
+        selectedItemColor: AppColors.orange,
+        unselectedItemColor: AppColors.purple,
+        items: [
+          BottomNavigationBarItem(
+            icon: Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: SvgPicture.asset(
+                'assets/icons/home-test.svg',
+                height: 34,
+                width: 34,
+                colorFilter: ColorFilter.mode(
+                  currentIndex == 0 ? AppColors.orange : AppColors.purple,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
+            label: 'Juegos',
           ),
-          _navItem(
-            index: 1,
-            size: 42,
-            currentIndex: widget.currentIndex,
-            normalAsset: 'assets/icons/leaderboard.svg',
-            selectedAsset: 'assets/icons/leaderboard-selected.svg',
+          BottomNavigationBarItem(
+            icon: Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: SvgPicture.asset(
+                'assets/icons/cup-test.svg',
+                height: 34,
+                width: 34,
+                colorFilter: ColorFilter.mode(
+                  currentIndex == 1 ? AppColors.orange : AppColors.purple,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
+            label: 'Divisiónes',
           ),
-          _navItem(
-            index: 2,
-            size: 36,
-            currentIndex: widget.currentIndex,
-            normalAsset: 'assets/icons/chest.svg',
-            selectedAsset: 'assets/icons/chest-selected.svg',
+          BottomNavigationBarItem(
+            icon: Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: SvgPicture.asset(
+                'assets/icons/flag-test.svg',
+                height: 34,
+                width: 34,
+                colorFilter: ColorFilter.mode(
+                  currentIndex == 2 ? AppColors.orange : AppColors.purple,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
+            label: 'Misiones',
           ),
-          _navItem(
-            index: 3,
-            size: 36,
-            currentIndex: widget.currentIndex,
-            normalAsset: 'assets/icons/shop.svg',
-            selectedAsset: 'assets/icons/shop-selected.svg',
+          BottomNavigationBarItem(
+            icon: Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: SvgPicture.asset(
+                'assets/icons/shop-test.svg',
+                height: 34,
+                width: 34,
+                colorFilter: ColorFilter.mode(
+                  currentIndex == 3 ? AppColors.orange : AppColors.purple,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
+            label: 'Compras',
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _navItem({
-    required int index,
-    required int currentIndex,
-    required double size,
-    required String normalAsset,
-    required String selectedAsset,
-  }) {
-    final isSelected = currentIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        widget.onTabTapped(index);
-      },
-      child: Container(
-        padding: EdgeInsets.all(size == 36 ? 4 : 3),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: isSelected
-              ? AppColors.orange.withOpacity(0.2)
-              : Colors.transparent,
-          border: Border.all(
-            color: isSelected ? AppColors.orange : Colors.transparent,
-            width: 2,
-          ),
-        ),
-        child: SvgPicture.asset(
-          isSelected ? selectedAsset : normalAsset,
-          height: size,
-          width: size,
-        ),
       ),
     );
   }

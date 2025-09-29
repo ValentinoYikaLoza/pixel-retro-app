@@ -31,6 +31,7 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
+          // --- HEADER / RECOMPENSA MENSUAL ---
           SliverToBoxAdapter(
             child: Container(
               height: 300 + safeAreaPadding.top,
@@ -44,6 +45,7 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 spacing: 20,
                 children: [
+                  // Header superior
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -56,7 +58,9 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                         ),
                         child: Center(
                           child: Text(
-                            rewardState.currentMonth,
+                            rewardState.currentMonth.isNotEmpty
+                                ? rewardState.currentMonth
+                                : "Sin mes",
                             style: TextStyle(
                               fontSize: 20,
                               height: 20 / 15,
@@ -73,61 +77,90 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                       ),
                     ],
                   ),
-                  rewardState.monthlyReward != null
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          spacing: 20,
-                          children: [
-                            Text(
-                              rewardState.monthlyReward!.description,
-                              style: TextStyle(
-                                fontSize: 20,
-                                height: 20 / 15,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.white,
-                              ),
-                            ),
-                            Container(
-                              height: 100,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.backgroundDark,
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              child: GoalWidget(
-                                current:
-                                    rewardState.monthlyReward!.currentPoints,
-                                total: rewardState.monthlyReward!.totalPoints,
-                                imagePath: ref
-                                    .read(rewardProvider.notifier)
-                                    .getRewardImage(
-                                      rewardState.monthlyReward!.categoryId,
-                                    ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.orange,
+
+                  // Recompensa mensual
+                  if (rewardState.monthlyReward != null)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      spacing: 20,
+                      children: [
+                        Text(
+                          rewardState.monthlyReward!.description,
+                          style: TextStyle(
+                            fontSize: 20,
+                            height: 20 / 15,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.white,
                           ),
                         ),
+                        Container(
+                          height: 100,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundDark,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: GoalWidget(
+                            current: rewardState.monthlyReward!.currentPoints,
+                            total: rewardState.monthlyReward!.totalPoints,
+                            imagePath: ref
+                                .read(rewardProvider.notifier)
+                                .getRewardImage(
+                                  rewardState.monthlyReward!.categoryId,
+                                ),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    SizedBox(
+                      height: 120,
+                      child: Center(
+                        child: Stack(
+                          children: [
+                            Text(
+                              "No hay desafío mensual",
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Pixel',
+                                foreground: Paint()
+                                  ..style = PaintingStyle.stroke
+                                  ..strokeWidth = 4
+                                  ..color = AppColors.orange,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(
+                              "No hay desafío mensual",
+                              style: TextStyle(
+                                color: AppColors.purple,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Pixel',
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
           ),
 
-          SliverToBoxAdapter(
-            child: rewardState.weeklyReward != null
-                ? Container(
+          // --- RECOMPENSA SEMANAL ---
+          rewardState.weeklyReward != null
+              ? SliverToBoxAdapter(
+                  child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: AppColors.backgroundDark,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       spacing: 20,
                       children: [
                         Column(
@@ -178,94 +211,177 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                         ),
                       ],
                     ),
-                  )
-                : Center(
-                    child: CircularProgressIndicator(color: AppColors.orange),
                   ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.only(bottom: 30),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final reward = rewardState.dailyRewards[index];
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    spacing: index == 0 ? 20 : 0,
-                    children: [
-                      if (index == 0)
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          spacing: 5,
-                          children: [
-                            const Text(
-                              'Desafíos del día',
-                              style: TextStyle(
-                                fontSize: 24,
-                                height: 24 / 20,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.white,
-                              ),
+                )
+              : SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 120,
+                    child: Center(
+                      child: Stack(
+                        children: [
+                          Text(
+                            "No hay desafío semanal",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Pixel',
+                              foreground: Paint()
+                                ..style = PaintingStyle.stroke
+                                ..strokeWidth = 4
+                                ..color = AppColors.orange,
                             ),
-                            TimeWidget(
-                              time: rewardState.timeLeftUntilNextDay?.time ?? 0,
-                              unit:
-                                  rewardState.timeLeftUntilNextDay?.unit ?? '',
-                              color: AppColors.orange,
-                              fontSize: 15,
-                              showTheTextComplete: true,
+                            textAlign: TextAlign.center,
+                          ),
+                          Text(
+                            "No hay desafío semanal",
+                            style: TextStyle(
+                              color: AppColors.purple,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Pixel',
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+          // --- RECOMPENSAS DIARIAS ---
+          rewardState.dailyRewards.isNotEmpty
+              ? SliverPadding(
+                  padding: const EdgeInsets.only(bottom: 30),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final reward = rewardState.dailyRewards[index];
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          spacing: 20,
+                          children: [
+                            if (index == 0)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                spacing: 5,
+                                children: [
+                                  const Text(
+                                    'Desafíos del día',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.white,
+                                    ),
+                                  ),
+                                  TimeWidget(
+                                    time:
+                                        rewardState
+                                            .timeLeftUntilNextDay
+                                            ?.time ??
+                                        0,
+                                    unit:
+                                        rewardState
+                                            .timeLeftUntilNextDay
+                                            ?.unit ??
+                                        '',
+                                    color: AppColors.orange,
+                                    fontSize: 15,
+                                    showTheTextComplete: true,
+                                  ),
+                                ],
+                              ),
+                            Container(
+                              height: 120,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.backgroundDark,
+                                borderRadius: BorderRadius.only(
+                                  topLeft: index == 0
+                                      ? Radius.circular(15)
+                                      : Radius.zero,
+                                  topRight: index == 0
+                                      ? Radius.circular(15)
+                                      : Radius.zero,
+                                  bottomLeft: index == 2
+                                      ? Radius.circular(15)
+                                      : Radius.zero,
+                                  bottomRight: index == 2
+                                      ? Radius.circular(15)
+                                      : Radius.zero,
+                                ),
+                                border: Border(
+                                  top: index == 0
+                                      ? BorderSide(
+                                          color: AppColors.orange,
+                                          width: 2,
+                                        )
+                                      : BorderSide.none,
+                                  bottom: BorderSide(
+                                    color: AppColors.orange,
+                                    width: 2,
+                                  ),
+                                  left: BorderSide(
+                                    color: AppColors.orange,
+                                    width: 2,
+                                  ),
+                                  right: BorderSide(
+                                    color: AppColors.orange,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              child: GoalWidget(
+                                current: reward.currentPoints,
+                                total: reward.totalPoints,
+                                imagePath: ref
+                                    .read(rewardProvider.notifier)
+                                    .getRewardImage(reward.categoryId),
+                                label: reward.description,
+                              ),
                             ),
                           ],
                         ),
-                      Container(
-                        height: 120,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        decoration: BoxDecoration(
-                          color: AppColors.backgroundDark,
-                          borderRadius: BorderRadius.only(
-                            topLeft: index == 0
-                                ? Radius.circular(15)
-                                : Radius.zero,
-                            topRight: index == 0
-                                ? Radius.circular(15)
-                                : Radius.zero,
-                            bottomLeft: index == 2
-                                ? Radius.circular(15)
-                                : Radius.zero,
-                            bottomRight: index == 2
-                                ? Radius.circular(15)
-                                : Radius.zero,
-                          ),
-                          border: Border(
-                            top: index == 0
-                                ? BorderSide(color: AppColors.orange, width: 2)
-                                : BorderSide.none,
-                            bottom: BorderSide(
-                              color: AppColors.orange,
-                              width: 2,
-                            ),
-                            left: BorderSide(color: AppColors.orange, width: 2),
-                            right: BorderSide(
-                              color: AppColors.orange,
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                        child: GoalWidget(
-                          current: reward.currentPoints,
-                          total: reward.totalPoints,
-                          imagePath: ref
-                              .read(rewardProvider.notifier)
-                              .getRewardImage(reward.categoryId),
-                          label: reward.description,
-                        ),
-                      ),
-                    ],
+                      );
+                    }, childCount: rewardState.dailyRewards.length),
                   ),
-                );
-              }, childCount: rewardState.dailyRewards.length),
-            ),
-          ),
+                )
+              : SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 120,
+                    child: Center(
+                      child: Stack(
+                        children: [
+                          Text(
+                            "No hay desafíos diarios",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Pixel',
+                              foreground: Paint()
+                                ..style = PaintingStyle.stroke
+                                ..strokeWidth = 4
+                                ..color = AppColors.orange,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          Text(
+                            "No hay desafíos diarios",
+                            style: TextStyle(
+                              color: AppColors.purple,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Pixel',
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
         ],
       ),
     );
@@ -288,6 +404,16 @@ class GoalWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Evitar división por cero
+    if (total <= 0) {
+      return const Center(
+        child: Text(
+          "Progreso no disponible",
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final containerWidth = constraints.maxWidth - 28;
@@ -303,7 +429,7 @@ class GoalWidget extends StatelessWidget {
             if (label.isNotEmpty)
               Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   height: 14 / 12,
                   fontWeight: FontWeight.bold,
@@ -316,7 +442,7 @@ class GoalWidget extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.centerLeft,
                 children: [
-                  // Fondo de la barra de progreso
+                  // Fondo de barra
                   Container(
                     height: 30,
                     width: containerWidth,
@@ -330,7 +456,7 @@ class GoalWidget extends StatelessWidget {
                     child: Center(
                       child: Text(
                         '$current / $total',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           height: 16 / 12,
                           fontWeight: FontWeight.bold,
@@ -340,7 +466,7 @@ class GoalWidget extends StatelessWidget {
                     ),
                   ),
 
-                  // Barra de progreso
+                  // Progreso
                   Container(
                     width: (current < total * 0.04 && current != 0
                         ? minProgressWidth
@@ -355,7 +481,7 @@ class GoalWidget extends StatelessWidget {
                     ),
                   ),
 
-                  // Icono
+                  // Ícono
                   Positioned(
                     right: 0,
                     child: SizedBox(

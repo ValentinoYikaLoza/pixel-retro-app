@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
+import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_icon_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
 
@@ -40,7 +40,7 @@ class _LevelSnakeGameScreenState extends State<LevelSnakeGameScreen> {
         canPop: false,
         onPopInvokedWithResult: (didPop, result) {
           if (!didPop) {
-            Get.toNamed('/wait-to-home-screen');
+            AppRoutes.go(AppRoutes.waitToLayout);
           }
         },
         child: Scaffold(
@@ -59,7 +59,7 @@ class _LevelSnakeGameScreenState extends State<LevelSnakeGameScreen> {
                   left: 0,
                   child: CustomIconButton(
                     onPressed: () {
-                      Get.toNamed('/wait-to-home-screen');
+                      AppRoutes.go(AppRoutes.waitToLayout);
                     },
                     width: 48,
                     height: 48,
@@ -178,7 +178,7 @@ class _LevelSnakeGameScreenState extends State<LevelSnakeGameScreen> {
                       height: 48,
                       radius: 15,
                       onPressed: () {
-                        Get.toNamed('/snake-game');
+                        AppRoutes.go(AppRoutes.snakeGame);
                       },
                       label: 'JUGAR',
                     ),

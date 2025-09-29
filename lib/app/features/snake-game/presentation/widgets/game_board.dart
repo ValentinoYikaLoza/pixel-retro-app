@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
+import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/providers/snake_game_provider.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_icon_button.dart';
 
@@ -158,7 +158,7 @@ class GameBoardState extends ConsumerState<GameBoard> {
                         padding: const EdgeInsets.only(top: 20, left: 20),
                         child: CustomIconButton(
                           onPressed: () {
-                            Get.toNamed('/wait-to-home-screen');
+                            AppRoutes.go(AppRoutes.waitToLayout);
                           },
                           width: 48,
                           height: 48,

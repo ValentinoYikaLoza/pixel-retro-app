@@ -1,69 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 
-final GlobalKey<_LoaderContentState> _loaderKey =
-    GlobalKey<_LoaderContentState>();
+final loaderProvider = StateProvider<bool>((ref) => false);
 
 class Loader {
-  static show() {
-    if (_loaderKey.currentState != null) {
-      _loaderKey.currentState!.show();
-    }
+  static late WidgetRef _ref;
+
+  static void init(WidgetRef ref) {
+    _ref = ref;
   }
 
-  static dissmiss() {
-    if (_loaderKey.currentState != null) {
-      _loaderKey.currentState!.dismiss();
-    }
+  static void show() {
+    _ref.read(loaderProvider.notifier).state = true;
   }
-}
 
-class LoaderProvider extends StatelessWidget {
-  const LoaderProvider({super.key, this.child});
-  final Widget? child;
-
-  @override
-  Widget build(BuildContext context) {
-    return _LoaderContent(key: _loaderKey, child: child);
+  static void dissmiss() {
+    _ref.read(loaderProvider.notifier).state = false;
   }
 }
 
-class _LoaderContent extends StatefulWidget {
-  const _LoaderContent({super.key, this.child});
-
-  final Widget? child;
-
-  @override
-  State<_LoaderContent> createState() => _LoaderContentState();
-}
-
-class _LoaderContentState extends State<_LoaderContent>
-    with SingleTickerProviderStateMixin {
-  bool showLoader = false;
-
-  show() {
-    setState(() {
-      showLoader = true;
-    });
-  }
-
-  dismiss() {
-    setState(() {
-      showLoader = false;
-    });
-  }
+class LoaderOverlay extends ConsumerWidget {
+  const LoaderOverlay({super.key, required this.child});
+  final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isLoading = ref.watch(loaderProvider);
+
     return Stack(
       children: [
-        if (widget.child != null) widget.child!,
-        if (showLoader)
+        child,
+        if (isLoading)
           Container(
             decoration: BoxDecoration(
               color: AppColors.backgroundDark.withOpacity(0.8),
             ),
-            child: Center(
+            child: const Center(
               child: CircularProgressIndicator(color: AppColors.orange),
             ),
           ),

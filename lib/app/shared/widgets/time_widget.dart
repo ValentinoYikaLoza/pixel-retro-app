@@ -1,6 +1,7 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 
 class TimeWidget extends StatelessWidget {
   const TimeWidget({
@@ -20,8 +21,39 @@ class TimeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Condición: no mostrar nada si no hay tiempo o unidad
+    if (time <= 0 || unit.isEmpty) {
+      return Stack(
+        children: [
+          Text(
+            "Sin tiempo disponible",
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Pixel',
+              foreground: Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 4
+                ..color = AppColors.orange,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            "Sin tiempo disponible",
+            style: TextStyle(
+              color: AppColors.purple,
+              fontSize: fontSize,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Pixel',
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      );
+    }
+
     return Row(
-      spacing: showTheTextComplete ? 5 : 10,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Spin(
           infinite: true,
@@ -32,6 +64,7 @@ class TimeWidget extends StatelessWidget {
             colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
           ),
         ),
+        const SizedBox(width: 8),
         Text(
           '${showTheTextComplete ? "QUEDAN " : ""}$time $unit',
           style: TextStyle(
