@@ -39,7 +39,7 @@ class _WaitToGameScreenState extends State<WaitToGameScreen> {
   }
 
   void setScreenConfig() {
-    OrientationService.setOverlayColor(AppColors.purple);
+    OrientationService.setOverlayColor(AppColors.neonPurple);
     OrientationService.setLandscape();
     OrientationService.setImmersiveMode();
   }

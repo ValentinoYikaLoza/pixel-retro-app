@@ -11,7 +11,6 @@ import 'package:pixel_retro_app/app/features/leaderboard/domain/repositories/lea
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
-import 'package:pixel_retro_app/app/shared/widgets/loader.dart';
 import 'package:pixel_retro_app/di.dart';
 
 final leaderboardProvider =
@@ -26,80 +25,65 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
   final LeaderboardRepository repository = getIt<LeaderboardRepository>();
 
   Future<void> getUsers() async {
-    Loader.show();
     try {
       final GetUserListResponseModel response = await repository.getUsers();
       state = state.copyWith(users: response.users);
-      Loader.dissmiss();
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error obteniendo los usuarios',
         type: SnackbarType.error,
       );
-      Loader.dissmiss();
     }
   }
 
   Future<void> getDivisions() async {
-    Loader.show();
     try {
       final GetDivisionListResponseModel response = await repository
           .getDivisions();
       state = state.copyWith(divisions: response.divisions);
-      Loader.dissmiss();
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error obteniendo las divisiones',
         type: SnackbarType.error,
       );
-      Loader.dissmiss();
     }
   }
 
   Future<void> getCurrentUser() async {
-    Loader.show();
     try {
       final GetCurrentUserResponseModel response = await repository
           .getCurrentUser();
       state = state.copyWith(currentUser: response.currentUser);
-      Loader.dissmiss();
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error obteniendo el usuario actual',
         type: SnackbarType.error,
       );
-      Loader.dissmiss();
     }
   }
 
   Future<void> getCurrentDivision() async {
-    Loader.show();
     try {
       final GetCurrentDivisionResponseModel response = await repository
           .getCurrentDivision();
       state = state.copyWith(currentDivision: response.currentDivision);
-      Loader.dissmiss();
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error obteniendo la division actual',
         type: SnackbarType.error,
       );
-      Loader.dissmiss();
     }
   }
 
   Future<void> getTimeLeft() async {
-    Loader.show();
     try {
       final GetTimeLeftResponseModel response = await repository.getTimeLeft();
       state = state.copyWith(timeLeft: response.timeLeft);
-      Loader.dissmiss();
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error obteniendo el tiempo restante',
         type: SnackbarType.error,
       );
-      Loader.dissmiss();
     }
   }
 

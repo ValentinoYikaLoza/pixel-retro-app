@@ -7,6 +7,7 @@ import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/lev
 import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/snake_game_screen.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/screens/layout_view.dart';
 import 'package:pixel_retro_app/app/shared/screens/ad_screen.dart';
+import 'package:pixel_retro_app/app/shared/screens/root_screen.dart';
 import 'package:pixel_retro_app/app/shared/screens/wait_to_layout_screen.dart';
 import 'package:pixel_retro_app/app/shared/screens/wait_to_game_screen.dart';
 import 'package:pixel_retro_app/app/shared/screens/welcome_screen.dart';
@@ -14,6 +15,7 @@ import 'package:pixel_retro_app/app/shared/screens/welcome_screen.dart';
 class AppRoutes {
   // Tabs principales
   static const String root = '/';
+  static const String home = '/home';
   static const String leaderboard = '/leaderboard';
   static const String reward = '/reward';
   static const String shop = '/shop';
@@ -28,9 +30,9 @@ class AppRoutes {
   static const String snakeGame = '/snake-game';
 
   // Ads
-  static const String adBanner = '/ad-banner';
   static const String adInterstitial = '/ad-interstitial';
-  static const String adRewarded = '/ad-rewarded';
+  static const String adRewardedCoins = '/ad-rewardedCoins';
+  static const String adRewardedLives = '/ad-rewardedLives';
 
   static Future<void> go(
     String route, {
@@ -40,9 +42,15 @@ class AppRoutes {
   }
 
   static final routes = [
-    // Tabs
+    // /
     GetPage(
       name: root,
+      page: () => const RootScreen(),
+      transition: Transition.fadeIn,
+    ),
+    // Tabs
+    GetPage(
+      name: home,
       page: () => const LayoutView(child: HomeScreen()),
       transition: Transition.fadeIn,
     ),
@@ -92,18 +100,18 @@ class AppRoutes {
     ),
     // Ads
     GetPage(
-      name: adBanner,
-      page: () => const AdBannerScreen(),
-      transition: Transition.fadeIn,
-    ),
-    GetPage(
       name: adInterstitial,
       page: () => const AdInterstitialScreen(),
       transition: Transition.fadeIn,
     ),
     GetPage(
-      name: adRewarded,
-      page: () => const AdRewardedScreen(),
+      name: adRewardedCoins,
+      page: () => const AdRewardedCoinsScreen(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: adRewardedLives,
+      page: () => const AdRewardedLivesScreen(),
       transition: Transition.fadeIn,
     ),
   ];

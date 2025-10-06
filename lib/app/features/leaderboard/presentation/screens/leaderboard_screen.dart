@@ -17,13 +17,6 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(leaderboardProvider.notifier).getUsers();
-      ref.read(leaderboardProvider.notifier).getDivisions();
-      ref.read(leaderboardProvider.notifier).getCurrentUser();
-      ref.read(leaderboardProvider.notifier).getCurrentDivision();
-      ref.read(leaderboardProvider.notifier).getTimeLeft();
-    });
   }
 
   @override

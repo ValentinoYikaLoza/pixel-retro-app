@@ -11,13 +11,13 @@ import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_user_
 class LeaderboardDatasourceImpl implements LeaderboardDatasource {
   @override
   Future<GetUserListResponseModel> getUsers() {
-    return Future.delayed(Duration(seconds: 2), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       return GetUserListResponseModel(
         users: [
           UserDivisionEntity(
             id: 1,
             name: 'Valentino',
-            score: 1200,
+            score: 1000,
             timesRankedFirst: 6,
           ),
           UserDivisionEntity(
@@ -141,7 +141,7 @@ class LeaderboardDatasourceImpl implements LeaderboardDatasource {
 
   @override
   Future<GetDivisionListResponseModel> getDivisions() {
-    return Future.delayed(Duration(seconds: 2), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       return GetDivisionListResponseModel(
         divisions: [
           DivisionEntity(id: 1, name: 'División Bronce'),
@@ -161,7 +161,7 @@ class LeaderboardDatasourceImpl implements LeaderboardDatasource {
 
   @override
   Future<GetTimeLeftResponseModel> getTimeLeft() {
-    return Future.delayed(Duration(seconds: 2), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       return GetTimeLeftResponseModel(
         timeLeft: TimeEntity(time: 5, unit: 'MINUTOS'),
       );
@@ -170,7 +170,7 @@ class LeaderboardDatasourceImpl implements LeaderboardDatasource {
 
   @override
   Future<GetCurrentDivisionResponseModel> getCurrentDivision() {
-    return Future.delayed(Duration(seconds: 2), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       return GetCurrentDivisionResponseModel(
         currentDivision: DivisionEntity(id: 1, name: 'División Bronce'),
       );
@@ -179,7 +179,7 @@ class LeaderboardDatasourceImpl implements LeaderboardDatasource {
 
   @override
   Future<GetCurrentUserResponseModel> getCurrentUser() {
-    return Future.delayed(Duration(seconds: 2), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       return GetCurrentUserResponseModel(
         currentUser: UserDivisionEntity(
           id: 1,

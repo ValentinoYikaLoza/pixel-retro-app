@@ -7,7 +7,6 @@ import 'package:pixel_retro_app/app/features/reward/domain/repositories/reward_r
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
-import 'package:pixel_retro_app/app/shared/widgets/loader.dart';
 import 'package:pixel_retro_app/di.dart';
 
 final rewardProvider = StateNotifierProvider<RewardNotifier, RewardState>((
@@ -23,26 +22,22 @@ class RewardNotifier extends StateNotifier<RewardState> {
   final RewardRepository repository = getIt<RewardRepository>();
 
   Future<void> getRewards() async {
-    Loader.show();
     try {
       final GetRewardListResponseModel response = await repository.getRewards();
       state = state.copyWith(
         monthlyReward: response.monthlyReward,
         weeklyReward: response.weeklyReward,
-        dailyReward: response.dailyRewards,
+        dailyRewards: response.dailyRewards,
       );
-      Loader.dissmiss();
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error obteniendo la lista de recompensas',
         type: SnackbarType.error,
       );
-      Loader.dissmiss();
     }
   }
 
   Future<void> getTimeLeftList() async {
-    Loader.show();
     try {
       final GetTimeLeftListResponseModel response = await repository
           .getTimeLeftList();
@@ -51,28 +46,23 @@ class RewardNotifier extends StateNotifier<RewardState> {
         timeLeftUntilNextWeek: response.timeLeftUntilNextWeek,
         timeLeftUntilNextDay: response.timeLeftUntilNextDay,
       );
-      Loader.dissmiss();
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error obteniendo los tiempos restantes',
         type: SnackbarType.error,
       );
-      Loader.dissmiss();
     }
   }
 
   Future<void> getCurrentMonth() async {
-    Loader.show();
     try {
       final String response = await repository.getCurrentMonth();
       state = state.copyWith(currentMonth: response);
-      Loader.dissmiss();
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error obteniendo el mes actual',
         type: SnackbarType.error,
       );
-      Loader.dissmiss();
     }
   }
 
@@ -112,7 +102,7 @@ class RewardState {
   RewardState copyWith({
     RewardEntity? monthlyReward,
     RewardEntity? weeklyReward,
-    List<RewardEntity>? dailyReward,
+    List<RewardEntity>? dailyRewards,
     TimeEntity? timeLeftUntilNextMonth,
     TimeEntity? timeLeftUntilNextWeek,
     TimeEntity? timeLeftUntilNextDay,
@@ -121,7 +111,7 @@ class RewardState {
     return RewardState(
       monthlyReward: monthlyReward ?? this.monthlyReward,
       weeklyReward: weeklyReward ?? this.weeklyReward,
-      dailyRewards: dailyReward ?? this.dailyRewards,
+      dailyRewards: dailyRewards ?? this.dailyRewards,
       timeLeftUntilNextMonth:
           timeLeftUntilNextMonth ?? this.timeLeftUntilNextMonth,
       timeLeftUntilNextWeek:

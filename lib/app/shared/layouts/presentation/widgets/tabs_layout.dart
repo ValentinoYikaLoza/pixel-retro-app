@@ -13,7 +13,7 @@ class TabsLayout extends StatefulWidget {
 
 class _TabsLayoutState extends State<TabsLayout> {
   final List<String> pageRoutes = [
-    AppRoutes.root,
+    AppRoutes.home,
     AppRoutes.leaderboard,
     AppRoutes.reward,
     AppRoutes.shop,

@@ -8,7 +8,7 @@ import 'package:pixel_retro_app/app/features/reward/domain/models/update_progres
 class RewardDataSourceImpl implements RewardDataSource {
   @override
   Future<GetRewardListResponseModel> getRewards() {
-    return Future.delayed(Duration(seconds: 2), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       return GetRewardListResponseModel(
         monthlyReward: RewardEntity(
           id: '1',
@@ -63,14 +63,14 @@ class RewardDataSourceImpl implements RewardDataSource {
 
   @override
   Future<void> updateProgress(UpdateProgressRequestModel request) {
-    return Future.delayed(Duration(seconds: 2), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       return;
     });
   }
 
   @override
   Future<GetTimeLeftListResponseModel> getTimeLeftList() {
-    return Future.delayed(Duration(seconds: 2), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       return GetTimeLeftListResponseModel(
         timeLeftUntilNextMonth: TimeEntity(time: 5, unit: 'DÍAS'),
         timeLeftUntilNextWeek: TimeEntity(time: 2, unit: 'HORAS'),
@@ -81,7 +81,7 @@ class RewardDataSourceImpl implements RewardDataSource {
 
   @override
   Future<String> getCurrentMonth() {
-    return Future.delayed(Duration(seconds: 2), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       return 'AGOSTO';
     });
   }

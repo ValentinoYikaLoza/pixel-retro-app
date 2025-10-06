@@ -17,7 +17,7 @@ class _WaitToLayoutScreenState extends State<WaitToLayoutScreen> {
     setScreenConfig();
 
     Future.delayed(const Duration(seconds: 1), () {
-      AppRoutes.go(AppRoutes.root);
+      AppRoutes.go(AppRoutes.home);
     });
   }
 

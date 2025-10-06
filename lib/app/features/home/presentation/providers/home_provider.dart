@@ -5,7 +5,6 @@ import 'package:pixel_retro_app/app/features/home/domain/repositories/home_repos
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
-import 'package:pixel_retro_app/app/shared/widgets/loader.dart';
 import 'package:pixel_retro_app/di.dart';
 
 final homeProvider = StateNotifierProvider<HomeNotifier, HomeState>((ref) {
@@ -19,20 +18,17 @@ class HomeNotifier extends StateNotifier<HomeState> {
   final HomeRepository repository = getIt<HomeRepository>();
 
   Future<void> getGames() async {
-    Loader.show();
     try {
       final GetGameListResponseModel response = await repository.getGamesData();
       state = state.copyWith(
         games: response.games,
         gameSelected: response.games[0],
       );
-      Loader.dissmiss();
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error obteniendo los juegos',
         type: SnackbarType.error,
       );
-      Loader.dissmiss();
     }
   }
 

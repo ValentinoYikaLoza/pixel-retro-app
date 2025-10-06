@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
+import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -29,13 +30,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     imagePath = arguments['imagePath']?.toString() ?? '';
 
     Future.delayed(const Duration(milliseconds: 1500), () {
-      AppRoutes.go(arguments['nextScreen']?.toString() ?? AppRoutes.root);
+      AppRoutes.go(arguments['nextScreen']?.toString() ?? AppRoutes.home);
     });
   }
 
   void setScreenConfig() {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    OrientationService.setOverlayColor(AppColors.neonPurple);
+    OrientationService.setLandscape();
+    OrientationService.setImmersiveMode();
   }
 
   @override

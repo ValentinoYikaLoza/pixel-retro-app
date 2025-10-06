@@ -9,7 +9,7 @@ import 'package:pixel_retro_app/app/features/shop/domain/models/get_live_shop_li
 class ShopDatasourceImpl implements ShopDatasource {
   @override
   Future<GetAdvertisementListResponseModel> getAdvertisements() {
-    return Future.delayed(Duration(seconds: 2), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       return GetAdvertisementListResponseModel(
         advertisementList: [
           AdvertisementEntity(
@@ -33,7 +33,7 @@ class ShopDatasourceImpl implements ShopDatasource {
 
   @override
   Future<GetCoinShopListResponseModel> getCoinShopList() {
-    return Future.delayed(Duration(seconds: 2), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       return GetCoinShopListResponseModel(
         coinShopList: [
           CoinShopEntity(id: 1, quantity: 100, price: 1.99),
@@ -47,7 +47,7 @@ class ShopDatasourceImpl implements ShopDatasource {
 
   @override
   Future<GetLiveShopListResponseModel> getLiveShopList() {
-    return Future.delayed(Duration(seconds: 2), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       return GetLiveShopListResponseModel(
         liveShopList: [
           LiveShopEntity(id: 1, quantity: 5, price: 1.99, typeId: 1),
@@ -65,7 +65,7 @@ class ShopDatasourceImpl implements ShopDatasource {
 
   @override
   Future<void> purchaseAdvertisement(int advertisementId) {
-    return Future.delayed(Duration(seconds: 2), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       // Simula la compra exitosa del anuncio
       return;
     });
@@ -73,7 +73,7 @@ class ShopDatasourceImpl implements ShopDatasource {
 
   @override
   Future<void> purchaseCoinShopItem(int itemId) {
-    return Future.delayed(Duration(seconds: 2), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       // Simula la compra exitosa del item de la tienda de monedas
       return;
     });
@@ -81,7 +81,7 @@ class ShopDatasourceImpl implements ShopDatasource {
 
   @override
   Future<void> purchaseLiveShopItem(int itemId) {
-    return Future.delayed(Duration(seconds: 2), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       // Simula la compra exitosa del item de la tienda de vidas
       return;
     });

@@ -23,9 +23,6 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(userProvider.notifier).getUserData();
-    });
   }
 
   @override

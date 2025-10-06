@@ -17,11 +17,6 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(shopProvider.notifier).getAdvertisements();
-      ref.read(shopProvider.notifier).getCoinShopItems();
-      ref.read(shopProvider.notifier).getLiveShopItems();
-    });
   }
 
   @override
@@ -62,6 +57,9 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
                         final ad = shopState.advertisements[index];
                         return AnuncioContainerWidget(
                           title: ad.description,
+                          type: ad.typeId == 1
+                              ? TypeItemShop.coin
+                              : TypeItemShop.live,
                           imagePath: ad.typeId == 1
                               ? 'assets/icons/coin.svg'
                               : 'assets/icons/heart.svg',
@@ -384,11 +382,13 @@ class AnuncioContainerWidget extends StatelessWidget {
     required this.title,
     required this.imagePath,
     required this.color,
+    required this.type,
   });
 
   final String title;
   final String imagePath;
   final Color color;
+  final TypeItemShop type;
 
   @override
   Widget build(BuildContext context) {
@@ -421,7 +421,7 @@ class AnuncioContainerWidget extends StatelessWidget {
           ),
           GestureDetector(
             onTap: () {
-              AppRoutes.go(AppRoutes.adRewarded);
+              AppRoutes.go(AppRoutes.adRewardedLives);
             },
             child: SvgPicture.asset(
               'assets/icons/play.svg',

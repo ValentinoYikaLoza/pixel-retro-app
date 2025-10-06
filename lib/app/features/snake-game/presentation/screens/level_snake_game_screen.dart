@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
+import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_icon_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
 
@@ -20,14 +21,12 @@ class _LevelSnakeGameScreenState extends State<LevelSnakeGameScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setScreenConfig();
-    });
   }
 
   void setScreenConfig() {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    OrientationService.setOverlayColor(AppColors.neonPurple);
+    OrientationService.setLandscape();
+    OrientationService.setImmersiveMode();
   }
 
   @override

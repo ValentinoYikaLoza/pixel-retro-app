@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/providers/snake_game_provider.dart';
+import 'package:pixel_retro_app/app/shared/providers/ad_provider.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_icon_button.dart';
 
 class GameBoard extends ConsumerStatefulWidget {
@@ -17,6 +19,7 @@ class GameBoardState extends ConsumerState<GameBoard> {
   @override
   Widget build(BuildContext context) {
     final gameState = ref.watch(snakeGameProvider);
+    final adBannerAsync = ref.watch(adBannerProvider);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -207,6 +210,22 @@ class GameBoardState extends ConsumerState<GameBoard> {
                             ),
                           ),
                         ],
+                      ),
+                    ),
+
+                    Positioned(
+                      bottom: 0,
+                      child: adBannerAsync.when(
+                        data: (ad) {
+                          if (ad == null) return const SizedBox();
+                          return SizedBox(
+                            width: ad.size.width.toDouble(),
+                            height: ad.size.height.toDouble(),
+                            child: AdWidget(ad: ad),
+                          );
+                        },
+                        loading: () => const SizedBox(),
+                        error: (error, stackTrace) => const SizedBox(),
                       ),
                     ),
                   ],

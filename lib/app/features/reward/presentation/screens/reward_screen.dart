@@ -16,11 +16,6 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(rewardProvider.notifier).getRewards();
-      ref.read(rewardProvider.notifier).getTimeLeftList();
-      ref.read(rewardProvider.notifier).getCurrentMonth();
-    });
   }
 
   @override

@@ -9,7 +9,6 @@ import 'package:pixel_retro_app/app/features/shop/domain/repositories/shop_repos
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
-import 'package:pixel_retro_app/app/shared/widgets/loader.dart';
 import 'package:pixel_retro_app/di.dart';
 
 final shopProvider = StateNotifierProvider<ShopNotifier, ShopState>((ref) {
@@ -23,39 +22,32 @@ class ShopNotifier extends StateNotifier<ShopState> {
   final ShopRepository repository = getIt<ShopRepository>();
 
   Future<void> getAdvertisements() async {
-    Loader.show();
     try {
       final GetAdvertisementListResponseModel response = await repository
           .getAdvertisements();
       state = state.copyWith(advertisements: response.advertisementList);
-      Loader.dissmiss();
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error al cargar los anuncios',
         type: SnackbarType.error,
       );
-      Loader.dissmiss();
     }
   }
 
   Future<void> getCoinShopItems() async {
-    Loader.show();
     try {
       final GetCoinShopListResponseModel coinShopList = await repository
           .getCoinShopList();
       state = state.copyWith(coinShopItems: coinShopList.coinShopList);
-      Loader.dissmiss();
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error al cargar los items de la tienda de monedas',
         type: SnackbarType.error,
       );
-      Loader.dissmiss();
     }
   }
 
   Future<void> getLiveShopItems() async {
-    Loader.show();
     try {
       final GetLiveShopListResponseModel liveShopList = await repository
           .getLiveShopList();
@@ -72,14 +64,11 @@ class ShopNotifier extends StateNotifier<ShopState> {
         liveShopItemsUnitUsd: liveShopItemsUnitUsd,
         liveShopItemsUnitCoin: liveShopItemsUnitCoin,
       );
-
-      Loader.dissmiss();
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error al cargar los items de la tienda de vidas',
         type: SnackbarType.error,
       );
-      Loader.dissmiss();
     }
   }
 

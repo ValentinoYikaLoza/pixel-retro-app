@@ -5,7 +5,7 @@ import 'package:pixel_retro_app/app/features/home/domain/models/get_game_list_re
 class HomeDataSourceImpl implements HomeDataSource {
   @override
   Future<GetGameListResponseModel> getGamesData() {
-    return Future.delayed(Duration(seconds: 1), () {
+    return Future.delayed(Duration(milliseconds: 200), () {
       return GetGameListResponseModel(
         games: [
           GameEntity(id: 1, name: 'snake', title: 'Snake'),

@@ -1,34 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/shared/providers/ad_provider.dart';
-
-class AdBannerScreen extends ConsumerWidget {
-  const AdBannerScreen({super.key});
-
-  @override
-  Widget build(BuildContext context, ref) {
-    final adBannerAsync = ref.watch(adBannerProvider);
-    return Scaffold(
-      body: Center(
-        child: adBannerAsync.when(
-          data: (bannerAd) {
-            return SizedBox(
-              width: bannerAd?.size.width.toDouble(),
-              height: bannerAd?.size.height.toDouble(),
-              child: AdWidget(ad: bannerAd!),
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stackTrace) =>
-              const Center(child: Text('Error al mostrar el banner')),
-        ),
-      ),
-    );
-  }
-}
+import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 
 class AdInterstitialScreen extends ConsumerWidget {
   const AdInterstitialScreen({super.key});
@@ -70,20 +45,70 @@ class AdInterstitialScreen extends ConsumerWidget {
   }
 }
 
-class AdRewardedScreen extends ConsumerWidget {
-  const AdRewardedScreen({super.key});
+class AdRewardedCoinsScreen extends ConsumerWidget {
+  const AdRewardedCoinsScreen({super.key});
 
   @override
   Widget build(BuildContext context, ref) {
-    final adRewardedAsync = ref.watch(adRewardedProvider);
+    final adRewardedAsync = ref.watch(adRewardedCoinsProvider);
 
-    ref.listen(adRewardedProvider, (previous, next) {
+    ref.listen(adRewardedCoinsProvider, (previous, next) {
       if (!next.hasValue) return;
       if (next.value == null) return;
 
       next.value!.show(
         onUserEarnedReward: (ad, reward) {
-          print('User earned reward: ${reward.amount}');
+          SnackbarService.show(
+            '¡Felicidades! Has ganado un ${reward.amount} monedas',
+          );
+          Get.offNamed(AppRoutes.shop);
+        },
+      );
+    });
+
+    if (adRewardedAsync.isLoading) {
+      return Scaffold(body: const Center(child: CircularProgressIndicator()));
+    }
+
+    return Scaffold(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Center(
+            child: Text(
+              'Ad rewarded',
+              style: TextStyle(color: Colors.white, fontSize: 24),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Get.offNamed(AppRoutes.shop);
+            },
+            child: const Text('Volver al inicio'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AdRewardedLivesScreen extends ConsumerWidget {
+  const AdRewardedLivesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, ref) {
+    final adRewardedAsync = ref.watch(adRewardedLivesProvider);
+
+    ref.listen(adRewardedLivesProvider, (previous, next) {
+      if (!next.hasValue) return;
+      if (next.value == null) return;
+
+      next.value!.show(
+        onUserEarnedReward: (ad, reward) {
+          SnackbarService.show(
+            '¡Felicidades! Has ganado un ${reward.amount} vidas',
+          );
+          Get.offNamed(AppRoutes.shop);
         },
       );
     });
