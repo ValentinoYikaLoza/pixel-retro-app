@@ -1,12 +1,13 @@
 import 'package:pixel_retro_app/app/config/api/api.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/data/dtos/get_current_division_response_dto.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/data/dtos/get_division_list_response_dto.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/data/dtos/get_time_left_response_dto.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/data/dtos/get_user_list_response_dto.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/data/mappers/get_current_division_response_mapper.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/data/mappers/get_division_list_response_mapper.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/data/mappers/get_time_left_response_mapper.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/data/mappers/get_user_list_response_mapper.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/datasources/leaderboard_datasource.dart';
-import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/time_entity.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_current_division_response_model.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_time_left_response_model.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_division_list_response_model.dart';
@@ -48,12 +49,18 @@ class LeaderboardDatasourceImpl implements LeaderboardDatasource {
   }
 
   @override
-  Future<GetTimeLeftResponseModel> getTimeLeft() {
-    return Future.delayed(Duration(milliseconds: 200), () {
-      return GetTimeLeftResponseModel(
-        timeLeft: TimeEntity(time: 5, unit: 'MINUTOS'),
-      );
-    });
+  Future<GetTimeLeftResponseModel> getTimeLeft() async {
+    try {
+      final response = await api.get('/getTimeLeftTillNextWeek');
+      if (response.statusCode == 200) {
+        final dto = GetTimeLeftResponseDto.fromJson(response.data);
+        return GetTimeLeftResponseMapper.fromDtoToModel(dto);
+      } else {
+        throw 'An error occurred, status code: ${response.statusCode}';
+      }
+    } catch (e) {
+      throw 'An error occurred, $e';
+    }
   }
 
   @override
