@@ -3,12 +3,12 @@ import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/divisio
 import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/time_entity.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/user_rank_entity.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_current_division_response_model.dart';
-import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_current_user_response_model.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_division_list_response_model.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_time_left_response_model.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_user_list_response_model.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/repositories/leaderboard_repository.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
+import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
 import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/di.dart';
@@ -50,16 +50,14 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
   }
 
   Future<void> getCurrentUser() async {
-    try {
-      final GetCurrentUserResponseModel response = await repository
-          .getCurrentUser();
-      state = state.copyWith(currentUser: response.currentUser);
-    } on ServiceException catch (_) {
-      SnackbarService.show(
-        'Error obteniendo el usuario actual',
-        type: SnackbarType.error,
-      );
-    }
+    final userId = ref.read(userProvider).userId;
+    if (userId == 0) return;
+
+    state.users.map((user) {
+      if (user.id == userId) {
+        state = state.copyWith(currentUser: user);
+      }
+    });
   }
 
   Future<void> getCurrentDivision() async {

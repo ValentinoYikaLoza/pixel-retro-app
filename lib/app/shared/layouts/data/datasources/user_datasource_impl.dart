@@ -1,21 +1,27 @@
+import 'package:pixel_retro_app/app/config/api/api.dart';
+import 'package:pixel_retro_app/app/shared/layouts/data/dtos/get_user_response_dto.dart';
+import 'package:pixel_retro_app/app/shared/layouts/data/mappers/get_user_response_mapper.dart';
 import 'package:pixel_retro_app/app/shared/layouts/domain/datasources/user_datasource.dart';
-import 'package:pixel_retro_app/app/shared/layouts/domain/entities/user_entity.dart';
 import 'package:pixel_retro_app/app/shared/layouts/domain/models/get_user_response_model.dart';
+
+final api = Api();
 
 class UserDataSourceImpl implements UserDataSource {
   @override
-  Future<GetUserResponseModel> getUser() {
-    return Future.delayed(Duration(milliseconds: 200), () {
-      return GetUserResponseModel(
-        user: UserEntity(
-          id: 1,
-          name: 'Valentino',
-          coins: 100,
-          lives: 5,
-          streak: 0,
-        ),
-      );
-    });
+  Future<GetUserResponseModel> getUser() async {
+    try {
+      Map<String, String> formData = {'user_id': '1'};
+
+      final response = await api.post('/getUser', data: formData);
+      if (response.statusCode == 200) {
+        final dto = GetUserResponseDto.fromJson(response.data);
+        return GetUserResponseMapper.fromDtoToModel(dto);
+      } else {
+        throw 'An error occurred, status code: ${response.statusCode}';
+      }
+    } catch (e) {
+      throw 'An error occurred, $e';
+    }
   }
 
   @override

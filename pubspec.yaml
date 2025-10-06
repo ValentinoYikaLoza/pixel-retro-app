@@ -58,3 +58,7 @@ flutter:
           weight: 700
         - asset: assets/fonts/pixel/PixelifySans-Bold.ttf
           weight: 800
+    - family: Noto
+      fonts:
+        - asset: assets/fonts/noto/NotoColorEmoji-Regular.ttf
+          weight: 700

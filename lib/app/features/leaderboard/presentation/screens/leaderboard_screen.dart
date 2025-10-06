@@ -255,73 +255,83 @@ class _UserRowWidget extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            spacing: 20,
-            children: [
-              index <= 3
-                  ? SvgPicture.asset(
-                      'assets/icons/${index == 1
-                          ? 'gold-medal'
-                          : index == 2
-                          ? 'silver-medal'
-                          : 'bronze-medal'}.svg',
-                      width: 45,
-                      height: 45,
-                    )
-                  : SizedBox(
-                      width: 45,
-                      height: 45,
-                      child: Center(
-                        child: Text(
-                          '$index',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: index <= 5
-                                ? AppColors.emerald
-                                : index <= 15
-                                ? AppColors.white
-                                : AppColors.red,
+          Expanded(
+            child: Row(
+              spacing: 20,
+              children: [
+                index <= 3
+                    ? SvgPicture.asset(
+                        'assets/icons/${index == 1
+                            ? 'gold-medal'
+                            : index == 2
+                            ? 'silver-medal'
+                            : 'bronze-medal'}.svg',
+                        width: 45,
+                        height: 45,
+                      )
+                    : SizedBox(
+                        width: 45,
+                        height: 45,
+                        child: Center(
+                          child: Text(
+                            '$index',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: index <= 5
+                                  ? AppColors.emerald
+                                  : index <= 15
+                                  ? AppColors.white
+                                  : AppColors.red,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
                         ),
                       ),
-                    ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 5,
-                children: [
-                  Text(
-                    user.name,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      height: 20 / 15,
-                      color: AppColors.white,
-                    ),
-                  ),
-                  Row(
-                    spacing: 10,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 5,
                     children: [
-                      Image.asset(
-                        'assets/images/flag.png',
-                        height: 15,
-                        fit: BoxFit.contain,
-                      ),
                       Text(
-                        '${user.timesRankedFirst}',
+                        user.name,
                         style: TextStyle(
-                          fontSize: 15,
-                          height: 15 / 15,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
+                          height: 20 / 15,
                           color: AppColors.white,
                         ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Row(
+                        spacing: 10,
+                        children: [
+                          Text(
+                            user.flag,
+                            style: TextStyle(
+                              fontSize: 15,
+                              height: 15 / 15,
+                              fontFamily: 'Noto',
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.white,
+                            ),
+                          ),
+                          Text(
+                            '${user.timesRankedFirst}',
+                            style: TextStyle(
+                              fontSize: 15,
+                              height: 15 / 15,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.white,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
           Text(
             '${user.score} EXP',

@@ -27,6 +27,7 @@ class UserNotifier extends StateNotifier<UserState> {
         coins: response.user.coins,
         lives: response.user.lives,
         streak: response.user.streak,
+        userId: response.user.id,
       );
     } on ServiceException catch (_) {
       SnackbarService.show(
@@ -89,14 +90,22 @@ class UserState {
   final int coins;
   final int lives;
   final int streak;
+  final int userId;
 
-  UserState({this.coins = 0, this.lives = 0, this.streak = 0});
+  UserState({this.coins = 0, this.lives = 0, this.streak = 0, this.userId = 0});
 
-  UserState copyWith({int? coins, int? lives, int? streak, int? exp}) {
+  UserState copyWith({
+    int? coins,
+    int? lives,
+    int? streak,
+    int? exp,
+    int? userId,
+  }) {
     return UserState(
       coins: coins ?? this.coins,
       lives: lives ?? this.lives,
       streak: streak ?? this.streak,
+      userId: userId ?? this.userId,
     );
   }
 }
