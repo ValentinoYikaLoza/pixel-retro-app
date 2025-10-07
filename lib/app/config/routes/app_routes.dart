@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/features/home/presentation/screens/home_screen.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/screens/leaderboard_screen.dart';
-import 'package:pixel_retro_app/app/features/reward/presentation/screens/reward_screen.dart';
+import 'package:pixel_retro_app/app/features/mission/presentation/screens/mission_screen.dart';
 import 'package:pixel_retro_app/app/features/shop/presentation/screens/shop_screen.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/level_snake_game_screen.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/snake_game_screen.dart';
@@ -17,7 +17,7 @@ class AppRoutes {
   static const String root = '/';
   static const String home = '/home';
   static const String leaderboard = '/leaderboard';
-  static const String reward = '/reward';
+  static const String mission = '/mission';
   static const String shop = '/shop';
 
   // Flujo de bienvenida
@@ -60,8 +60,8 @@ class AppRoutes {
       transition: Transition.fadeIn,
     ),
     GetPage(
-      name: reward,
-      page: () => const LayoutView(child: RewardScreen()),
+      name: mission,
+      page: () => const LayoutView(child: MissionScreen()),
       transition: Transition.fadeIn,
     ),
     GetPage(

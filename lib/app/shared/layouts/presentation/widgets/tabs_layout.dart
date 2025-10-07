@@ -15,7 +15,7 @@ class _TabsLayoutState extends State<TabsLayout> {
   final List<String> pageRoutes = [
     AppRoutes.home,
     AppRoutes.leaderboard,
-    AppRoutes.reward,
+    AppRoutes.mission,
     AppRoutes.shop,
   ];
 

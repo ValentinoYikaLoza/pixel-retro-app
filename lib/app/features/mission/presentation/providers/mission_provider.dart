@@ -1,29 +1,30 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/time_entity.dart';
-import 'package:pixel_retro_app/app/features/reward/domain/entities/reward_entity.dart';
-import 'package:pixel_retro_app/app/features/reward/domain/models/get_reward_list_response_model.dart';
-import 'package:pixel_retro_app/app/features/reward/domain/models/get_time_left_list_response_model.dart';
-import 'package:pixel_retro_app/app/features/reward/domain/repositories/reward_repository.dart';
+import 'package:pixel_retro_app/app/features/mission/domain/entities/mission_entity.dart';
+import 'package:pixel_retro_app/app/features/mission/domain/models/get_mission_list_response_model.dart';
+import 'package:pixel_retro_app/app/features/mission/domain/models/get_time_left_list_response_model.dart';
+import 'package:pixel_retro_app/app/features/mission/domain/repositories/mission_repository.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/di.dart';
 
-final rewardProvider = StateNotifierProvider<RewardNotifier, RewardState>((
+final missionProvider = StateNotifierProvider<MissionNotifier, MissionState>((
   ref,
 ) {
-  return RewardNotifier(ref);
+  return MissionNotifier(ref);
 });
 
-class RewardNotifier extends StateNotifier<RewardState> {
-  RewardNotifier(this.ref) : super(const RewardState());
+class MissionNotifier extends StateNotifier<MissionState> {
+  MissionNotifier(this.ref) : super(const MissionState());
 
   final Ref ref;
-  final RewardRepository repository = getIt<RewardRepository>();
+  final MissionRepository repository = getIt<MissionRepository>();
 
-  Future<void> getRewards() async {
+  Future<void> getMissions() async {
     try {
-      final GetRewardListResponseModel response = await repository.getRewards();
+      final GetMissionListResponseModel response = await repository
+          .getMissions();
       state = state.copyWith(
         monthlyReward: response.monthlyReward,
         weeklyReward: response.weeklyReward,
@@ -66,30 +67,28 @@ class RewardNotifier extends StateNotifier<RewardState> {
     }
   }
 
-  String getRewardImage(int categoryId) {
-    switch (categoryId) {
-      case 1:
-        return 'assets/icons/gold-chest.svg';
-      case 2:
+  String getRewardImage(RewardCategory category) {
+    switch (category) {
+      case RewardCategory.bronzeChest:
+        return 'assets/icons/bronze-chest.svg';
+      case RewardCategory.silverChest:
         return 'assets/icons/silver-chest.svg';
-      case 3:
-        return 'assets/icons/bronze-chest.svg';
-      default:
-        return 'assets/icons/bronze-chest.svg';
+      case RewardCategory.goldChest:
+        return 'assets/icons/gold-chest.svg';
     }
   }
 }
 
-class RewardState {
-  final RewardEntity? monthlyReward;
-  final RewardEntity? weeklyReward;
-  final List<RewardEntity> dailyRewards;
+class MissionState {
+  final MissionEntity? monthlyReward;
+  final MissionEntity? weeklyReward;
+  final List<MissionEntity> dailyRewards;
   final TimeEntity? timeLeftUntilNextMonth;
   final TimeEntity? timeLeftUntilNextWeek;
   final TimeEntity? timeLeftUntilNextDay;
   final String currentMonth;
 
-  const RewardState({
+  const MissionState({
     this.monthlyReward,
     this.weeklyReward,
     this.dailyRewards = const [],
@@ -99,16 +98,16 @@ class RewardState {
     this.currentMonth = '',
   });
 
-  RewardState copyWith({
-    RewardEntity? monthlyReward,
-    RewardEntity? weeklyReward,
-    List<RewardEntity>? dailyRewards,
+  MissionState copyWith({
+    MissionEntity? monthlyReward,
+    MissionEntity? weeklyReward,
+    List<MissionEntity>? dailyRewards,
     TimeEntity? timeLeftUntilNextMonth,
     TimeEntity? timeLeftUntilNextWeek,
     TimeEntity? timeLeftUntilNextDay,
     String? currentMonth,
   }) {
-    return RewardState(
+    return MissionState(
       monthlyReward: monthlyReward ?? this.monthlyReward,
       weeklyReward: weeklyReward ?? this.weeklyReward,
       dailyRewards: dailyRewards ?? this.dailyRewards,

@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
-import 'package:pixel_retro_app/app/features/reward/presentation/providers/reward_provider.dart';
+import 'package:pixel_retro_app/app/features/mission/presentation/providers/mission_provider.dart';
 import 'package:pixel_retro_app/app/shared/widgets/time_widget.dart';
 
-class RewardScreen extends ConsumerStatefulWidget {
-  const RewardScreen({super.key});
+class MissionScreen extends ConsumerStatefulWidget {
+  const MissionScreen({super.key});
 
   @override
-  RewardScreenState createState() => RewardScreenState();
+  MissionScreenState createState() => MissionScreenState();
 }
 
-class RewardScreenState extends ConsumerState<RewardScreen> {
+class MissionScreenState extends ConsumerState<MissionScreen> {
   @override
   void initState() {
     super.initState();
@@ -21,7 +21,7 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
   @override
   Widget build(BuildContext context) {
     EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
-    final rewardState = ref.watch(rewardProvider);
+    final missionState = ref.watch(missionProvider);
 
     return Scaffold(
       body: CustomScrollView(
@@ -53,8 +53,8 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                         ),
                         child: Center(
                           child: Text(
-                            rewardState.currentMonth.isNotEmpty
-                                ? rewardState.currentMonth
+                            missionState.currentMonth.isNotEmpty
+                                ? missionState.currentMonth
                                 : "Sin mes",
                             style: TextStyle(
                               fontSize: 20,
@@ -66,21 +66,21 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                         ),
                       ),
                       TimeWidget(
-                        time: rewardState.timeLeftUntilNextMonth?.time ?? 0,
-                        unit: rewardState.timeLeftUntilNextMonth?.unit ?? '',
+                        time: missionState.timeLeftUntilNextMonth?.time ?? 0,
+                        unit: missionState.timeLeftUntilNextMonth?.unit ?? '',
                         color: AppColors.purple,
                       ),
                     ],
                   ),
 
                   // Recompensa mensual
-                  if (rewardState.monthlyReward != null)
+                  if (missionState.monthlyReward != null)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       spacing: 20,
                       children: [
                         Text(
-                          rewardState.monthlyReward!.description,
+                          missionState.monthlyReward!.description,
                           style: TextStyle(
                             fontSize: 20,
                             height: 20 / 15,
@@ -96,12 +96,12 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: GoalWidget(
-                            current: rewardState.monthlyReward!.currentPoints,
-                            total: rewardState.monthlyReward!.totalPoints,
+                            current: missionState.monthlyReward!.currentPoints,
+                            total: missionState.monthlyReward!.totalPoints,
                             imagePath: ref
-                                .read(rewardProvider.notifier)
+                                .read(missionProvider.notifier)
                                 .getRewardImage(
-                                  rewardState.monthlyReward!.categoryId,
+                                  missionState.monthlyReward!.category,
                                 ),
                           ),
                         ),
@@ -146,7 +146,7 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
           ),
 
           // --- RECOMPENSA SEMANAL ---
-          rewardState.weeklyReward != null
+          missionState.weeklyReward != null
               ? SliverToBoxAdapter(
                   child: Container(
                     padding: const EdgeInsets.all(20),
@@ -173,9 +173,10 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                             ),
                             TimeWidget(
                               time:
-                                  rewardState.timeLeftUntilNextWeek?.time ?? 0,
+                                  missionState.timeLeftUntilNextWeek?.time ?? 0,
                               unit:
-                                  rewardState.timeLeftUntilNextWeek?.unit ?? '',
+                                  missionState.timeLeftUntilNextWeek?.unit ??
+                                  '',
                               color: AppColors.orange,
                               fontSize: 15,
                               showTheTextComplete: true,
@@ -194,14 +195,14 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                             ),
                           ),
                           child: GoalWidget(
-                            current: rewardState.weeklyReward!.currentPoints,
-                            total: rewardState.weeklyReward!.totalPoints,
+                            current: missionState.weeklyReward!.currentPoints,
+                            total: missionState.weeklyReward!.totalPoints,
                             imagePath: ref
-                                .read(rewardProvider.notifier)
+                                .read(missionProvider.notifier)
                                 .getRewardImage(
-                                  rewardState.weeklyReward!.categoryId,
+                                  missionState.weeklyReward!.category,
                                 ),
-                            label: rewardState.weeklyReward!.description,
+                            label: missionState.weeklyReward!.description,
                           ),
                         ),
                       ],
@@ -244,12 +245,12 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                 ),
 
           // --- RECOMPENSAS DIARIAS ---
-          rewardState.dailyRewards.isNotEmpty
+          missionState.dailyRewards.isNotEmpty
               ? SliverPadding(
                   padding: const EdgeInsets.only(bottom: 30),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
-                      final reward = rewardState.dailyRewards[index];
+                      final reward = missionState.dailyRewards[index];
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Column(
@@ -271,12 +272,12 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                                   ),
                                   TimeWidget(
                                     time:
-                                        rewardState
+                                        missionState
                                             .timeLeftUntilNextDay
                                             ?.time ??
                                         0,
                                     unit:
-                                        rewardState
+                                        missionState
                                             .timeLeftUntilNextDay
                                             ?.unit ??
                                         '',
@@ -332,15 +333,15 @@ class RewardScreenState extends ConsumerState<RewardScreen> {
                                 current: reward.currentPoints,
                                 total: reward.totalPoints,
                                 imagePath: ref
-                                    .read(rewardProvider.notifier)
-                                    .getRewardImage(reward.categoryId),
+                                    .read(missionProvider.notifier)
+                                    .getRewardImage(reward.category),
                                 label: reward.description,
                               ),
                             ),
                           ],
                         ),
                       );
-                    }, childCount: rewardState.dailyRewards.length),
+                    }, childCount: missionState.dailyRewards.length),
                   ),
                 )
               : SliverToBoxAdapter(

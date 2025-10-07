@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/home/presentation/providers/home_provider.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/providers/leaderboard_provider.dart';
-import 'package:pixel_retro_app/app/features/reward/presentation/providers/reward_provider.dart';
+import 'package:pixel_retro_app/app/features/mission/presentation/providers/mission_provider.dart';
 import 'package:pixel_retro_app/app/features/shop/presentation/providers/shop_provider.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
 
@@ -39,9 +39,9 @@ class RootScreenState extends ConsumerState<RootScreen> {
       ref.read(leaderboardProvider.notifier).getTimeLeft(),
 
       // reward
-      ref.read(rewardProvider.notifier).getRewards(),
-      ref.read(rewardProvider.notifier).getTimeLeftList(),
-      ref.read(rewardProvider.notifier).getCurrentMonth(),
+      ref.read(missionProvider.notifier).getMissions(),
+      ref.read(missionProvider.notifier).getTimeLeftList(),
+      ref.read(missionProvider.notifier).getCurrentMonth(),
 
       // shop
       ref.read(shopProvider.notifier).getAdvertisements(),

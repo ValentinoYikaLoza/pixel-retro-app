@@ -7,10 +7,10 @@ import 'package:pixel_retro_app/app/features/leaderboard/data/datasources/leader
 import 'package:pixel_retro_app/app/features/leaderboard/data/repositories/leaderboard_repository_impl.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/datasources/leaderboard_datasource.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/repositories/leaderboard_repository.dart';
-import 'package:pixel_retro_app/app/features/reward/data/datasources/reward_datasource_impl.dart';
-import 'package:pixel_retro_app/app/features/reward/data/repositories/reward_repository_impl.dart';
-import 'package:pixel_retro_app/app/features/reward/domain/datasources/reward_datasource.dart';
-import 'package:pixel_retro_app/app/features/reward/domain/repositories/reward_repository.dart';
+import 'package:pixel_retro_app/app/features/mission/data/datasources/mission_datasource_impl.dart';
+import 'package:pixel_retro_app/app/features/mission/data/repositories/mission_repository_impl.dart';
+import 'package:pixel_retro_app/app/features/mission/domain/datasources/mission_datasource.dart';
+import 'package:pixel_retro_app/app/features/mission/domain/repositories/mission_repository.dart';
 import 'package:pixel_retro_app/app/features/shop/data/datasources/shop_datasource_impl.dart';
 import 'package:pixel_retro_app/app/features/shop/data/repositories/shop_repository_impl.dart';
 import 'package:pixel_retro_app/app/features/shop/domain/datasources/shop_datasource.dart';
@@ -29,7 +29,7 @@ void setup() {
   getIt.registerLazySingleton<LeaderboardDatasource>(
     () => LeaderboardDatasourceImpl(),
   );
-  getIt.registerLazySingleton<RewardDataSource>(() => RewardDataSourceImpl());
+  getIt.registerLazySingleton<MissionDataSource>(() => MissionDataSourceImpl());
   getIt.registerLazySingleton<ShopDatasource>(() => ShopDatasourceImpl());
 
   // Repositories
@@ -42,8 +42,8 @@ void setup() {
   getIt.registerLazySingleton<LeaderboardRepository>(
     () => LeaderboardRepositoryImpl(getIt<LeaderboardDatasource>()),
   );
-  getIt.registerLazySingleton<RewardRepository>(
-    () => RewardRepositoryImpl(getIt<RewardDataSource>()),
+  getIt.registerLazySingleton<MissionRepository>(
+    () => MissionRepositoryImpl(getIt<MissionDataSource>()),
   );
   getIt.registerLazySingleton<ShopRepository>(
     () => ShopRepositoryImpl(getIt<ShopDatasource>()),
