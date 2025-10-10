@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/division_entity.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/time_entity.dart';
@@ -7,9 +9,12 @@ import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_divis
 import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_time_left_response_model.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_user_list_response_model.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/repositories/leaderboard_repository.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/presentation/data/division_mapper.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/presentation/data/user_mapper.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
 import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
+import 'package:pixel_retro_app/app/shared/providers/web_socket_provider.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/di.dart';
 
@@ -24,10 +29,39 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
   final Ref ref;
   final LeaderboardRepository repository = getIt<LeaderboardRepository>();
 
+  StreamSubscription<Map<String, dynamic>>? _usersSub;
+  StreamSubscription<Map<String, dynamic>>? _divisionsSub;
+
+  Future<void> initDataUser() async {
+    // Obtiene la instancia del socket desde Riverpod
+    final socket = ref.read(websocketServiceProvider);
+    // 📊 Escucha las estadísticas en tiempo real
+    _usersSub = socket.usersStream.listen((users) {
+      // print('📊 [LeaderboardNotifier] Users recibidos: $users');
+
+      final GetUserListResponseModel model = UserMapper.fromSocketData(users);
+      // print('📊 [Provider] Usuarios actuales: ${model.users[0].name}');
+      state = state.copyWith(users: model.users);
+    });
+  }
+
+  Future<void> initDataDivision() async {
+    // Obtiene la instancia del socket desde Riverpod
+    final socket = ref.read(websocketServiceProvider);
+    // 📊 Escucha las estadísticas en tiempo real
+    _divisionsSub = socket.divisionsStream.listen((division) {
+      // print('📊 [LeaderboardNotifier] Divisions recibidas: $division');
+      final GetCurrentDivisionResponseModel model =
+          DivisionMapper.fromSocketData(division);
+      // print('📊 [Provider] Division actual: ${model.currentDivision.name}');
+      state = state.copyWith(currentDivision: model.currentDivision);
+    });
+  }
+
   Future<void> getUsers() async {
     try {
-      final GetUserListResponseModel response = await repository.getUsers();
-      state = state.copyWith(users: response.users);
+      await initDataUser();
+      await repository.getUsers();
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error obteniendo los usuarios',
@@ -62,9 +96,8 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
 
   Future<void> getCurrentDivision() async {
     try {
-      final GetCurrentDivisionResponseModel response = await repository
-          .getCurrentDivision();
-      state = state.copyWith(currentDivision: response.currentDivision);
+      await initDataDivision();
+      await repository.getCurrentDivision();
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error obteniendo la division actual',
@@ -121,6 +154,13 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
     return index <= (state.currentDivision!.id)
         ? divisionActiveImageList[index - 1]
         : divisionInactiveImageList[index - 1];
+  }
+
+  @override
+  void dispose() {
+    _usersSub?.cancel();
+    _divisionsSub?.cancel();
+    super.dispose();
   }
 }
 

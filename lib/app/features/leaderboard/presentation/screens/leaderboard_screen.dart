@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/user_rank_entity.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/providers/leaderboard_provider.dart';
+import 'package:pixel_retro_app/app/shared/providers/time_provider.dart';
 import 'package:pixel_retro_app/app/shared/widgets/time_widget.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
@@ -22,6 +23,7 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   @override
   Widget build(BuildContext context) {
     final leaderboardState = ref.watch(leaderboardProvider);
+    final timeState = ref.watch(timeProvider);
     EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
 
     return Scaffold(
@@ -54,8 +56,11 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                         ),
                       ),
                       TimeWidget(
-                        time: leaderboardState.timeLeft?.time ?? 0,
-                        unit: leaderboardState.timeLeft?.unit ?? '',
+                        time:
+                            timeState.timeList?.timeLeftUntilNextWeek.time ?? 0,
+                        unit:
+                            timeState.timeList?.timeLeftUntilNextWeek.unit ??
+                            '',
                         color: AppColors.orange,
                       ),
                     ],

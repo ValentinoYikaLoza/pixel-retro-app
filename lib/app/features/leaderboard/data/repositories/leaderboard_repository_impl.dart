@@ -1,8 +1,6 @@
 import 'package:pixel_retro_app/app/features/leaderboard/domain/datasources/leaderboard_datasource.dart';
-import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_current_division_response_model.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_time_left_response_model.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_division_list_response_model.dart';
-import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_user_list_response_model.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/repositories/leaderboard_repository.dart';
 
 class LeaderboardRepositoryImpl implements LeaderboardRepository {
@@ -11,7 +9,7 @@ class LeaderboardRepositoryImpl implements LeaderboardRepository {
   LeaderboardRepositoryImpl(this.datasource);
 
   @override
-  Future<GetUserListResponseModel> getUsers() {
+  Future<void> getUsers() {
     return datasource.getUsers();
   }
 
@@ -26,7 +24,7 @@ class LeaderboardRepositoryImpl implements LeaderboardRepository {
   }
 
   @override
-  Future<GetCurrentDivisionResponseModel> getCurrentDivision() {
+  Future<void> getCurrentDivision() {
     return datasource.getCurrentDivision();
   }
 }

@@ -1,5 +1,4 @@
 import 'package:pixel_retro_app/app/shared/layouts/domain/datasources/user_datasource.dart';
-import 'package:pixel_retro_app/app/shared/layouts/domain/models/get_user_response_model.dart';
 import 'package:pixel_retro_app/app/shared/layouts/domain/repositories/user_repository.dart';
 
 class UserRepositoryImpl implements UserRepository {
@@ -8,18 +7,18 @@ class UserRepositoryImpl implements UserRepository {
   UserRepositoryImpl(this._dataSource);
 
   @override
-  Future<GetUserResponseModel> getUser() {
+  Future<void> getUser() {
     return _dataSource.getUser();
   }
 
   @override
-  Future<void> updateCoins(int coins, bool add) {
-    return _dataSource.updateCoins(coins, add);
+  Future<void> updateCoins(int coins) {
+    return _dataSource.updateCoins(coins);
   }
 
   @override
-  Future<void> updateLives(int lives, bool add) {
-    return _dataSource.updateLives(lives, add);
+  Future<void> updateLives(int lives) {
+    return _dataSource.updateLives(lives);
   }
 
   @override

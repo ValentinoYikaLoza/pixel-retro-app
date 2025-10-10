@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/home/presentation/providers/home_provider.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/providers/leaderboard_provider.dart';
 import 'package:pixel_retro_app/app/features/mission/presentation/providers/mission_provider.dart';
 import 'package:pixel_retro_app/app/features/shop/presentation/providers/shop_provider.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
+import 'package:pixel_retro_app/app/shared/providers/time_provider.dart';
 
 class RootScreen extends ConsumerStatefulWidget {
   const RootScreen({super.key});
@@ -18,13 +20,21 @@ class RootScreenState extends ConsumerState<RootScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      getData();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await getData();
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   Future<void> getData() async {
     await Future.wait([
+      // time
+      ref.read(timeProvider.notifier).initData(),
+
       // user
       ref.read(userProvider.notifier).getUserData(),
 
@@ -36,19 +46,15 @@ class RootScreenState extends ConsumerState<RootScreen> {
       ref.read(leaderboardProvider.notifier).getDivisions(),
       ref.read(leaderboardProvider.notifier).getCurrentUser(),
       ref.read(leaderboardProvider.notifier).getCurrentDivision(),
-      ref.read(leaderboardProvider.notifier).getTimeLeft(),
 
       // reward
       ref.read(missionProvider.notifier).getMissions(),
-      ref.read(missionProvider.notifier).getTimeLeftList(),
-      ref.read(missionProvider.notifier).getCurrentMonth(),
 
       // shop
       ref.read(shopProvider.notifier).getAdvertisements(),
       ref.read(shopProvider.notifier).getCoinShopItems(),
       ref.read(shopProvider.notifier).getLiveShopItems(),
     ]);
-    print('DATA RECIBIDAS');
 
     // Cuando todas las peticiones acaben:
     AppRoutes.go(AppRoutes.home);
@@ -59,8 +65,8 @@ class RootScreenState extends ConsumerState<RootScreen> {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      decoration: BoxDecoration(color: Colors.white),
-      child: Center(child: CircularProgressIndicator(color: Colors.black)),
+      decoration: BoxDecoration(color: AppColors.backgroundDark),
+      child: Center(child: CircularProgressIndicator(color: AppColors.orange)),
     );
   }
 }

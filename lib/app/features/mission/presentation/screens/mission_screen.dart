@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/features/mission/presentation/providers/mission_provider.dart';
+import 'package:pixel_retro_app/app/shared/providers/time_provider.dart';
 import 'package:pixel_retro_app/app/shared/widgets/time_widget.dart';
 
 class MissionScreen extends ConsumerStatefulWidget {
@@ -22,6 +23,7 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
   Widget build(BuildContext context) {
     EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
     final missionState = ref.watch(missionProvider);
+    final timeState = ref.watch(timeProvider);
 
     return Scaffold(
       body: CustomScrollView(
@@ -53,8 +55,8 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
                         ),
                         child: Center(
                           child: Text(
-                            missionState.currentMonth.isNotEmpty
-                                ? missionState.currentMonth
+                            timeState.timeList != null
+                                ? timeState.timeList!.currentMonth
                                 : "Sin mes",
                             style: TextStyle(
                               fontSize: 20,
@@ -66,8 +68,12 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
                         ),
                       ),
                       TimeWidget(
-                        time: missionState.timeLeftUntilNextMonth?.time ?? 0,
-                        unit: missionState.timeLeftUntilNextMonth?.unit ?? '',
+                        time:
+                            timeState.timeList?.timeLeftUntilNextMonth.time ??
+                            0,
+                        unit:
+                            timeState.timeList?.timeLeftUntilNextMonth.unit ??
+                            '',
                         color: AppColors.purple,
                       ),
                     ],
@@ -173,9 +179,16 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
                             ),
                             TimeWidget(
                               time:
-                                  missionState.timeLeftUntilNextWeek?.time ?? 0,
+                                  timeState
+                                      .timeList
+                                      ?.timeLeftUntilNextWeek
+                                      .time ??
+                                  0,
                               unit:
-                                  missionState.timeLeftUntilNextWeek?.unit ??
+                                  timeState
+                                      .timeList
+                                      ?.timeLeftUntilNextWeek
+                                      .unit ??
                                   '',
                               color: AppColors.orange,
                               fontSize: 15,
@@ -272,14 +285,16 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
                                   ),
                                   TimeWidget(
                                     time:
-                                        missionState
-                                            .timeLeftUntilNextDay
-                                            ?.time ??
+                                        timeState
+                                            .timeList
+                                            ?.timeLeftUntilNextDay
+                                            .time ??
                                         0,
                                     unit:
-                                        missionState
-                                            .timeLeftUntilNextDay
-                                            ?.unit ??
+                                        timeState
+                                            .timeList
+                                            ?.timeLeftUntilNextDay
+                                            .unit ??
                                         '',
                                     color: AppColors.orange,
                                     fontSize: 15,

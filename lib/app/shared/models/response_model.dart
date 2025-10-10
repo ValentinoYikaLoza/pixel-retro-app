@@ -1,19 +1,11 @@
 class Response {
   final String message;
   final bool success;
-  final int code;
 
-  Response({required this.message, required this.success, required this.code});
+  Response({required this.message, required this.success});
 
-  factory Response.fromJson(Map<String, dynamic> json) => Response(
-    message: json["msg"] ?? '',
-    success: json["success"] ?? false,
-    code: json["code"] ?? 0,
-  );
+  factory Response.fromJson(Map<String, dynamic> json) =>
+      Response(message: json["msg"] ?? '', success: json["success"] ?? false);
 
-  Map<String, dynamic> toJson() => {
-    "message": message,
-    "success": success,
-    "code": code,
-  };
+  Map<String, dynamic> toJson() => {"message": message, "success": success};
 }

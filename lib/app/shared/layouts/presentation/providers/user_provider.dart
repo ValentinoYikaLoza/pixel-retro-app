@@ -1,8 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
-import 'package:pixel_retro_app/app/shared/layouts/domain/models/get_user_response_model.dart';
 import 'package:pixel_retro_app/app/shared/layouts/domain/repositories/user_repository.dart';
 import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
+import 'package:pixel_retro_app/app/shared/providers/web_socket_provider.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/di.dart';
 
@@ -16,31 +18,39 @@ class UserNotifier extends StateNotifier<UserState> {
   final Ref ref;
   final UserRepository repository = getIt<UserRepository>();
 
-  void initData() {
-    state = state.copyWith(coins: 0, lives: 0, streak: 0, exp: 0);
+  StreamSubscription<Map<String, dynamic>>? _statsSub;
+
+  /// Inicializa el usuario y se suscribe a los streams del WebSocket
+  Future<void> initData() async {
+    // Obtiene la instancia del socket desde Riverpod
+    final socket = ref.read(websocketServiceProvider);
+    // 📊 Escucha las estadísticas en tiempo real
+    _statsSub = socket.statsStream.listen((stats) {
+      print('📊 [UserNotifier] Stats recibidas: $stats');
+      state = state.copyWith(
+        userId: stats['user']['id'] ?? state.userId,
+        coins: stats['user']['coins'] ?? state.coins,
+        lives: stats['user']['lives'] ?? state.lives,
+        streak: stats['user']['streak'] ?? state.streak,
+      );
+    });
   }
 
   Future<void> getUserData() async {
     try {
-      final GetUserResponseModel response = await repository.getUser();
-      state = state.copyWith(
-        coins: response.user.coins,
-        lives: response.user.lives,
-        streak: response.user.streak,
-        userId: response.user.id,
-      );
+      await initData();
+      await repository.getUser();
     } on ServiceException catch (_) {
       SnackbarService.show(
-        'Error obteniendo datos del usuario',
+        'Error obteniendo los datos del usuario',
         type: SnackbarType.error,
       );
     }
   }
 
-  Future<void> updateCoins(int coins, bool add) async {
+  Future<void> updateCoins(int coins) async {
     try {
-      await repository.updateCoins(coins, add);
-      await getUserData();
+      await repository.updateCoins(coins);
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error actualizando monedas del usuario',
@@ -49,10 +59,9 @@ class UserNotifier extends StateNotifier<UserState> {
     }
   }
 
-  Future<void> updateLives(int lives, bool add) async {
+  Future<void> updateLives(int lives) async {
     try {
-      await repository.updateLives(lives, add);
-      await getUserData();
+      await repository.updateLives(lives);
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error actualizando vidas del usuario',
@@ -64,7 +73,6 @@ class UserNotifier extends StateNotifier<UserState> {
   Future<void> updateStreak() async {
     try {
       await repository.updateStreak();
-      await getUserData();
     } on ServiceException catch (_) {
       SnackbarService.show(
         'Error actualizando racha del usuario',
@@ -73,16 +81,10 @@ class UserNotifier extends StateNotifier<UserState> {
     }
   }
 
-  Future<void> updateExp(int exp) async {
-    try {
-      await repository.updateExp(exp);
-      await getUserData();
-    } on ServiceException catch (_) {
-      SnackbarService.show(
-        'Error actualizando experiencia del usuario',
-        type: SnackbarType.error,
-      );
-    }
+  @override
+  void dispose() {
+    _statsSub?.cancel();
+    super.dispose();
   }
 }
 
@@ -94,13 +96,7 @@ class UserState {
 
   UserState({this.coins = 0, this.lives = 0, this.streak = 0, this.userId = 0});
 
-  UserState copyWith({
-    int? coins,
-    int? lives,
-    int? streak,
-    int? exp,
-    int? userId,
-  }) {
+  UserState copyWith({int? coins, int? lives, int? streak, int? userId}) {
     return UserState(
       coins: coins ?? this.coins,
       lives: lives ?? this.lives,

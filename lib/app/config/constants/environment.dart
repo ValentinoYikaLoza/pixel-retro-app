@@ -6,4 +6,5 @@ class Environment {
   }
 
   static String urlBase = dotenv.get('URL_BASE');
+  static String urlBaseSocket = dotenv.get('URL_BASE_SOCKET');
 }
