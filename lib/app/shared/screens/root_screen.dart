@@ -6,8 +6,8 @@ import 'package:pixel_retro_app/app/features/home/presentation/providers/home_pr
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/providers/leaderboard_provider.dart';
 import 'package:pixel_retro_app/app/features/mission/presentation/providers/mission_provider.dart';
 import 'package:pixel_retro_app/app/features/shop/presentation/providers/shop_provider.dart';
+import 'package:pixel_retro_app/app/features/time/presentation/providers/time_provider.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
-import 'package:pixel_retro_app/app/shared/providers/time_provider.dart';
 
 class RootScreen extends ConsumerStatefulWidget {
   const RootScreen({super.key});
@@ -33,7 +33,7 @@ class RootScreenState extends ConsumerState<RootScreen> {
   Future<void> getData() async {
     await Future.wait([
       // time
-      ref.read(timeProvider.notifier).initData(),
+      ref.read(timeProvider.notifier).getTime(),
 
       // user
       ref.read(userProvider.notifier).getUserData(),
@@ -63,10 +63,8 @@ class RootScreenState extends ConsumerState<RootScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      height: double.infinity,
-      decoration: BoxDecoration(color: AppColors.backgroundDark),
-      child: Center(child: CircularProgressIndicator(color: AppColors.orange)),
+      decoration: BoxDecoration(color: AppColors.orange),
+      child: Center(child: CircularProgressIndicator(color: AppColors.white)),
     );
   }
 }

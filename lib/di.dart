@@ -15,6 +15,10 @@ import 'package:pixel_retro_app/app/features/shop/data/datasources/shop_datasour
 import 'package:pixel_retro_app/app/features/shop/data/repositories/shop_repository_impl.dart';
 import 'package:pixel_retro_app/app/features/shop/domain/datasources/shop_datasource.dart';
 import 'package:pixel_retro_app/app/features/shop/domain/repositories/shop_repository.dart';
+import 'package:pixel_retro_app/app/features/time/data/datasources/time_datasource_impl.dart';
+import 'package:pixel_retro_app/app/features/time/data/repositories/time_repository_impl.dart';
+import 'package:pixel_retro_app/app/features/time/domain/datasources/time_datasource.dart';
+import 'package:pixel_retro_app/app/features/time/domain/repositories/time_repository.dart';
 import 'package:pixel_retro_app/app/shared/layouts/data/datasources/user_datasource_impl.dart';
 import 'package:pixel_retro_app/app/shared/layouts/data/repositories/user_repository_impl.dart';
 import 'package:pixel_retro_app/app/shared/layouts/domain/datasources/user_datasource.dart';
@@ -31,6 +35,7 @@ void setup() {
   );
   getIt.registerLazySingleton<MissionDataSource>(() => MissionDataSourceImpl());
   getIt.registerLazySingleton<ShopDatasource>(() => ShopDatasourceImpl());
+  getIt.registerLazySingleton<TimeDataSource>(() => TimeDataSourceImpl());
 
   // Repositories
   getIt.registerLazySingleton<UserRepository>(
@@ -44,6 +49,9 @@ void setup() {
   );
   getIt.registerLazySingleton<MissionRepository>(
     () => MissionRepositoryImpl(getIt<MissionDataSource>()),
+  );
+  getIt.registerLazySingleton<TimeRepository>(
+    () => TimeRepositoryImpl(getIt<TimeDataSource>()),
   );
   getIt.registerLazySingleton<ShopRepository>(
     () => ShopRepositoryImpl(getIt<ShopDatasource>()),

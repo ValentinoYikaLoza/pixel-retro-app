@@ -32,9 +32,13 @@ class _WaitToLayoutScreenState extends State<WaitToLayoutScreen> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        body: Center(
-          child: Container(
-            decoration: BoxDecoration(color: AppColors.backgroundDark),
+        body: Container(
+          decoration: BoxDecoration(color: AppColors.orange),
+          child: Center(
+            child: const Text(
+              'Espere...',
+              style: TextStyle(fontSize: 24, color: Colors.white),
+            ),
           ),
         ),
       ),

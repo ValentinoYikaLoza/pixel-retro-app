@@ -17,15 +17,12 @@ class WebSocketService {
   final _divisionsController =
       StreamController<Map<String, dynamic>>.broadcast();
   final _usersController = StreamController<Map<String, dynamic>>.broadcast();
-  final _timeListController =
-      StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get statsStream => _statsController.stream;
   Stream<Map<String, dynamic>> get missionsStream => _missionsController.stream;
   Stream<Map<String, dynamic>> get divisionsStream =>
       _divisionsController.stream;
   Stream<Map<String, dynamic>> get usersStream => _usersController.stream;
-  Stream<Map<String, dynamic>> get timeListStream => _timeListController.stream;
 
   bool _isConnected = false;
   Timer? _reconnectTimer;
@@ -84,13 +81,6 @@ class WebSocketService {
           'data': {'channel': 'user.users.$userId'},
         }),
       );
-
-      _channel!.sink.add(
-        jsonEncode({
-          'event': 'pusher:subscribe',
-          'data': {'channel': 'system.time.$userId'},
-        }),
-      );
     } catch (e) {
       SnackbarService.show(
         'Error suscribiéndose a canales',
@@ -121,10 +111,6 @@ class WebSocketService {
         final parsed = jsonDecode(payload);
         // print('🎯 [WebSocket] Usuarios recibidos: $parsed');
         _usersController.add(parsed);
-      } else if (event == 'TimeUpdated') {
-        final parsed = jsonDecode(payload);
-        // print('🎯 [WebSocket] Tiempos recibidos: $parsed');
-        _timeListController.add(parsed);
       } else if (event == 'pusher:error') {
         final error = payload is String ? jsonDecode(payload) : payload;
         SnackbarService.show(
@@ -191,6 +177,5 @@ class WebSocketService {
     _missionsController.close();
     _divisionsController.close();
     _usersController.close();
-    _timeListController.close();
   }
 }

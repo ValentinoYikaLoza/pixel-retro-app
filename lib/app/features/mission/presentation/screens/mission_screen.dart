@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/features/mission/presentation/providers/mission_provider.dart';
-import 'package:pixel_retro_app/app/shared/providers/time_provider.dart';
-import 'package:pixel_retro_app/app/shared/widgets/time_widget.dart';
+import 'package:pixel_retro_app/app/features/time/presentation/providers/time_provider.dart';
+import 'package:pixel_retro_app/app/features/time/presentation/widgets/time_widget.dart';
 
 class MissionScreen extends ConsumerStatefulWidget {
   const MissionScreen({super.key});
@@ -47,7 +47,7 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        width: 120,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
                         height: 40,
                         decoration: BoxDecoration(
                           color: AppColors.white,
@@ -55,9 +55,7 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
                         ),
                         child: Center(
                           child: Text(
-                            timeState.timeList != null
-                                ? timeState.timeList!.currentMonth
-                                : "Sin mes",
+                            timeState.currentMonth,
                             style: TextStyle(
                               fontSize: 20,
                               height: 20 / 15,
@@ -68,12 +66,7 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
                         ),
                       ),
                       TimeWidget(
-                        time:
-                            timeState.timeList?.timeLeftUntilNextMonth.time ??
-                            0,
-                        unit:
-                            timeState.timeList?.timeLeftUntilNextMonth.unit ??
-                            '',
+                        type: TimeWidgetType.timeUntilNextMonth,
                         color: AppColors.purple,
                       ),
                     ],
@@ -178,18 +171,7 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
                               ),
                             ),
                             TimeWidget(
-                              time:
-                                  timeState
-                                      .timeList
-                                      ?.timeLeftUntilNextWeek
-                                      .time ??
-                                  0,
-                              unit:
-                                  timeState
-                                      .timeList
-                                      ?.timeLeftUntilNextWeek
-                                      .unit ??
-                                  '',
+                              type: TimeWidgetType.timeUntilNextWeek,
                               color: AppColors.orange,
                               fontSize: 15,
                               showTheTextComplete: true,
@@ -284,18 +266,7 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
                                     ),
                                   ),
                                   TimeWidget(
-                                    time:
-                                        timeState
-                                            .timeList
-                                            ?.timeLeftUntilNextDay
-                                            .time ??
-                                        0,
-                                    unit:
-                                        timeState
-                                            .timeList
-                                            ?.timeLeftUntilNextDay
-                                            .unit ??
-                                        '',
+                                    type: TimeWidgetType.timeUntilNextDay,
                                     color: AppColors.orange,
                                     fontSize: 15,
                                     showTheTextComplete: true,
