@@ -14,14 +14,10 @@ class WebSocketService {
   final _statsController = StreamController<Map<String, dynamic>>.broadcast();
   final _missionsController =
       StreamController<Map<String, dynamic>>.broadcast();
-  final _divisionsController =
-      StreamController<Map<String, dynamic>>.broadcast();
   final _usersController = StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get statsStream => _statsController.stream;
   Stream<Map<String, dynamic>> get missionsStream => _missionsController.stream;
-  Stream<Map<String, dynamic>> get divisionsStream =>
-      _divisionsController.stream;
   Stream<Map<String, dynamic>> get usersStream => _usersController.stream;
 
   bool _isConnected = false;
@@ -71,13 +67,6 @@ class WebSocketService {
       _channel!.sink.add(
         jsonEncode({
           'event': 'pusher:subscribe',
-          'data': {'channel': 'user.divisions.$userId'},
-        }),
-      );
-
-      _channel!.sink.add(
-        jsonEncode({
-          'event': 'pusher:subscribe',
           'data': {'channel': 'user.users.$userId'},
         }),
       );
@@ -103,10 +92,6 @@ class WebSocketService {
         final parsed = jsonDecode(payload);
         // print('🎯 [WebSocket] Misiones recibidas: $parsed');
         _missionsController.add(parsed);
-      } else if (event == 'DivisionsUpdated') {
-        final parsed = jsonDecode(payload);
-        // print('🎯 [WebSocket] Divisiones recibidas: $parsed');
-        _divisionsController.add(parsed);
       } else if (event == 'UsersUpdated') {
         final parsed = jsonDecode(payload);
         // print('🎯 [WebSocket] Usuarios recibidos: $parsed');
@@ -175,7 +160,6 @@ class WebSocketService {
     _channel?.sink.close(status.goingAway);
     _statsController.close();
     _missionsController.close();
-    _divisionsController.close();
     _usersController.close();
   }
 }

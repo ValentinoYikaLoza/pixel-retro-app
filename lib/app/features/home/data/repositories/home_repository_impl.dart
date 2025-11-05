@@ -8,7 +8,7 @@ class HomeRepositoryImpl implements HomeRepository {
   HomeRepositoryImpl(this.dataSource);
 
   @override
-  Future<GetGameListResponseModel> getGamesData() {
-    return dataSource.getGamesData();
+  Future<GetGameListResponseModel> getGames() {
+    return dataSource.getGames();
   }
 }

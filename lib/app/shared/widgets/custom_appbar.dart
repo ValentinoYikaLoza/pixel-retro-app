@@ -30,46 +30,85 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
     EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
     final userState = ref.watch(userProvider);
 
+    final hasUserId = userState.userId != 0;
+
     return AppBar(
       automaticallyImplyLeading: false,
-      flexibleSpace: Container(
-        padding: EdgeInsets.only(left: 20, right: 20, top: safeAreaPadding.top),
-        height: 62 + safeAreaPadding.top,
-        decoration: BoxDecoration(
-          color: AppColors.backgroundDark,
-          border: Border(bottom: BorderSide(color: AppColors.orange, width: 2)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            GestureDetector(
-              onTap: () {
-                AppRoutes.go(AppRoutes.shop);
-              },
-              child: AppBarRow(
-                asset: 'assets/icons/coin.svg',
-                text: '${userState.coins}',
-                color: AppColors.yellow,
+      flexibleSpace: hasUserId
+          ? Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: safeAreaPadding.top,
+              ),
+              height: 62 + safeAreaPadding.top,
+              decoration: BoxDecoration(
+                color: AppColors.backgroundDark,
+                border: Border(
+                  bottom: BorderSide(color: AppColors.orange, width: 2),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      AppRoutes.go(AppRoutes.shop);
+                    },
+                    child: AppBarRow(
+                      asset: 'assets/icons/coin.svg',
+                      text: '${userState.coins}',
+                      color: AppColors.yellow,
+                    ),
+                  ),
+                  AppBarRow(
+                    asset: 'assets/icons/fire.svg',
+                    text: '${userState.streak}',
+                    color: AppColors.orange,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      AppRoutes.go(AppRoutes.shop);
+                    },
+                    child: AppBarRow(
+                      asset: 'assets/icons/heart.svg',
+                      text: '${userState.lives}',
+                      color: AppColors.red,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: safeAreaPadding.top,
+              ),
+              height: 62 + safeAreaPadding.top,
+              decoration: BoxDecoration(
+                color: AppColors.backgroundDark,
+                border: Border(
+                  bottom: BorderSide(color: AppColors.gray, width: 2),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 20,
+                children: [
+                  Icon(Icons.wifi_off_rounded, color: AppColors.gray, size: 24),
+                  Text(
+                    'SIN CONEXIÓN',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Inter',
+                      color: AppColors.gray,
+                    ),
+                  ),
+                ],
               ),
             ),
-            AppBarRow(
-              asset: 'assets/icons/fire.svg',
-              text: '${userState.streak}',
-              color: AppColors.orange,
-            ),
-            GestureDetector(
-              onTap: () {
-                AppRoutes.go(AppRoutes.shop);
-              },
-              child: AppBarRow(
-                asset: 'assets/icons/heart.svg',
-                text: '${userState.lives}',
-                color: AppColors.red,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

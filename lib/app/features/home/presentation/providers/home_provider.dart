@@ -19,7 +19,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
 
   Future<void> getGames() async {
     try {
-      final GetGameListResponseModel response = await repository.getGamesData();
+      final GetGameListResponseModel response = await repository.getGames();
       state = state.copyWith(
         games: response.games,
         gameSelected: response.games[0],

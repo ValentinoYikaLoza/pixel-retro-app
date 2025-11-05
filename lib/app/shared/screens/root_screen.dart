@@ -36,7 +36,7 @@ class RootScreenState extends ConsumerState<RootScreen> {
       ref.read(timeProvider.notifier).getTime(),
 
       // user
-      ref.read(userProvider.notifier).getUserData(),
+      ref.read(userProvider.notifier).getUser(),
 
       // home
       ref.read(homeProvider.notifier).getGames(),
@@ -44,8 +44,6 @@ class RootScreenState extends ConsumerState<RootScreen> {
       // leaderboard
       ref.read(leaderboardProvider.notifier).getUsers(),
       ref.read(leaderboardProvider.notifier).getDivisions(),
-      ref.read(leaderboardProvider.notifier).getCurrentUser(),
-      ref.read(leaderboardProvider.notifier).getCurrentDivision(),
 
       // reward
       ref.read(missionProvider.notifier).getMissions(),
@@ -56,7 +54,6 @@ class RootScreenState extends ConsumerState<RootScreen> {
       ref.read(shopProvider.notifier).getLiveShopItems(),
     ]);
 
-    // Cuando todas las peticiones acaben:
     AppRoutes.go(AppRoutes.home);
   }
 

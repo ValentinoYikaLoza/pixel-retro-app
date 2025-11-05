@@ -26,17 +26,17 @@ class UserNotifier extends StateNotifier<UserState> {
     final socket = ref.read(websocketServiceProvider);
     // 📊 Escucha las estadísticas en tiempo real
     _statsSub = socket.statsStream.listen((stats) {
-      print('📊 [UserNotifier] Stats recibidas: $stats');
       state = state.copyWith(
         userId: stats['user']['id'] ?? state.userId,
         coins: stats['user']['coins'] ?? state.coins,
         lives: stats['user']['lives'] ?? state.lives,
         streak: stats['user']['streak'] ?? state.streak,
+        divisionId: stats['user']['division_id'] ?? state.divisionId,
       );
     });
   }
 
-  Future<void> getUserData() async {
+  Future<void> getUser() async {
     try {
       await initData();
       await repository.getUser();
@@ -93,15 +93,29 @@ class UserState {
   final int lives;
   final int streak;
   final int userId;
+  final int divisionId;
 
-  UserState({this.coins = 0, this.lives = 0, this.streak = 0, this.userId = 0});
+  UserState({
+    this.coins = 0,
+    this.lives = 0,
+    this.streak = 0,
+    this.userId = 0,
+    this.divisionId = 0,
+  });
 
-  UserState copyWith({int? coins, int? lives, int? streak, int? userId}) {
+  UserState copyWith({
+    int? coins,
+    int? lives,
+    int? streak,
+    int? userId,
+    int? divisionId,
+  }) {
     return UserState(
       coins: coins ?? this.coins,
       lives: lives ?? this.lives,
       streak: streak ?? this.streak,
       userId: userId ?? this.userId,
+      divisionId: divisionId ?? this.divisionId,
     );
   }
 }

@@ -2,17 +2,12 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/division_entity.dart';
-import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/time_entity.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/user_rank_entity.dart';
-import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_current_division_response_model.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_division_list_response_model.dart';
-import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_time_left_response_model.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_user_list_response_model.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/repositories/leaderboard_repository.dart';
-import 'package:pixel_retro_app/app/features/leaderboard/presentation/data/division_mapper.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/data/user_mapper.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
-import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
 import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
 import 'package:pixel_retro_app/app/shared/providers/web_socket_provider.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
@@ -30,7 +25,6 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
   final LeaderboardRepository repository = getIt<LeaderboardRepository>();
 
   StreamSubscription<Map<String, dynamic>>? _usersSub;
-  StreamSubscription<Map<String, dynamic>>? _divisionsSub;
 
   Future<void> initDataUser() async {
     // Obtiene la instancia del socket desde Riverpod
@@ -42,19 +36,6 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
       final GetUserListResponseModel model = UserMapper.fromSocketData(users);
       // print('📊 [Provider] Usuarios actuales: ${model.users[0].name}');
       state = state.copyWith(users: model.users);
-    });
-  }
-
-  Future<void> initDataDivision() async {
-    // Obtiene la instancia del socket desde Riverpod
-    final socket = ref.read(websocketServiceProvider);
-    // 📊 Escucha las estadísticas en tiempo real
-    _divisionsSub = socket.divisionsStream.listen((division) {
-      // print('📊 [LeaderboardNotifier] Divisions recibidas: $division');
-      final GetCurrentDivisionResponseModel model =
-          DivisionMapper.fromSocketData(division);
-      // print('📊 [Provider] Division actual: ${model.currentDivision.name}');
-      state = state.copyWith(currentDivision: model.currentDivision);
     });
   }
 
@@ -83,43 +64,8 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
     }
   }
 
-  Future<void> getCurrentUser() async {
-    final userId = ref.read(userProvider).userId;
-    if (userId == 0) return;
-
-    state.users.map((user) {
-      if (user.id == userId) {
-        state = state.copyWith(currentUser: user);
-      }
-    });
-  }
-
-  Future<void> getCurrentDivision() async {
-    try {
-      await initDataDivision();
-      await repository.getCurrentDivision();
-    } on ServiceException catch (_) {
-      SnackbarService.show(
-        'Error obteniendo la division actual',
-        type: SnackbarType.error,
-      );
-    }
-  }
-
-  Future<void> getTimeLeft() async {
-    try {
-      final GetTimeLeftResponseModel response = await repository.getTimeLeft();
-      state = state.copyWith(timeLeft: response.timeLeft);
-    } on ServiceException catch (_) {
-      SnackbarService.show(
-        'Error obteniendo el tiempo restante',
-        type: SnackbarType.error,
-      );
-    }
-  }
-
-  String getDivisionImage(int index) {
-    if (state.currentDivision == null) {
+  String getDivisionImage(int index, int divisionId) {
+    if (divisionId == 0) {
       return index < 3
           ? 'assets/icons/trophy-1-empty.svg'
           : 'assets/icons/trophy-2-empty.svg';
@@ -151,7 +97,7 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
       'assets/icons/trophy-2-empty.svg',
     ];
 
-    return index <= (state.currentDivision!.id)
+    return index <= divisionId
         ? divisionActiveImageList[index - 1]
         : divisionInactiveImageList[index - 1];
   }
@@ -159,39 +105,23 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
   @override
   void dispose() {
     _usersSub?.cancel();
-    _divisionsSub?.cancel();
     super.dispose();
   }
 }
 
 class LeaderboardState {
-  final DivisionEntity? currentDivision;
   final List<DivisionEntity> divisions;
   final List<UserDivisionEntity> users;
-  final UserDivisionEntity? currentUser;
-  final TimeEntity? timeLeft;
 
-  LeaderboardState({
-    this.divisions = const [],
-    this.currentDivision,
-    this.users = const [],
-    this.currentUser,
-    this.timeLeft,
-  });
+  LeaderboardState({this.divisions = const [], this.users = const []});
 
   LeaderboardState copyWith({
-    DivisionEntity? currentDivision,
     List<DivisionEntity>? divisions,
     List<UserDivisionEntity>? users,
-    UserDivisionEntity? currentUser,
-    TimeEntity? timeLeft,
   }) {
     return LeaderboardState(
       divisions: divisions ?? this.divisions,
-      currentDivision: currentDivision ?? this.currentDivision,
       users: users ?? this.users,
-      currentUser: currentUser ?? this.currentUser,
-      timeLeft: timeLeft ?? this.timeLeft,
     );
   }
 }
