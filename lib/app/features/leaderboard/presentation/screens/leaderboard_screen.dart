@@ -29,12 +29,14 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     final hasDivisions = leaderboardState.divisions.isNotEmpty;
     final hasUsers = leaderboardState.users.isNotEmpty;
 
-    final currentDivision = leaderboardState.divisions.firstWhere(
-      (division) => division.id == userState.divisionId,
-    );
+    final currentDivision = hasDivisions
+        ? leaderboardState.divisions.firstWhere(
+            (division) => division.id == userState.divisionId,
+          )
+        : null;
 
     return Scaffold(
-      body: hasDivisions && hasUsers
+      body: hasDivisions && hasUsers && currentDivision != null
           ? Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -148,7 +150,7 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             )
           : Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 30),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,

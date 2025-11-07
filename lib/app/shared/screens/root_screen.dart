@@ -8,6 +8,7 @@ import 'package:pixel_retro_app/app/features/mission/presentation/providers/miss
 import 'package:pixel_retro_app/app/features/shop/presentation/providers/shop_provider.dart';
 import 'package:pixel_retro_app/app/features/time/presentation/providers/time_provider.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
+import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
 
 class RootScreen extends ConsumerStatefulWidget {
   const RootScreen({super.key});
@@ -31,28 +32,32 @@ class RootScreenState extends ConsumerState<RootScreen> {
   }
 
   Future<void> getData() async {
-    await Future.wait([
-      // time
-      ref.read(timeProvider.notifier).getTime(),
+    bool hasInternet = ref.watch(internetStatusProvider).value ?? false;
 
-      // user
-      ref.read(userProvider.notifier).getUser(),
+    if (hasInternet) {
+      await Future.wait([
+        // time
+        ref.read(timeProvider.notifier).getTime(),
 
-      // home
-      ref.read(homeProvider.notifier).getGames(),
+        // user
+        ref.read(userProvider.notifier).getUser(),
 
-      // leaderboard
-      ref.read(leaderboardProvider.notifier).getUsers(),
-      ref.read(leaderboardProvider.notifier).getDivisions(),
+        // home
+        ref.read(homeProvider.notifier).getGames(),
 
-      // reward
-      ref.read(missionProvider.notifier).getMissions(),
+        // leaderboard
+        ref.read(leaderboardProvider.notifier).getUsers(),
+        ref.read(leaderboardProvider.notifier).getDivisions(),
 
-      // shop
-      ref.read(shopProvider.notifier).getAdvertisements(),
-      ref.read(shopProvider.notifier).getCoinShopItems(),
-      ref.read(shopProvider.notifier).getLiveShopItems(),
-    ]);
+        // reward
+        ref.read(missionProvider.notifier).getMissions(),
+
+        // shop
+        ref.read(shopProvider.notifier).getAdvertisements(),
+        ref.read(shopProvider.notifier).getCoinShopItems(),
+        ref.read(shopProvider.notifier).getLiveShopItems(),
+      ]);
+    }
 
     AppRoutes.go(AppRoutes.home);
   }

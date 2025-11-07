@@ -5,6 +5,7 @@ import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
 
 class CustomAppbar extends ConsumerStatefulWidget
     implements PreferredSizeWidget {
@@ -30,11 +31,13 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
     EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
     final userState = ref.watch(userProvider);
 
-    final hasUserId = userState.userId != 0;
+    final internetStatusState = ref.watch(internetStatusProvider);
+
+    final hasIntenetConnection = internetStatusState.value ?? false;
 
     return AppBar(
       automaticallyImplyLeading: false,
-      flexibleSpace: hasUserId
+      flexibleSpace: hasIntenetConnection
           ? Container(
               padding: EdgeInsets.only(
                 left: 20,

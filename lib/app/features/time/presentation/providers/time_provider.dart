@@ -139,7 +139,7 @@ class TimeState {
 
   DateTime? get currentDateSynced {
     if (serverDate == null || receivedAt == null) return null;
-    return serverDate!.add(DateTime.now().difference(receivedAt!));
+    return serverDate!.add(DateTime.now().difference(receivedAt!)).toLocal();
   }
 
   TimeState copyWith({

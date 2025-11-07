@@ -298,7 +298,7 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
             )
           : Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 30),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -349,7 +349,7 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
   }
 }
 
-class GoalWidget extends StatelessWidget {
+class GoalWidget extends StatefulWidget {
   const GoalWidget({
     super.key,
     required this.current,
@@ -364,9 +364,22 @@ class GoalWidget extends StatelessWidget {
   final String label;
 
   @override
+  State<GoalWidget> createState() => _GoalWidgetState();
+}
+
+class _GoalWidgetState extends State<GoalWidget>
+    with SingleTickerProviderStateMixin {
+  double _iconOffset = 0; // 0 = normal, negativo = sube
+
+  void _onTap() async {
+    setState(() => _iconOffset = -36); // sube 12px
+    await Future.delayed(const Duration(milliseconds: 240));
+    setState(() => _iconOffset = 0); // vuelve
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Evitar división por cero
-    if (total <= 0) {
+    if (widget.total <= 0) {
       return const Center(
         child: Text(
           "Progreso no disponible",
@@ -378,83 +391,136 @@ class GoalWidget extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final containerWidth = constraints.maxWidth - 28;
-        final progressWidth = (current / total) * containerWidth;
+        final progressWidth = (widget.current / widget.total) * containerWidth;
         final minProgressWidth = containerWidth * 0.04;
-        final stackHeight = 46.0;
+        final containerHeight = constraints.maxHeight;
+        final progressFactor = widget.current / widget.total;
+        final adjustedFactor = (progressFactor < 0.04 && widget.current != 0)
+            ? 0.04
+            : progressFactor;
 
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 5,
-          children: [
-            if (label.isNotEmpty)
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 14,
-                  height: 14 / 12,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.white,
-                ),
-              ),
-            SizedBox(
-              height: stackHeight,
-              width: constraints.maxWidth,
-              child: Stack(
-                alignment: Alignment.centerLeft,
-                children: [
-                  // Fondo de barra
-                  Container(
-                    height: 30,
-                    width: containerWidth,
-                    decoration: BoxDecoration(
-                      color: AppColors.selector,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(11),
-                        bottomLeft: Radius.circular(11),
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '$current / $total',
+        return SizedBox(
+          width: constraints.maxWidth,
+          child: Stack(
+            children: [
+              Container(
+                padding: widget.label.isNotEmpty
+                    ? EdgeInsets.only(bottom: containerHeight * 0.2)
+                    : null,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: widget.label.isNotEmpty
+                      ? MainAxisAlignment.end
+                      : MainAxisAlignment.center,
+                  spacing: 15,
+                  children: [
+                    // Label
+                    if (widget.label.isNotEmpty)
+                      Text(
+                        widget.label,
                         style: const TextStyle(
-                          fontSize: 16,
-                          height: 16 / 12,
+                          fontSize: 14,
+                          height: 14 / 12,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.gray,
+                          color: AppColors.white,
                         ),
                       ),
-                    ),
-                  ),
 
-                  // Progreso
-                  Container(
-                    width: (current < total * 0.04 && current != 0
-                        ? minProgressWidth
-                        : progressWidth),
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: AppColors.emerald,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(11),
-                        bottomLeft: Radius.circular(11),
-                      ),
-                    ),
-                  ),
+                    // barra de progreso
+                    Stack(
+                      children: [
+                        // Fondo barra
+                        Container(
+                          height: 30,
+                          width: containerWidth,
+                          decoration: BoxDecoration(
+                            color: AppColors.selector,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(11),
+                              bottomLeft: Radius.circular(11),
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${widget.current} / ${widget.total}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                height: 16 / 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.gray,
+                              ),
+                            ),
+                          ),
+                        ),
 
-                  // Ícono
-                  Positioned(
-                    right: 0,
+                        // Progreso
+                        Container(
+                          height: 30,
+                          width:
+                              (widget.current < widget.total * 0.04 &&
+                                  widget.current != 0
+                              ? minProgressWidth
+                              : progressWidth),
+                          decoration: BoxDecoration(
+                            color: AppColors.emerald,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(11),
+                              bottomLeft: Radius.circular(11),
+                            ),
+                          ),
+                        ),
+
+                        ClipRect(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            widthFactor: adjustedFactor,
+                            child: SizedBox(
+                              height: 30,
+                              width: containerWidth,
+                              child: Center(
+                                child: Text(
+                                  '${widget.current} / ${widget.total}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    height: 16 / 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Ícono con animación de salto
+              GestureDetector(
+                onTap: _onTap,
+                child: Align(
+                  alignment: widget.label.isNotEmpty
+                      ? Alignment.bottomRight
+                      : Alignment.centerRight,
+                  child: AnimatedContainer(
+                    padding: widget.label.isNotEmpty
+                        ? EdgeInsets.only(bottom: containerHeight * 0.1)
+                        : null,
+                    duration: const Duration(milliseconds: 270),
+                    curve: Curves.easeOutBack,
+                    transform: Matrix4.translationValues(0, _iconOffset, 0),
                     child: SizedBox(
                       width: 56,
                       height: 56,
-                      child: SvgPicture.asset(imagePath, width: 56, height: 56),
+                      child: SvgPicture.asset(widget.imagePath),
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );

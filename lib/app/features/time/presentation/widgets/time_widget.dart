@@ -30,17 +30,30 @@ class TimeWidget extends ConsumerStatefulWidget {
 }
 
 class TimeWidgetState extends ConsumerState<TimeWidget> {
-  timeUnitMapper(TimeUnit? unit) {
+  timeUnitMapper(TimeUnit? unit, int? time) {
     if (unit == null) return '';
+    if (time == null) return '';
 
     switch (unit) {
       case TimeUnit.seconds:
+        if (time == 1) {
+          return 'SEGUNDO';
+        }
         return 'SEGUNDOS';
       case TimeUnit.minutes:
+        if (time == 1) {
+          return 'MINUTO';
+        }
         return 'MINUTOS';
       case TimeUnit.hours:
+        if (time == 1) {
+          return 'HORA';
+        }
         return 'HORAS';
       case TimeUnit.days:
+        if (time == 1) {
+          return 'DÍA';
+        }
         return 'DÍAS';
     }
   }
@@ -53,7 +66,10 @@ class TimeWidgetState extends ConsumerState<TimeWidget> {
       case TimeWidgetType.timeUntilNextDay:
         return _buildTimeWidget(
           time: timeState.timeUntilNextDay.time,
-          unit: timeUnitMapper(timeState.timeUntilNextDay.unit),
+          unit: timeUnitMapper(
+            timeState.timeUntilNextDay.unit,
+            timeState.timeUntilNextDay.time,
+          ),
           color: widget.color,
           fontSize: widget.fontSize,
           showTheTextComplete: widget.showTheTextComplete,
@@ -61,7 +77,10 @@ class TimeWidgetState extends ConsumerState<TimeWidget> {
       case TimeWidgetType.timeUntilNextWeek:
         return _buildTimeWidget(
           time: timeState.timeUntilNextWeek.time,
-          unit: timeUnitMapper(timeState.timeUntilNextWeek.unit),
+          unit: timeUnitMapper(
+            timeState.timeUntilNextWeek.unit,
+            timeState.timeUntilNextWeek.time,
+          ),
           color: widget.color,
           fontSize: widget.fontSize,
           showTheTextComplete: widget.showTheTextComplete,
@@ -69,7 +88,10 @@ class TimeWidgetState extends ConsumerState<TimeWidget> {
       case TimeWidgetType.timeUntilNextMonth:
         return _buildTimeWidget(
           time: timeState.timeUntilNextMonth.time,
-          unit: timeUnitMapper(timeState.timeUntilNextMonth.unit),
+          unit: timeUnitMapper(
+            timeState.timeUntilNextMonth.unit,
+            timeState.timeUntilNextMonth.time,
+          ),
           color: widget.color,
           fontSize: widget.fontSize,
           showTheTextComplete: widget.showTheTextComplete,
@@ -77,7 +99,10 @@ class TimeWidgetState extends ConsumerState<TimeWidget> {
       case TimeWidgetType.timeUntilNextSeason:
         return _buildTimeWidget(
           time: timeState.timeUntilNextSeason.time,
-          unit: timeUnitMapper(timeState.timeUntilNextSeason.unit),
+          unit: timeUnitMapper(
+            timeState.timeUntilNextSeason.unit,
+            timeState.timeUntilNextSeason.time,
+          ),
           color: widget.color,
           fontSize: widget.fontSize,
           showTheTextComplete: widget.showTheTextComplete,

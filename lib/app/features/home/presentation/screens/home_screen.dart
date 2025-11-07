@@ -163,32 +163,54 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ] else ...[
               // --- Mensaje cuando no hay juegos ---
-              Stack(
-                children: [
-                  Text(
-                    "No hay juegos disponibles",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Pixel',
-                      foreground: Paint()
-                        ..style = PaintingStyle.stroke
-                        ..strokeWidth = 4
-                        ..color = AppColors.orange,
-                    ),
-                    textAlign: TextAlign.center,
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 30),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    spacing: 20,
+                    children: [
+                      Stack(
+                        children: [
+                          Text(
+                            "Los juegos no están disponibles\nen este momento",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Pixel',
+                              foreground: Paint()
+                                ..style = PaintingStyle.stroke
+                                ..strokeWidth = 4
+                                ..color = AppColors.orange,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          Text(
+                            "Los juegos no están disponibles\nen este momento",
+                            style: TextStyle(
+                              color: AppColors.purple,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Pixel',
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                      Text(
+                        "Parece que estás offline. ¡Revisa tu conexión!",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.white,
+                          fontFamily: 'Inter',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  Text(
-                    "No hay juegos disponibles",
-                    style: TextStyle(
-                      color: AppColors.purple,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Pixel',
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                ),
               ),
             ],
           ],

@@ -9,12 +9,17 @@ import 'package:pixel_retro_app/app/config/constants/environment.dart';
 import 'package:pixel_retro_app/app/config/theme/app_theme.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
+import 'package:pixel_retro_app/app/shared/services/internet_service.dart';
 import 'package:pixel_retro_app/di.dart';
 
 void main() async {
   await Environment.initEnvironment();
   WidgetsFlutterBinding.ensureInitialized();
   await AdsService.initialize();
+
+  // ⬇️ Aquí inicializamos la escucha en tiempo real
+  await InternetService.instance.initialize();
+
   setup();
 
   WidgetsBinding.instance.addPostFrameCallback((_) {
