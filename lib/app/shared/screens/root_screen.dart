@@ -37,8 +37,8 @@ class RootScreenState extends ConsumerState<RootScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(color: AppColors.orange),
-      child: Center(child: CircularProgressIndicator(color: AppColors.white)),
+      decoration: BoxDecoration(color: AppColors.logoBackground),
+      child: Center(child: Image.asset('assets/images/logo.png')),
     );
   }
 }

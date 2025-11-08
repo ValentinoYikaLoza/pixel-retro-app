@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:pixel_retro_app/app/features/home/presentation/providers/home_provider.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/providers/leaderboard_provider.dart';
 import 'package:pixel_retro_app/app/features/mission/presentation/providers/mission_provider.dart';
 import 'package:pixel_retro_app/app/features/shop/presentation/providers/shop_provider.dart';
@@ -45,7 +44,6 @@ class DataSyncNotifier extends StateNotifier<DataSyncState> {
       await Future.wait([
         ref.read(timeProvider.notifier).getTime(),
         ref.read(userProvider.notifier).getUser(),
-        ref.read(homeProvider.notifier).getGames(),
         ref.read(leaderboardProvider.notifier).getUsers(),
         ref.read(leaderboardProvider.notifier).getDivisions(),
         ref.read(missionProvider.notifier).getMissions(),

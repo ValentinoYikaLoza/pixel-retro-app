@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/widgets/tabs_layout.dart';
+import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_appbar.dart';
 import 'package:pixel_retro_app/app/shared/widgets/refresh_indicator.dart';
 
@@ -15,6 +17,14 @@ class LayoutView extends StatefulWidget {
 }
 
 class _LayoutViewState extends State<LayoutView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      OrientationService.setOverlayColor(AppColors.orange);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final String route = Get.currentRoute;

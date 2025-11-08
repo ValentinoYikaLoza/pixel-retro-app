@@ -24,7 +24,9 @@ void main() async {
 
   WidgetsBinding.instance.addPostFrameCallback((_) {
     SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(systemNavigationBarColor: AppColors.orange),
+      const SystemUiOverlayStyle(
+        systemNavigationBarColor: AppColors.logoBackground,
+      ),
     );
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);

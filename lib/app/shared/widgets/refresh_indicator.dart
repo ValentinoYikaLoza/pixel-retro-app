@@ -6,6 +6,7 @@ import 'package:pixel_retro_app/app/shared/providers/data_sync_provider.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
 import 'package:pixel_retro_app/app/shared/widgets/loader.dart';
 import 'package:pixel_retro_app/app/shared/widgets/no_internet_dialog.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class RefreshIndicatorOverlay extends ConsumerStatefulWidget {
   final Widget child;
@@ -17,6 +18,8 @@ class RefreshIndicatorOverlay extends ConsumerStatefulWidget {
 
 class RefreshIndicatorOverlayState
     extends ConsumerState<RefreshIndicatorOverlay> {
+  final RefreshController _refreshController = RefreshController();
+
   @override
   void initState() {
     super.initState();
@@ -34,60 +37,112 @@ class RefreshIndicatorOverlayState
 
   @override
   Widget build(BuildContext context) {
-    final double topPadding =
-        kToolbarHeight + MediaQuery.of(context).padding.top;
-
     final internetStatusState = ref.watch(internetStatusProvider);
-    final dataAsyncStatusState = ref.watch(dataSyncProvider);
-
     final hasConnection = internetStatusState.value ?? false;
-    final hasDataAsync = dataAsyncStatusState.syncStatus == SyncStatus.success;
 
-    return hasConnection && hasDataAsync
-        ? RefreshIndicator(
-            color: AppColors.white,
-            backgroundColor: AppColors.orange,
-            displacement: topPadding + 10,
-            onRefresh: () async {
-              if (!hasConnection) {
-                _showNoInternetDialog();
-                return;
-              }
+    return SmartRefresher(
+      controller: _refreshController,
+      onRefresh: () async {
+        if (!hasConnection) {
+          _refreshController.refreshFailed();
+          _showNoInternetDialog();
+          return;
+        }
 
-              Loader.show();
-              await ref.read(dataSyncProvider.notifier).sync();
-              Loader.dissmiss();
-            },
-            child: widget.child,
-          )
-        : Stack(
-            children: [
-              widget.child,
-              RefreshIndicator(
-                color: AppColors.white,
-                backgroundColor: AppColors.orange,
-                displacement: topPadding + 10,
-                onRefresh: () async {
-                  if (!hasConnection) {
-                    _showNoInternetDialog();
-                    return;
-                  }
-
-                  Loader.show();
-                  await ref.read(dataSyncProvider.notifier).sync();
-                  Loader.dissmiss();
-                },
-                child: SingleChildScrollView(
-                  physics: BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics(),
-                  ),
-                  child: Container(
-                    height: MediaQuery.of(context).size.height,
-                    color: Colors.transparent,
-                  ),
+        Loader.show();
+        await ref.read(dataSyncProvider.notifier).sync();
+        Loader.dissmiss();
+        _refreshController.refreshCompleted();
+      },
+      header: CustomHeader(
+        height: 60, // equivale a displacement
+        builder: (context, status) {
+          return Container(
+            alignment: Alignment.center,
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.orange,
+                shape: BoxShape.circle,
+              ),
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: AppColors.white,
                 ),
               ),
-            ],
+            ),
           );
+        },
+      ),
+
+      child: widget.child,
+    );
+
+    // return hasConnection && hasDataAsync
+    //     ? RefreshIndicator(
+    //         color: AppColors.white,
+    //         backgroundColor: AppColors.orange,
+    //         displacement: topPadding + 10,
+    //         onRefresh: () async {
+    //           if (!hasConnection) {
+    //             _showNoInternetDialog();
+    //             return;
+    //           }
+
+    //           Loader.show();
+    //           await ref.read(dataSyncProvider.notifier).sync();
+    //           Loader.dissmiss();
+    //         },
+    //         child: widget.child,
+    //       )
+    //     : Get.currentRoute != AppRoutes.home
+    //     ? Stack(
+    //         children: [
+    //           widget.child,
+    //           RefreshIndicator(
+    //             color: AppColors.white,
+    //             backgroundColor: AppColors.orange,
+    //             displacement: topPadding + 10,
+    //             onRefresh: () async {
+    //               if (!hasConnection) {
+    //                 _showNoInternetDialog();
+    //                 return;
+    //               }
+
+    //               Loader.show();
+    //               await ref.read(dataSyncProvider.notifier).sync();
+    //               Loader.dissmiss();
+    //             },
+    //             child: SingleChildScrollView(
+    //               physics: BouncingScrollPhysics(
+    //                 parent: AlwaysScrollableScrollPhysics(),
+    //               ),
+    //               child: Container(
+    //                 height: MediaQuery.of(context).size.height,
+    //                 color: Colors.transparent,
+    //               ),
+    //             ),
+    //           ),
+    //         ],
+    //       )
+    //     : RefreshIndicator(
+    //         color: AppColors.white,
+    //         backgroundColor: AppColors.orange,
+    //         displacement: topPadding + 10,
+    //         onRefresh: () async {
+    //           if (!hasConnection) {
+    //             _showNoInternetDialog();
+    //             return;
+    //           }
+
+    //           Loader.show();
+    //           await ref.read(dataSyncProvider.notifier).sync();
+    //           Loader.dissmiss();
+    //         },
+    //         child: widget.child,
+    //       );
   }
 }

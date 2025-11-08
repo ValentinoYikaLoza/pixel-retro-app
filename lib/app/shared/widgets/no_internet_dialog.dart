@@ -29,15 +29,39 @@ class _NoInternetDialogState extends State<NoInternetDialog> {
           fontFamily: 'Inter',
         ),
       ),
-      content: const Text(
-        'Por favor, conéctate a internet para continuar.',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: AppColors.white,
-          fontFamily: 'Inter',
+      content: RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: 'Por favor, conéctate a internet para continuar.\n\n',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.white,
+                fontFamily: 'Inter',
+              ),
+            ),
+            TextSpan(
+              text: 'Desliza para recargar.',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.backgroundDark,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ],
         ),
       ),
+      // content: const Text(
+      //   'Por favor, conéctate a internet para continuar.\nDesliza para recargar.',
+      //   style: TextStyle(
+      //     fontSize: 18,
+      //     fontWeight: FontWeight.bold,
+      //     color: AppColors.white,
+      //     fontFamily: 'Inter',
+      //   ),
+      // ),
       actions: [
         const SizedBox(height: 20),
         GestureDetector(

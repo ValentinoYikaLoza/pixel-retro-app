@@ -35,54 +35,102 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
 
     final hasIntenetConnection = internetStatusState.value ?? false;
     final hasDataAsync = dataAsyncStatusState.syncStatus == SyncStatus.success;
+    final isDataSyncning =
+        dataAsyncStatusState.syncStatus == SyncStatus.syncing;
 
     return AppBar(
       automaticallyImplyLeading: false,
-      flexibleSpace: hasIntenetConnection && hasDataAsync
-          ? Container(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: safeAreaPadding.top,
-              ),
-              height: 62 + safeAreaPadding.top,
-              decoration: BoxDecoration(
-                color: AppColors.backgroundDark,
-                border: Border(
-                  bottom: BorderSide(color: AppColors.orange, width: 2),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      AppRoutes.go(AppRoutes.shop);
-                    },
-                    child: AppBarRow(
-                      asset: 'assets/icons/coin.svg',
-                      text: '${userState.coins}',
-                      color: AppColors.yellow,
+      flexibleSpace: hasIntenetConnection
+          ? hasDataAsync
+                ? Container(
+                    padding: EdgeInsets.only(
+                      left: 20,
+                      right: 20,
+                      top: safeAreaPadding.top,
                     ),
-                  ),
-                  AppBarRow(
-                    asset: 'assets/icons/fire.svg',
-                    text: '${userState.streak}',
-                    color: AppColors.orange,
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      AppRoutes.go(AppRoutes.shop);
-                    },
-                    child: AppBarRow(
-                      asset: 'assets/icons/heart.svg',
-                      text: '${userState.lives}',
-                      color: AppColors.red,
+                    height: 62 + safeAreaPadding.top,
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundDark,
+                      border: Border(
+                        bottom: BorderSide(color: AppColors.orange, width: 2),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            )
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            AppRoutes.go(AppRoutes.shop);
+                          },
+                          child: AppBarRow(
+                            asset: 'assets/icons/coin.svg',
+                            text: '${userState.coins}',
+                            color: AppColors.yellow,
+                          ),
+                        ),
+                        AppBarRow(
+                          asset: 'assets/icons/fire.svg',
+                          text: '${userState.streak}',
+                          color: AppColors.orange,
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            AppRoutes.go(AppRoutes.shop);
+                          },
+                          child: AppBarRow(
+                            asset: 'assets/icons/heart.svg',
+                            text: '${userState.lives}',
+                            color: AppColors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : Container(
+                    padding: EdgeInsets.only(
+                      left: 20,
+                      right: 20,
+                      top: safeAreaPadding.top,
+                    ),
+                    height: 62 + safeAreaPadding.top,
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundDark,
+                      border: Border(
+                        bottom: BorderSide(color: AppColors.gray, width: 2),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      spacing: 20,
+                      children: [
+                        isDataSyncning
+                            ? SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: AppColors.gray,
+                                  strokeWidth: 5,
+                                ),
+                              )
+                            : Icon(
+                                Icons.arrow_downward_rounded,
+                                color: AppColors.gray,
+                                size: 24,
+                              ),
+                        Text(
+                          isDataSyncning
+                              ? 'CARGANDO DATOS'
+                              : 'DESLIZAR HACIA ABAJO',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Inter',
+                            color: AppColors.gray,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
           : Container(
               padding: EdgeInsets.only(
                 left: 20,

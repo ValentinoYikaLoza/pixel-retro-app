@@ -25,6 +25,7 @@ dependencies:
   google_mobile_ads: ^6.0.0
   intl: ^0.20.2
   permission_handler: ^12.0.1
+  pull_to_refresh: ^2.0.0
   shared_preferences: ^2.5.3
   web_socket_channel: ^3.0.3
 
