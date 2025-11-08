@@ -4,6 +4,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/shop/presentation/providers/shop_provider.dart';
+import 'package:pixel_retro_app/app/shared/providers/data_sync_provider.dart';
+import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_appbar.dart';
 
 class ShopScreen extends ConsumerStatefulWidget {
@@ -23,6 +25,12 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
   Widget build(BuildContext context) {
     final shopState = ref.watch(shopProvider);
 
+    final internetStatusState = ref.watch(internetStatusProvider);
+    final dataAsyncStatusState = ref.watch(dataSyncProvider);
+
+    final hasIntenetConnection = internetStatusState.value ?? false;
+    final hasDataAsync = dataAsyncStatusState.syncStatus == SyncStatus.success;
+
     final hasAdvertisements = shopState.advertisements.isNotEmpty;
     final hasCoinShopItems = shopState.coinShopItems.isNotEmpty;
     final hasLiveShopItems =
@@ -31,7 +39,12 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
 
     return Scaffold(
       appBar: const CustomAppbar(),
-      body: hasAdvertisements && hasCoinShopItems && hasLiveShopItems
+      body:
+          hasIntenetConnection &&
+              hasDataAsync &&
+              hasAdvertisements &&
+              hasCoinShopItems &&
+              hasLiveShopItems
           ? CustomScrollView(
               slivers: [
                 // -------------------- ANUNCIOS --------------------

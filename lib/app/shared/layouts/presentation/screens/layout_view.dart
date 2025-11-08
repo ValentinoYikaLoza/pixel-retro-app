@@ -1,28 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/widgets/tabs_layout.dart';
 import 'package:pixel_retro_app/app/shared/widgets/refresh_indicator.dart';
 
-class LayoutView extends ConsumerStatefulWidget {
-  const LayoutView({super.key, required this.child});
-
+class LayoutView extends StatelessWidget {
   final Widget child;
 
-  @override
-  LayoutViewState createState() => LayoutViewState();
-}
-
-class LayoutViewState extends ConsumerState<LayoutView> {
-  @override
-  void initState() {
-    super.initState();
-  }
+  const LayoutView({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: const TabsLayout(),
-      body: RefreshIndicatorOverlay(child: widget.child),
+      body: RefreshIndicatorOverlay(child: child),
     );
   }
 }

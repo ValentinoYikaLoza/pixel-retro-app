@@ -6,6 +6,8 @@ import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/user_ra
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/providers/leaderboard_provider.dart';
 import 'package:pixel_retro_app/app/features/time/presentation/widgets/time_widget.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
+import 'package:pixel_retro_app/app/shared/providers/data_sync_provider.dart';
+import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
   const LeaderboardScreen({super.key});
@@ -22,9 +24,14 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
     final leaderboardState = ref.watch(leaderboardProvider);
     final userState = ref.watch(userProvider);
-    EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
+    final internetStatusState = ref.watch(internetStatusProvider);
+    final dataAsyncStatusState = ref.watch(dataSyncProvider);
+
+    final hasIntenetConnection = internetStatusState.value ?? false;
+    final hasDataAsync = dataAsyncStatusState.syncStatus == SyncStatus.success;
 
     final hasDivisions = leaderboardState.divisions.isNotEmpty;
     final hasUsers = leaderboardState.users.isNotEmpty;
@@ -36,7 +43,12 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         : null;
 
     return Scaffold(
-      body: hasDivisions && hasUsers && currentDivision != null
+      body:
+          hasIntenetConnection &&
+              hasDataAsync &&
+              hasDivisions &&
+              hasUsers &&
+              currentDivision != null
           ? Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [

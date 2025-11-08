@@ -20,8 +20,6 @@ class CustomAppbar extends ConsumerStatefulWidget
 }
 
 class CustomAppbarState extends ConsumerState<CustomAppbar> {
-  String? userName;
-
   @override
   void initState() {
     super.initState();
@@ -33,10 +31,10 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
     final userState = ref.watch(userProvider);
 
     final internetStatusState = ref.watch(internetStatusProvider);
-    final dataAsyncStatusState = ref.watch(dataSyncStatusProvider);
+    final dataAsyncStatusState = ref.watch(dataSyncProvider);
 
     final hasIntenetConnection = internetStatusState.value ?? false;
-    final hasDataAsync = dataAsyncStatusState.value == SyncStatus.success;
+    final hasDataAsync = dataAsyncStatusState.syncStatus == SyncStatus.success;
 
     return AppBar(
       automaticallyImplyLeading: false,
