@@ -22,9 +22,13 @@ class _TabsLayoutState extends State<TabsLayout> {
   @override
   Widget build(BuildContext context) {
     EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
+
     int currentIndex = pageRoutes.indexWhere((route) {
       return route == Get.currentRoute;
     });
+
+    // Si no existe, asigna 0
+    if (currentIndex == -1) currentIndex = 0;
 
     return Container(
       decoration: BoxDecoration(

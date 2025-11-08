@@ -14,15 +14,17 @@ class _WaitToLayoutScreenState extends State<WaitToLayoutScreen> {
   @override
   void initState() {
     super.initState();
-    setScreenConfig();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setScreenConfig();
+    });
 
-    Future.delayed(const Duration(seconds: 1), () {
+    Future.delayed(const Duration(seconds: 2), () {
       AppRoutes.go(AppRoutes.home);
     });
   }
 
   void setScreenConfig() {
-    OrientationService.setOverlayColor(AppColors.orange);
+    OrientationService.setOverlayColor(AppColors.logoBackground);
     OrientationService.setPortrait();
     OrientationService.setEdgeToEdge();
   }
@@ -33,13 +35,8 @@ class _WaitToLayoutScreenState extends State<WaitToLayoutScreen> {
       canPop: false,
       child: Scaffold(
         body: Container(
-          decoration: BoxDecoration(color: AppColors.orange),
-          child: Center(
-            child: const Text(
-              'Espere...',
-              style: TextStyle(fontSize: 24, color: Colors.white),
-            ),
-          ),
+          decoration: BoxDecoration(color: AppColors.logoBackground),
+          child: Center(child: Image.asset('assets/images/logo.png')),
         ),
       ),
     );
