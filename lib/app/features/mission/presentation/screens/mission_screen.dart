@@ -36,328 +36,316 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
     final hasWeeklyReward = missionState.weeklyReward != null;
     final hasMonthlyReward = missionState.monthlyReward != null;
 
-    return Scaffold(
-      body:
-          hasIntenetConnection &&
-              hasDataAsync &&
-              hasMonthlyReward &&
-              hasWeeklyReward &&
-              hasDailyRewards
-          ? Column(
-              children: [
-                Container(
-                  padding: EdgeInsets.only(top: safeAreaPadding.top),
-                  decoration: BoxDecoration(color: AppColors.orange),
-                ),
-                Expanded(
-                  child: CustomScrollView(
-                    slivers: [
-                      // --- HEADER / RECOMPENSA MENSUAL ---
-                      SliverToBoxAdapter(
-                        child: Container(
-                          padding: EdgeInsets.only(
-                            bottom: 30,
-                            left: 20,
-                            right: 20,
-                            top: 30,
-                          ),
-                          decoration: BoxDecoration(color: AppColors.orange),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            spacing: 20,
-                            children: [
-                              // Header superior
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
+    return hasIntenetConnection &&
+            hasDataAsync &&
+            hasMonthlyReward &&
+            hasWeeklyReward &&
+            hasDailyRewards
+        ? Column(
+            children: [
+              Container(
+                padding: EdgeInsets.only(top: safeAreaPadding.top),
+                decoration: BoxDecoration(color: AppColors.orange),
+              ),
+              Expanded(
+                child: CustomScrollView(
+                  slivers: [
+                    // --- HEADER / RECOMPENSA MENSUAL ---
+                    SliverToBoxAdapter(
+                      child: Container(
+                        padding: EdgeInsets.only(
+                          bottom: 30,
+                          left: 20,
+                          right: 20,
+                          top: 30,
+                        ),
+                        decoration: BoxDecoration(color: AppColors.orange),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          spacing: 20,
+                          children: [
+                            // Header superior
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                  ),
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      timeState.currentMonth,
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        height: 20 / 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.orange,
+                                      ),
                                     ),
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.white,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        timeState.currentMonth,
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          height: 20 / 15,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.orange,
+                                  ),
+                                ),
+                                TimeWidget(
+                                  type: TimeWidgetType.timeUntilNextMonth,
+                                  color: AppColors.purple,
+                                ),
+                              ],
+                            ),
+
+                            // Recompensa mensual
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              spacing: 20,
+                              children: [
+                                Text(
+                                  missionState.monthlyReward!.description,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    height: 20 / 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.white,
+                                  ),
+                                ),
+                                Container(
+                                  height: 100,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.backgroundDark,
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: GoalWidget(
+                                    current: missionState
+                                        .monthlyReward!
+                                        .currentPoints,
+                                    total:
+                                        missionState.monthlyReward!.totalPoints,
+                                    imagePath: ref
+                                        .read(missionProvider.notifier)
+                                        .getRewardImage(
+                                          missionState.monthlyReward!.category,
                                         ),
-                                      ),
-                                    ),
                                   ),
-                                  TimeWidget(
-                                    type: TimeWidgetType.timeUntilNextMonth,
-                                    color: AppColors.purple,
-                                  ),
-                                ],
-                              ),
-
-                              // Recompensa mensual
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                spacing: 20,
-                                children: [
-                                  Text(
-                                    missionState.monthlyReward!.description,
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      height: 20 / 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.white,
-                                    ),
-                                  ),
-                                  Container(
-                                    height: 100,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.backgroundDark,
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    child: GoalWidget(
-                                      current: missionState
-                                          .monthlyReward!
-                                          .currentPoints,
-                                      total: missionState
-                                          .monthlyReward!
-                                          .totalPoints,
-                                      imagePath: ref
-                                          .read(missionProvider.notifier)
-                                          .getRewardImage(
-                                            missionState
-                                                .monthlyReward!
-                                                .category,
-                                          ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
+                    ),
 
-                      SliverToBoxAdapter(
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: AppColors.backgroundDark,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            spacing: 20,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                spacing: 5,
-                                children: [
-                                  const Text(
-                                    'Desafíos de la semana',
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      height: 24 / 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.white,
-                                    ),
-                                  ),
-                                  TimeWidget(
-                                    type: TimeWidgetType.timeUntilNextWeek,
-                                    color: AppColors.orange,
-                                    fontSize: 15,
-                                    showTheTextComplete: true,
-                                  ),
-                                ],
-                              ),
-                              Container(
-                                height: 120,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.backgroundDark,
-                                  borderRadius: BorderRadius.circular(15),
-                                  border: Border.all(
-                                    color: AppColors.orange,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: GoalWidget(
-                                  current:
-                                      missionState.weeklyReward!.currentPoints,
-                                  total: missionState.weeklyReward!.totalPoints,
-                                  imagePath: ref
-                                      .read(missionProvider.notifier)
-                                      .getRewardImage(
-                                        missionState.weeklyReward!.category,
-                                      ),
-                                  label: missionState.weeklyReward!.description,
-                                ),
-                              ),
-                            ],
-                          ),
+                    SliverToBoxAdapter(
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundDark,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ),
-
-                      // --- RECOMPENSAS DIARIAS ---
-                      SliverPadding(
-                        padding: const EdgeInsets.only(bottom: 30),
-                        sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate((
-                            context,
-                            index,
-                          ) {
-                            final reward = missionState.dailyRewards[index];
-                            return Container(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          spacing: 20,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              spacing: 5,
+                              children: [
+                                const Text(
+                                  'Desafíos de la semana',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    height: 24 / 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.white,
+                                  ),
+                                ),
+                                TimeWidget(
+                                  type: TimeWidgetType.timeUntilNextWeek,
+                                  color: AppColors.orange,
+                                  fontSize: 15,
+                                  showTheTextComplete: true,
+                                ),
+                              ],
+                            ),
+                            Container(
+                              height: 120,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 20,
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                spacing: 20,
-                                children: [
-                                  if (index == 0)
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      spacing: 5,
-                                      children: [
-                                        const Text(
-                                          'Desafíos del día',
-                                          style: TextStyle(
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.white,
-                                          ),
-                                        ),
-                                        TimeWidget(
-                                          type: TimeWidgetType.timeUntilNextDay,
-                                          color: AppColors.orange,
-                                          fontSize: 15,
-                                          showTheTextComplete: true,
-                                        ),
-                                      ],
+                              decoration: BoxDecoration(
+                                color: AppColors.backgroundDark,
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(
+                                  color: AppColors.orange,
+                                  width: 2,
+                                ),
+                              ),
+                              child: GoalWidget(
+                                current:
+                                    missionState.weeklyReward!.currentPoints,
+                                total: missionState.weeklyReward!.totalPoints,
+                                imagePath: ref
+                                    .read(missionProvider.notifier)
+                                    .getRewardImage(
+                                      missionState.weeklyReward!.category,
                                     ),
-                                  Container(
-                                    height: 120,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.backgroundDark,
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: index == 0
-                                            ? Radius.circular(15)
-                                            : Radius.zero,
-                                        topRight: index == 0
-                                            ? Radius.circular(15)
-                                            : Radius.zero,
-                                        bottomLeft: index == 2
-                                            ? Radius.circular(15)
-                                            : Radius.zero,
-                                        bottomRight: index == 2
-                                            ? Radius.circular(15)
-                                            : Radius.zero,
-                                      ),
-                                      border: Border(
-                                        top: index == 0
-                                            ? BorderSide(
-                                                color: AppColors.orange,
-                                                width: 2,
-                                              )
-                                            : BorderSide.none,
-                                        bottom: BorderSide(
-                                          color: AppColors.orange,
-                                          width: 2,
-                                        ),
-                                        left: BorderSide(
-                                          color: AppColors.orange,
-                                          width: 2,
-                                        ),
-                                        right: BorderSide(
-                                          color: AppColors.orange,
-                                          width: 2,
+                                label: missionState.weeklyReward!.description,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // --- RECOMPENSAS DIARIAS ---
+                    SliverPadding(
+                      padding: const EdgeInsets.only(bottom: 30),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final reward = missionState.dailyRewards[index];
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              spacing: 20,
+                              children: [
+                                if (index == 0)
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    spacing: 5,
+                                    children: [
+                                      const Text(
+                                        'Desafíos del día',
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.white,
                                         ),
                                       ),
+                                      TimeWidget(
+                                        type: TimeWidgetType.timeUntilNextDay,
+                                        color: AppColors.orange,
+                                        fontSize: 15,
+                                        showTheTextComplete: true,
+                                      ),
+                                    ],
+                                  ),
+                                Container(
+                                  height: 120,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.backgroundDark,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: index == 0
+                                          ? Radius.circular(15)
+                                          : Radius.zero,
+                                      topRight: index == 0
+                                          ? Radius.circular(15)
+                                          : Radius.zero,
+                                      bottomLeft: index == 2
+                                          ? Radius.circular(15)
+                                          : Radius.zero,
+                                      bottomRight: index == 2
+                                          ? Radius.circular(15)
+                                          : Radius.zero,
                                     ),
-                                    child: GoalWidget(
-                                      current: reward.currentPoints,
-                                      total: reward.totalPoints,
-                                      imagePath: ref
-                                          .read(missionProvider.notifier)
-                                          .getRewardImage(reward.category),
-                                      label: reward.description,
+                                    border: Border(
+                                      top: index == 0
+                                          ? BorderSide(
+                                              color: AppColors.orange,
+                                              width: 2,
+                                            )
+                                          : BorderSide.none,
+                                      bottom: BorderSide(
+                                        color: AppColors.orange,
+                                        width: 2,
+                                      ),
+                                      left: BorderSide(
+                                        color: AppColors.orange,
+                                        width: 2,
+                                      ),
+                                      right: BorderSide(
+                                        color: AppColors.orange,
+                                        width: 2,
+                                      ),
                                     ),
                                   ),
-                                ],
-                              ),
-                            );
-                          }, childCount: missionState.dailyRewards.length),
-                        ),
+                                  child: GoalWidget(
+                                    current: reward.currentPoints,
+                                    total: reward.totalPoints,
+                                    imagePath: ref
+                                        .read(missionProvider.notifier)
+                                        .getRewardImage(reward.category),
+                                    label: reward.description,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }, childCount: missionState.dailyRewards.length),
                       ),
-                    ],
-                  ),
-                ),
-              ],
-            )
-          : Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  spacing: 20,
-                  children: [
-                    Stack(
-                      children: [
-                        Text(
-                          "Las desafíos no están disponibles\nen este momento",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Pixel',
-                            foreground: Paint()
-                              ..style = PaintingStyle.stroke
-                              ..strokeWidth = 4
-                              ..color = AppColors.orange,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        Text(
-                          "Las desafíos no están disponibles\nen este momento",
-                          style: TextStyle(
-                            color: AppColors.purple,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Pixel',
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                    Text(
-                      "Parece que estás offline. ¡Revisa tu conexión!",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.white,
-                        fontFamily: 'Inter',
-                      ),
-                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
               ),
+            ],
+          )
+        : Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                spacing: 20,
+                children: [
+                  Stack(
+                    children: [
+                      Text(
+                        "Las desafíos no están disponibles\nen este momento",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Pixel',
+                          foreground: Paint()
+                            ..style = PaintingStyle.stroke
+                            ..strokeWidth = 4
+                            ..color = AppColors.orange,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        "Las desafíos no están disponibles\nen este momento",
+                        style: TextStyle(
+                          color: AppColors.purple,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Pixel',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                  Text(
+                    "Parece que estás offline. ¡Revisa tu conexión!",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.white,
+                      fontFamily: 'Inter',
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
-    );
+          );
   }
 }
 

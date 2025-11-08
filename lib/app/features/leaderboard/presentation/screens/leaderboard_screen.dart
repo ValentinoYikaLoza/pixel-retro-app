@@ -42,174 +42,171 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           )
         : null;
 
-    return Scaffold(
-      body:
-          hasIntenetConnection &&
-              hasDataAsync &&
-              hasDivisions &&
-              hasUsers &&
-              currentDivision != null
-          ? Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                // --- HEADER ---
-                Container(
-                  padding: EdgeInsets.only(
-                    top: 30 + safeAreaPadding.top,
-                    bottom: 30,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: AppColors.orange, width: 2),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: 30,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              currentDivision.name,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.white,
-                              ),
-                            ),
-                            TimeWidget(
-                              type: TimeWidgetType.timeUntilNextSeason,
-                              color: AppColors.orange,
-                            ),
-                          ],
-                        ),
-                      ),
-                      // --- Divisiones ---
-                      SizedBox(
-                        height: 75,
-                        child: CustomScrollView(
-                          scrollDirection: Axis.horizontal,
-                          slivers: [
-                            const SliverPadding(
-                              padding: EdgeInsets.only(left: 20),
-                            ),
-                            SliverList.separated(
-                              itemBuilder: (context, index) {
-                                return SvgPicture.asset(
-                                  ref
-                                      .read(leaderboardProvider.notifier)
-                                      .getDivisionImage(
-                                        leaderboardState.divisions[index].id,
-                                        userState.divisionId,
-                                      ),
-                                  width: 75,
-                                  height: 75,
-                                );
-                              },
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(width: 20),
-                              itemCount: leaderboardState.divisions.length,
-                            ),
-                            const SliverPadding(
-                              padding: EdgeInsets.only(right: 20),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+    return hasIntenetConnection &&
+            hasDataAsync &&
+            hasDivisions &&
+            hasUsers &&
+            currentDivision != null
+        ? Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              // --- HEADER ---
+              Container(
+                padding: EdgeInsets.only(
+                  top: 30 + safeAreaPadding.top,
+                  bottom: 30,
+                ),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: AppColors.orange, width: 2),
                   ),
                 ),
-
-                // --- LISTA DE USUARIOS ---
-                Expanded(
-                  child: CustomScrollView(
-                    slivers: [
-                      SliverList.builder(
-                        itemBuilder: (context, index) {
-                          final user = leaderboardState.users[index];
-                          return Column(
-                            spacing: 20,
-                            children: [
-                              UserRow(
-                                isCurrentUser: userState.userId == user.id,
-                                user: user,
-                                index: index + 1,
-                              ),
-                              if (index + 1 == 5)
-                                Separator(
-                                  text: "ZONA DE ASCENSO",
-                                  color: AppColors.emerald,
-                                  icon: 'assets/icons/arrow-up.svg',
-                                ),
-                              if (index + 1 == 15)
-                                Separator(
-                                  text: "ZONA DE DESCENSO",
-                                  color: AppColors.ruby,
-                                  icon: 'assets/icons/arrow-down.svg',
-                                ),
-                            ],
-                          );
-                        },
-                        itemCount: leaderboardState.users.length,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            )
-          : Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  spacing: 20,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 30,
                   children: [
-                    Stack(
-                      children: [
-                        Text(
-                          "Las ligas no están disponibles\nen este momento",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Pixel',
-                            foreground: Paint()
-                              ..style = PaintingStyle.stroke
-                              ..strokeWidth = 4
-                              ..color = AppColors.orange,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            currentDivision.name,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.white,
+                            ),
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                        Text(
-                          "Las ligas no están disponibles\nen este momento",
-                          style: TextStyle(
-                            color: AppColors.purple,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Pixel',
+                          TimeWidget(
+                            type: TimeWidgetType.timeUntilNextSeason,
+                            color: AppColors.orange,
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                    Text(
-                      "Parece que estás offline. ¡Revisa tu conexión!",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.white,
-                        fontFamily: 'Inter',
+                        ],
                       ),
-                      textAlign: TextAlign.center,
+                    ),
+                    // --- Divisiones ---
+                    SizedBox(
+                      height: 75,
+                      child: CustomScrollView(
+                        scrollDirection: Axis.horizontal,
+                        slivers: [
+                          const SliverPadding(
+                            padding: EdgeInsets.only(left: 20),
+                          ),
+                          SliverList.separated(
+                            itemBuilder: (context, index) {
+                              return SvgPicture.asset(
+                                ref
+                                    .read(leaderboardProvider.notifier)
+                                    .getDivisionImage(
+                                      leaderboardState.divisions[index].id,
+                                      userState.divisionId,
+                                    ),
+                                width: 75,
+                                height: 75,
+                              );
+                            },
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 20),
+                            itemCount: leaderboardState.divisions.length,
+                          ),
+                          const SliverPadding(
+                            padding: EdgeInsets.only(right: 20),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
+
+              // --- LISTA DE USUARIOS ---
+              Expanded(
+                child: CustomScrollView(
+                  slivers: [
+                    SliverList.builder(
+                      itemBuilder: (context, index) {
+                        final user = leaderboardState.users[index];
+                        return Column(
+                          spacing: 20,
+                          children: [
+                            UserRow(
+                              isCurrentUser: userState.userId == user.id,
+                              user: user,
+                              index: index + 1,
+                            ),
+                            if (index + 1 == 5)
+                              Separator(
+                                text: "ZONA DE ASCENSO",
+                                color: AppColors.emerald,
+                                icon: 'assets/icons/arrow-up.svg',
+                              ),
+                            if (index + 1 == 15)
+                              Separator(
+                                text: "ZONA DE DESCENSO",
+                                color: AppColors.ruby,
+                                icon: 'assets/icons/arrow-down.svg',
+                              ),
+                          ],
+                        );
+                      },
+                      itemCount: leaderboardState.users.length,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          )
+        : Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                spacing: 20,
+                children: [
+                  Stack(
+                    children: [
+                      Text(
+                        "Las ligas no están disponibles\nen este momento",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Pixel',
+                          foreground: Paint()
+                            ..style = PaintingStyle.stroke
+                            ..strokeWidth = 4
+                            ..color = AppColors.orange,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        "Las ligas no están disponibles\nen este momento",
+                        style: TextStyle(
+                          color: AppColors.purple,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Pixel',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                  Text(
+                    "Parece que estás offline. ¡Revisa tu conexión!",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.white,
+                      fontFamily: 'Inter',
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
-    );
+          );
   }
 }
 
