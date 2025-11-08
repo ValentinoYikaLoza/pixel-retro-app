@@ -4,6 +4,7 @@ import 'package:pixel_retro_app/app/features/home/domain/models/get_game_list_re
 import 'package:pixel_retro_app/app/features/home/domain/repositories/home_repository.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
+import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/di.dart';
 
@@ -12,10 +13,27 @@ final homeProvider = StateNotifierProvider<HomeNotifier, HomeState>((ref) {
 });
 
 class HomeNotifier extends StateNotifier<HomeState> {
-  HomeNotifier(this.ref) : super(HomeState());
+  HomeNotifier(this.ref) : super(HomeState()) {
+    _init();
+  }
 
   final Ref ref;
   final HomeRepository repository = getIt<HomeRepository>();
+
+  void _init() {
+    ref.listen<bool>(
+      internetStatusProvider.select((async) => async.value ?? false),
+      (previous, hasInternet) {
+        if (!hasInternet) {
+          initData();
+        }
+      },
+    );
+  }
+
+  void initData() async {
+    state = state.copyWith(games: const [], gameSelected: null);
+  }
 
   Future<void> getGames() async {
     try {

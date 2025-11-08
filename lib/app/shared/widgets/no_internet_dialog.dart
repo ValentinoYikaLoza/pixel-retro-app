@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
+import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 
 class NoInternetDialog extends StatefulWidget {
   const NoInternetDialog({super.key});
@@ -44,6 +45,10 @@ class _NoInternetDialogState extends State<NoInternetDialog> {
           onTapUp: (_) {
             setState(() => _pressed = false);
             Get.back();
+
+            Get.currentRoute == AppRoutes.root
+                ? AppRoutes.go(AppRoutes.home)
+                : () {};
           },
           onTapCancel: () => setState(() => _pressed = false),
           child: AnimatedContainer(

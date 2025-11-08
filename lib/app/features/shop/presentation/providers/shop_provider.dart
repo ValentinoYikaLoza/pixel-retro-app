@@ -8,6 +8,7 @@ import 'package:pixel_retro_app/app/features/shop/domain/models/get_live_shop_li
 import 'package:pixel_retro_app/app/features/shop/domain/repositories/shop_repository.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
+import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/di.dart';
 
@@ -16,10 +17,32 @@ final shopProvider = StateNotifierProvider<ShopNotifier, ShopState>((ref) {
 });
 
 class ShopNotifier extends StateNotifier<ShopState> {
-  ShopNotifier(this.ref) : super(ShopState());
+  ShopNotifier(this.ref) : super(ShopState()) {
+    _init();
+  }
 
   final Ref ref;
   final ShopRepository repository = getIt<ShopRepository>();
+
+  void _init() {
+    ref.listen<bool>(
+      internetStatusProvider.select((async) => async.value ?? false),
+      (previous, hasInternet) {
+        if (!hasInternet) {
+          initData();
+        }
+      },
+    );
+  }
+
+  void initData() {
+    state = state.copyWith(
+      advertisements: const [],
+      coinShopItems: const [],
+      liveShopItemsUnitUsd: const [],
+      liveShopItemsUnitCoin: const [],
+    );
+  }
 
   Future<void> getAdvertisements() async {
     try {

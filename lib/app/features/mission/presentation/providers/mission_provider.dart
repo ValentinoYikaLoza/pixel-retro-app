@@ -7,6 +7,7 @@ import 'package:pixel_retro_app/app/features/mission/domain/repositories/mission
 import 'package:pixel_retro_app/app/features/mission/presentation/data/mission_mapper.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
+import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
 import 'package:pixel_retro_app/app/shared/providers/web_socket_provider.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/di.dart';
@@ -18,15 +19,36 @@ final missionProvider = StateNotifierProvider<MissionNotifier, MissionState>((
 });
 
 class MissionNotifier extends StateNotifier<MissionState> {
-  MissionNotifier(this.ref) : super(const MissionState());
+  MissionNotifier(this.ref) : super(const MissionState()) {
+    _init();
+  }
 
   final Ref ref;
   final MissionRepository repository = getIt<MissionRepository>();
 
   StreamSubscription<Map<String, dynamic>>? _missionsSub;
 
+  void _init() {
+    ref.listen<bool>(
+      internetStatusProvider.select((async) => async.value ?? false),
+      (previous, hasInternet) {
+        if (!hasInternet) {
+          initData();
+        }
+      },
+    );
+  }
+
+  void initData() {
+    state = state.copyWith(
+      dailyRewards: const [],
+      weeklyReward: null,
+      monthlyReward: null,
+    );
+  }
+
   /// Inicializa las misiones y se suscribe a los streams del WebSocket
-  Future<void> initData() async {
+  Future<void> initDataMissions() async {
     // Obtiene la instancia del socket desde Riverpod
     final socket = ref.read(websocketServiceProvider);
     // 🎯 Escucha las misiones en tiempo real
@@ -46,7 +68,7 @@ class MissionNotifier extends StateNotifier<MissionState> {
 
   Future<void> getMissions() async {
     try {
-      await initData();
+      await initDataMissions();
       await repository.getMissions();
     } on ServiceException catch (_) {
       SnackbarService.show(

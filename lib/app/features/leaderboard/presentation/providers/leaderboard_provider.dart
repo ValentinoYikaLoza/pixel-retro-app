@@ -8,7 +8,9 @@ import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_user_
 import 'package:pixel_retro_app/app/features/leaderboard/domain/repositories/leaderboard_repository.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/data/user_mapper.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
+import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
 import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
+import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
 import 'package:pixel_retro_app/app/shared/providers/web_socket_provider.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/di.dart';
@@ -19,12 +21,29 @@ final leaderboardProvider =
     });
 
 class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
-  LeaderboardNotifier(this.ref) : super(LeaderboardState());
+  LeaderboardNotifier(this.ref) : super(LeaderboardState()) {
+    _init();
+  }
 
   final Ref ref;
   final LeaderboardRepository repository = getIt<LeaderboardRepository>();
 
   StreamSubscription<Map<String, dynamic>>? _usersSub;
+
+  void _init() {
+    ref.listen<bool>(
+      internetStatusProvider.select((async) => async.value ?? false),
+      (previous, hasInternet) {
+        if (!hasInternet) {
+          initData();
+        }
+      },
+    );
+  }
+
+  void initData() async {
+    state = state.copyWith(divisions: const [], users: const []);
+  }
 
   Future<void> initDataUser() async {
     // Obtiene la instancia del socket desde Riverpod
@@ -49,6 +68,22 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
         type: SnackbarType.error,
       );
     }
+  }
+
+  String getDivision() {
+    final userState = ref.read(userProvider);
+
+    final divisions = state.divisions;
+
+    if (divisions.isEmpty) return '';
+
+    final DivisionEntity currentDivision = divisions.firstWhere(
+      (division) => division.id == userState.divisionId,
+    );
+
+    final divisionName = currentDivision.name;
+
+    return divisionName;
   }
 
   Future<void> getDivisions() async {

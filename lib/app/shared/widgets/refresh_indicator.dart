@@ -38,39 +38,56 @@ class RefreshIndicatorOverlayState
         kToolbarHeight + MediaQuery.of(context).padding.top;
 
     final internetStatusState = ref.watch(internetStatusProvider);
+    final dataAsyncStatusState = ref.watch(dataSyncProvider);
 
     final hasConnection = internetStatusState.value ?? false;
+    final hasDataAsync = dataAsyncStatusState.syncStatus == SyncStatus.success;
 
-    return Stack(
-      children: [
-        widget.child, // Tu contenido original debajo
-        RefreshIndicator(
-          color: AppColors.white,
-          backgroundColor: AppColors.orange,
-          displacement: topPadding + 10,
-          onRefresh: () async {
-            if (!hasConnection) {
-              _showNoInternetDialog();
-              return;
-            }
+    return hasConnection && hasDataAsync
+        ? RefreshIndicator(
+            color: AppColors.white,
+            backgroundColor: AppColors.orange,
+            displacement: topPadding + 10,
+            onRefresh: () async {
+              if (!hasConnection) {
+                _showNoInternetDialog();
+                return;
+              }
 
-            Loader.show();
-            await ref.read(dataSyncProvider.notifier).sync();
-            Loader.dissmiss();
-          },
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            child: Container(
-              // Esto asegura que el scroll pueda existir aunque no haya contenido
-              height: MediaQuery.of(context).size.height,
-              padding: EdgeInsets.only(top: topPadding),
-              color: Colors.transparent,
-            ),
-          ),
-        ),
-      ],
-    );
+              Loader.show();
+              await ref.read(dataSyncProvider.notifier).sync();
+              Loader.dissmiss();
+            },
+            child: widget.child,
+          )
+        : Stack(
+            children: [
+              widget.child,
+              RefreshIndicator(
+                color: AppColors.white,
+                backgroundColor: AppColors.orange,
+                displacement: topPadding + 10,
+                onRefresh: () async {
+                  if (!hasConnection) {
+                    _showNoInternetDialog();
+                    return;
+                  }
+
+                  Loader.show();
+                  await ref.read(dataSyncProvider.notifier).sync();
+                  Loader.dissmiss();
+                },
+                child: SingleChildScrollView(
+                  physics: BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics(),
+                  ),
+                  child: Container(
+                    height: MediaQuery.of(context).size.height,
+                    color: Colors.transparent,
+                  ),
+                ),
+              ),
+            ],
+          );
   }
 }

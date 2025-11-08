@@ -5,7 +5,6 @@ import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/features/mission/presentation/providers/mission_provider.dart';
 import 'package:pixel_retro_app/app/features/time/presentation/providers/time_provider.dart';
 import 'package:pixel_retro_app/app/features/time/presentation/widgets/time_widget.dart';
-import 'package:pixel_retro_app/app/shared/providers/data_sync_provider.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
 
 class MissionScreen extends ConsumerStatefulWidget {
@@ -27,17 +26,14 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
     final missionState = ref.watch(missionProvider);
     final timeState = ref.watch(timeProvider);
     final internetStatusState = ref.watch(internetStatusProvider);
-    final dataAsyncStatusState = ref.watch(dataSyncProvider);
 
     final hasIntenetConnection = internetStatusState.value ?? false;
-    final hasDataAsync = dataAsyncStatusState.syncStatus == SyncStatus.success;
 
     final hasDailyRewards = missionState.dailyRewards.isNotEmpty;
     final hasWeeklyReward = missionState.weeklyReward != null;
     final hasMonthlyReward = missionState.monthlyReward != null;
 
     return hasIntenetConnection &&
-            hasDataAsync &&
             hasMonthlyReward &&
             hasWeeklyReward &&
             hasDailyRewards

@@ -6,7 +6,6 @@ import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/user_ra
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/providers/leaderboard_provider.dart';
 import 'package:pixel_retro_app/app/features/time/presentation/widgets/time_widget.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
-import 'package:pixel_retro_app/app/shared/providers/data_sync_provider.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
@@ -28,25 +27,20 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     final leaderboardState = ref.watch(leaderboardProvider);
     final userState = ref.watch(userProvider);
     final internetStatusState = ref.watch(internetStatusProvider);
-    final dataAsyncStatusState = ref.watch(dataSyncProvider);
 
     final hasIntenetConnection = internetStatusState.value ?? false;
-    final hasDataAsync = dataAsyncStatusState.syncStatus == SyncStatus.success;
 
     final hasDivisions = leaderboardState.divisions.isNotEmpty;
     final hasUsers = leaderboardState.users.isNotEmpty;
 
-    final currentDivision = hasDivisions
-        ? leaderboardState.divisions.firstWhere(
-            (division) => division.id == userState.divisionId,
-          )
-        : null;
+    final String currentDivisionName = ref
+        .read(leaderboardProvider.notifier)
+        .getDivision();
 
     return hasIntenetConnection &&
-            hasDataAsync &&
             hasDivisions &&
             hasUsers &&
-            currentDivision != null
+            currentDivisionName != ''
         ? Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -71,7 +65,7 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            currentDivision.name,
+                            currentDivisionName,
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,

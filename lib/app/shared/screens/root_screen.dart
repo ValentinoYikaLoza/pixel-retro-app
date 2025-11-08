@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/shared/providers/data_sync_provider.dart';
@@ -27,6 +28,8 @@ class RootScreenState extends ConsumerState<RootScreen> {
 
   Future<void> getData() async {
     await ref.read(dataSyncProvider.notifier).sync();
+
+    if (Get.isDialogOpen == true) return;
 
     AppRoutes.go(AppRoutes.home);
   }
