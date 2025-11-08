@@ -36,7 +36,6 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
-  // En HomeScreenState
   void _handleAnimationComplete(String gameMode) {
     if (shouldRotate) {
       setState(() {

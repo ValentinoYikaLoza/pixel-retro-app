@@ -5,6 +5,7 @@ import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:pixel_retro_app/app/shared/providers/data_sync_provider.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
 
 class CustomAppbar extends ConsumerStatefulWidget
@@ -32,12 +33,14 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
     final userState = ref.watch(userProvider);
 
     final internetStatusState = ref.watch(internetStatusProvider);
+    final dataAsyncStatusState = ref.watch(dataSyncStatusProvider);
 
     final hasIntenetConnection = internetStatusState.value ?? false;
+    final hasDataAsync = dataAsyncStatusState.value == SyncStatus.success;
 
     return AppBar(
       automaticallyImplyLeading: false,
-      flexibleSpace: hasIntenetConnection
+      flexibleSpace: hasIntenetConnection && hasDataAsync
           ? Container(
               padding: EdgeInsets.only(
                 left: 20,
