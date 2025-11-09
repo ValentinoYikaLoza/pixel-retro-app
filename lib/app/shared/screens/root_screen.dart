@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
@@ -13,16 +15,29 @@ class RootScreen extends ConsumerStatefulWidget {
 }
 
 class RootScreenState extends ConsumerState<RootScreen> {
+  String loadingText = "Cargando";
+  Timer? _timer;
+  int dotCount = 0;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await getData();
     });
+
+    // Animación de los puntitos
+    _timer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+      setState(() {
+        dotCount = (dotCount + 1) % 4; // 0,1,2,3 → vuelve a 0
+        loadingText = "Cargando${"." * dotCount}";
+      });
+    });
   }
 
   @override
   void dispose() {
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -31,6 +46,8 @@ class RootScreenState extends ConsumerState<RootScreen> {
 
     if (Get.isDialogOpen == true) return;
 
+    _timer?.cancel();
+
     AppRoutes.go(AppRoutes.home);
   }
 
@@ -38,7 +55,39 @@ class RootScreenState extends ConsumerState<RootScreen> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(color: AppColors.logoBackground),
-      child: Center(child: Image.asset('assets/images/logo.png')),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        spacing: 20,
+        children: [
+          Image.asset('assets/images/logo.png'),
+          Stack(
+            children: [
+              Text(
+                loadingText,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Pixel',
+                  foreground: Paint()
+                    ..style = PaintingStyle.stroke
+                    ..strokeWidth = 4
+                    ..color = AppColors.orange,
+                ),
+              ),
+              Text(
+                loadingText,
+                style: TextStyle(
+                  color: AppColors.purple,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Pixel',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
