@@ -53,15 +53,6 @@ class _NoInternetDialogState extends State<NoInternetDialog> {
           ],
         ),
       ),
-      // content: const Text(
-      //   'Por favor, conéctate a internet para continuar.\nDesliza para recargar.',
-      //   style: TextStyle(
-      //     fontSize: 18,
-      //     fontWeight: FontWeight.bold,
-      //     color: AppColors.white,
-      //     fontFamily: 'Inter',
-      //   ),
-      // ),
       actions: [
         const SizedBox(height: 20),
         GestureDetector(

@@ -6,6 +6,7 @@ import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/providers/snake_game_provider.dart';
 import 'package:pixel_retro_app/app/shared/providers/ad_provider.dart';
+import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_icon_button.dart';
 
 class GameBoard extends ConsumerStatefulWidget {
@@ -19,7 +20,7 @@ class GameBoardState extends ConsumerState<GameBoard> {
   @override
   Widget build(BuildContext context) {
     final gameState = ref.watch(snakeGameProvider);
-    final adBannerAsync = ref.watch(adBannerProvider);
+    final adAsync = ref.watch(adProvider(AdType.banner));
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -213,19 +214,25 @@ class GameBoardState extends ConsumerState<GameBoard> {
                       ),
                     ),
 
+                    // Ad banner – solo si cargó correctamente
                     Positioned(
                       bottom: 0,
-                      child: adBannerAsync.when(
+                      left: 0,
+                      right: 0,
+                      child: adAsync.when(
                         data: (ad) {
-                          if (ad == null) return const SizedBox();
-                          return SizedBox(
-                            width: ad.size.width.toDouble(),
-                            height: ad.size.height.toDouble(),
-                            child: AdWidget(ad: ad),
-                          );
+                          if (ad is BannerAd) {
+                            return Container(
+                              alignment: Alignment.center,
+                              width: ad.size.width.toDouble(),
+                              height: ad.size.height.toDouble(),
+                              child: AdWidget(ad: ad),
+                            );
+                          }
+                          return const SizedBox();
                         },
-                        loading: () => const SizedBox(),
-                        error: (error, stackTrace) => const SizedBox(),
+                        loading: () => const SizedBox(height: 50),
+                        error: (_, __) => const SizedBox(),
                       ),
                     ),
                   ],

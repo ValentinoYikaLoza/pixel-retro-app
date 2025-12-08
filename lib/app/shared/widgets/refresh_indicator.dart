@@ -38,7 +38,10 @@ class RefreshIndicatorOverlayState
   @override
   Widget build(BuildContext context) {
     final internetStatusState = ref.watch(internetStatusProvider);
+    final dataAsyncStatusState = ref.watch(dataSyncProvider);
+
     final hasConnection = internetStatusState.value ?? false;
+    final hasDataAsync = dataAsyncStatusState.syncStatus == SyncStatus.success;
 
     return SmartRefresher(
       controller: _refreshController,
@@ -49,13 +52,14 @@ class RefreshIndicatorOverlayState
           return;
         }
 
+        _refreshController.refreshCompleted();
         Loader.show();
         await ref.read(dataSyncProvider.notifier).sync();
         Loader.dissmiss();
-        _refreshController.refreshCompleted();
       },
+      enablePullDown: !hasConnection || !hasDataAsync,
       header: CustomHeader(
-        height: 60, // equivale a displacement
+        height: 60,
         builder: (context, status) {
           return Container(
             alignment: Alignment.center,
@@ -80,69 +84,5 @@ class RefreshIndicatorOverlayState
 
       child: widget.child,
     );
-
-    // return hasConnection && hasDataAsync
-    //     ? RefreshIndicator(
-    //         color: AppColors.white,
-    //         backgroundColor: AppColors.orange,
-    //         displacement: topPadding + 10,
-    //         onRefresh: () async {
-    //           if (!hasConnection) {
-    //             _showNoInternetDialog();
-    //             return;
-    //           }
-
-    //           Loader.show();
-    //           await ref.read(dataSyncProvider.notifier).sync();
-    //           Loader.dissmiss();
-    //         },
-    //         child: widget.child,
-    //       )
-    //     : Get.currentRoute != AppRoutes.home
-    //     ? Stack(
-    //         children: [
-    //           widget.child,
-    //           RefreshIndicator(
-    //             color: AppColors.white,
-    //             backgroundColor: AppColors.orange,
-    //             displacement: topPadding + 10,
-    //             onRefresh: () async {
-    //               if (!hasConnection) {
-    //                 _showNoInternetDialog();
-    //                 return;
-    //               }
-
-    //               Loader.show();
-    //               await ref.read(dataSyncProvider.notifier).sync();
-    //               Loader.dissmiss();
-    //             },
-    //             child: SingleChildScrollView(
-    //               physics: BouncingScrollPhysics(
-    //                 parent: AlwaysScrollableScrollPhysics(),
-    //               ),
-    //               child: Container(
-    //                 height: MediaQuery.of(context).size.height,
-    //                 color: Colors.transparent,
-    //               ),
-    //             ),
-    //           ),
-    //         ],
-    //       )
-    //     : RefreshIndicator(
-    //         color: AppColors.white,
-    //         backgroundColor: AppColors.orange,
-    //         displacement: topPadding + 10,
-    //         onRefresh: () async {
-    //           if (!hasConnection) {
-    //             _showNoInternetDialog();
-    //             return;
-    //           }
-
-    //           Loader.show();
-    //           await ref.read(dataSyncProvider.notifier).sync();
-    //           Loader.dissmiss();
-    //         },
-    //         child: widget.child,
-    //       );
   }
 }

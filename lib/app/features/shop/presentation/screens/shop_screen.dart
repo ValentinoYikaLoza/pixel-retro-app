@@ -1,26 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
-import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/shop/presentation/providers/shop_provider.dart';
+import 'package:pixel_retro_app/app/features/shop/presentation/widgets/anuncio_container.dart';
+import 'package:pixel_retro_app/app/features/shop/presentation/widgets/section_title.dart';
+import 'package:pixel_retro_app/app/features/shop/presentation/widgets/show_item.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
 
-class ShopScreen extends ConsumerStatefulWidget {
+class ShopScreen extends ConsumerWidget {
   const ShopScreen({super.key});
 
   @override
-  ShopScreenState createState() => ShopScreenState();
-}
-
-class ShopScreenState extends ConsumerState<ShopScreen> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final shopState = ref.watch(shopProvider);
 
     final internetStatusState = ref.watch(internetStatusProvider);
@@ -47,16 +38,7 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
                     spacing: 20,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Anuncios',
-                        style: TextStyle(
-                          fontSize: 24,
-                          height: 24 / 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.white,
-                        ),
-                      ),
-
+                      const SectionTitle(title: 'Anuncios'),
                       ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -92,15 +74,7 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
                     spacing: 20,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Monedas',
-                        style: TextStyle(
-                          fontSize: 24,
-                          height: 24 / 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.white,
-                        ),
-                      ),
+                      const SectionTitle(title: 'Monedas'),
 
                       GridView.builder(
                         gridDelegate:
@@ -116,7 +90,7 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
                         itemBuilder: (context, index) {
                           final item = shopState.coinShopItems[index];
 
-                          return ShopItemWidget(
+                          return ShopItem(
                             imagePath: ref
                                 .read(shopProvider.notifier)
                                 .getItemImagePath(index + 1, TypeItemShop.coin),
@@ -145,15 +119,7 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
                     spacing: 20,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Vidas',
-                        style: TextStyle(
-                          fontSize: 24,
-                          height: 24 / 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.white,
-                        ),
-                      ),
+                      const SectionTitle(title: 'Vidas'),
 
                       // live items USD
                       GridView.builder(
@@ -170,7 +136,7 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
                         itemBuilder: (context, index) {
                           final item = shopState.liveShopItemsUnitUsd[index];
 
-                          return ShopItemWidget(
+                          return ShopItem(
                             imagePath: ref
                                 .read(shopProvider.notifier)
                                 .getItemImagePath(index + 1, TypeItemShop.live),
@@ -197,7 +163,7 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
                         itemBuilder: (context, index) {
                           final item = shopState.liveShopItemsUnitCoin[index];
 
-                          return ShopItemWidget(
+                          return ShopItem(
                             imagePath: ref
                                 .read(shopProvider.notifier)
                                 .getItemImagePath(index + 1, TypeItemShop.live),
@@ -265,141 +231,3 @@ class ShopScreenState extends ConsumerState<ShopScreen> {
           );
   }
 }
-
-class ShopItemWidget extends StatelessWidget {
-  const ShopItemWidget({
-    super.key,
-    required this.imagePath,
-    required this.quantity,
-    required this.price,
-    required this.unit,
-    required this.color,
-  });
-
-  final String imagePath;
-  final int quantity;
-  final double price;
-  final ShopItemUnit unit;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppColors.orange, width: 2),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      child: Column(
-        spacing: 10,
-        children: [
-          SvgPicture.asset(imagePath, height: 72),
-          Text(
-            '$quantity',
-            style: const TextStyle(
-              fontSize: 18,
-              height: 18 / 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.white,
-            ),
-          ),
-          if (unit == ShopItemUnit.usd)
-            Text(
-              'USD \$$price',
-              style: TextStyle(
-                fontSize: 18,
-                height: 18 / 16,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-          if (unit == ShopItemUnit.coin)
-            Row(
-              spacing: 5,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SvgPicture.asset(
-                  'assets/icons/coin.svg',
-                  height: 24,
-                  width: 24,
-                ),
-                Text(
-                  price.toStringAsFixed(
-                    price.truncateToDouble() == price ? 0 : 2,
-                  ),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    height: 18 / 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.yellow,
-                  ),
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class AnuncioContainerWidget extends StatelessWidget {
-  const AnuncioContainerWidget({
-    super.key,
-    required this.title,
-    required this.imagePath,
-    required this.color,
-    required this.type,
-  });
-
-  final String title;
-  final String imagePath;
-  final Color color;
-  final TypeItemShop type;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minHeight: 100),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppColors.orange, width: 2),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            spacing: 8,
-            children: [
-              SvgPicture.asset(imagePath, height: 48, width: 48),
-              SizedBox(
-                width: 200,
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          GestureDetector(
-            onTap: () {
-              AppRoutes.go(AppRoutes.adRewardedLives);
-            },
-            child: SvgPicture.asset(
-              'assets/icons/play.svg',
-              height: 48,
-              width: 48,
-              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-enum ShopItemUnit { usd, coin }

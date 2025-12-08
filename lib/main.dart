@@ -15,7 +15,7 @@ import 'package:pixel_retro_app/di.dart';
 void main() async {
   await Environment.initEnvironment();
   WidgetsFlutterBinding.ensureInitialized();
-  await AdsService.initialize();
+  await AdsService.instance.initialize();
 
   // ⬇️ Aquí inicializamos la escucha en tiempo real
   await InternetService.instance.initialize();

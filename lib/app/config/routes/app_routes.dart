@@ -11,6 +11,7 @@ import 'package:pixel_retro_app/app/shared/screens/root_screen.dart';
 import 'package:pixel_retro_app/app/shared/screens/wait_to_layout_screen.dart';
 import 'package:pixel_retro_app/app/shared/screens/wait_to_game_screen.dart';
 import 'package:pixel_retro_app/app/shared/screens/welcome_screen.dart';
+import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
 
 class AppRoutes {
   // Tabs principales
@@ -98,20 +99,21 @@ class AppRoutes {
       page: () => const SnakeGameScreen(),
       transition: Transition.downToUp,
     ),
-    // Ads
     GetPage(
-      name: adInterstitial,
-      page: () => const AdInterstitialScreen(),
+      name: AppRoutes.adInterstitial,
+      page: () => const AdScreen(type: AdType.interstitial),
       transition: Transition.fadeIn,
     ),
+
     GetPage(
-      name: adRewardedCoins,
-      page: () => const AdRewardedCoinsScreen(),
+      name: AppRoutes.adRewardedCoins,
+      page: () => const AdScreen(type: AdType.rewardedCoins),
       transition: Transition.fadeIn,
     ),
+
     GetPage(
-      name: adRewardedLives,
-      page: () => const AdRewardedLivesScreen(),
+      name: AppRoutes.adRewardedLives,
+      page: () => const AdScreen(type: AdType.rewardedLives),
       transition: Transition.fadeIn,
     ),
   ];

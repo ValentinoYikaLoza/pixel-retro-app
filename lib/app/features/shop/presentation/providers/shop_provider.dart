@@ -138,8 +138,6 @@ class ShopNotifier extends StateNotifier<ShopState> {
 
 enum TypeItemShop { coin, live }
 
-enum ShopItemUnit { usd, coin }
-
 class ShopState {
   final List<AdvertisementEntity> advertisements;
   final List<CoinShopEntity> coinShopItems;

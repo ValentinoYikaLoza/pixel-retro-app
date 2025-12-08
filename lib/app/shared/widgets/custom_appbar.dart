@@ -37,6 +37,8 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
     final hasDataAsync = dataAsyncStatusState.syncStatus == SyncStatus.success;
     final isDataSyncning =
         dataAsyncStatusState.syncStatus == SyncStatus.syncing;
+    final isDataSyncFailed =
+        dataAsyncStatusState.syncStatus == SyncStatus.error;
 
     return AppBar(
       automaticallyImplyLeading: false,
@@ -112,6 +114,12 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
                                   strokeWidth: 5,
                                 ),
                               )
+                            : isDataSyncFailed
+                            ? Icon(
+                                Icons.error_outline_rounded,
+                                color: AppColors.gray,
+                                size: 24,
+                              )
                             : Icon(
                                 Icons.arrow_downward_rounded,
                                 color: AppColors.gray,
@@ -120,7 +128,9 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
                         Text(
                           isDataSyncning
                               ? 'CARGANDO DATOS'
-                              : 'DESLIZAR HACIA ABAJO',
+                              : isDataSyncFailed
+                              ? 'OCURRIÓ UN ERROR'
+                              : 'SINCRONIZAR DATOS',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
