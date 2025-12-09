@@ -5,14 +5,16 @@ import 'package:pixel_retro_app/app/features/leaderboard/domain/datasources/lead
 import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_division_list_response_model.dart';
 import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
 import 'package:pixel_retro_app/app/shared/services/error_service.dart';
+import 'package:pixel_retro_app/main.dart';
 
 final api = Api();
+final userId = globalUserId;
 
 class LeaderboardDatasourceImpl implements LeaderboardDatasource {
   @override
   Future<void> getUsers() async {
     try {
-      Map<String, String> formData = {'user_id': '1'};
+      Map<String, String> formData = {'user_id': userId.toString()};
 
       final response = await api.post('/listUsers', data: formData);
       if (response.statusCode == 200) {

@@ -9,7 +9,7 @@ import 'package:web_socket_channel/status.dart' as status;
 class WebSocketService {
   final String url;
   WebSocketChannel? _channel;
-  final int userId;
+  final String userId;
 
   final _statsController = StreamController<Map<String, dynamic>>.broadcast();
   final _missionsController =

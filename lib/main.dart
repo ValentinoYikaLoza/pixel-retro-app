@@ -6,15 +6,23 @@ import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/app.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/constants/environment.dart';
+import 'package:pixel_retro_app/app/config/constants/storage_keys.dart';
 import 'package:pixel_retro_app/app/config/theme/app_theme.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
 import 'package:pixel_retro_app/app/shared/services/internet_service.dart';
+import 'package:pixel_retro_app/app/shared/services/storage_service.dart';
 import 'package:pixel_retro_app/di.dart';
+
+late String globalUserId;
 
 void main() async {
   await Environment.initEnvironment();
   WidgetsFlutterBinding.ensureInitialized();
+
+  await StorageService.set<String>(StorageKeys.userId, '1');
+  globalUserId = await StorageService.get<String>(StorageKeys.userId) ?? '';
+
   await AdsService.instance.initialize();
 
   // ⬇️ Aquí inicializamos la escucha en tiempo real
@@ -22,7 +30,7 @@ void main() async {
 
   setup();
 
-  WidgetsBinding.instance.addPostFrameCallback((_) {
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         systemNavigationBarColor: AppColors.logoBackground,

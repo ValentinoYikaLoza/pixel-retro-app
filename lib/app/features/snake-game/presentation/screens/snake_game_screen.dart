@@ -161,7 +161,7 @@ class SnakeGameScreenState extends ConsumerState<SnakeGameScreen> {
                                 ],
                               ),
                               Text(
-                                '${userState.lives}', // Corregí esto - debería ser gameState.lives
+                                '${userState.lives}',
                                 style: TextStyle(
                                   color: AppColors.white,
                                   fontSize: 24,

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
+import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
+import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
+import 'package:pixel_retro_app/app/shared/widgets/custom_dialog.dart';
 
 class ShopItem extends StatefulWidget {
   const ShopItem({
@@ -33,7 +37,20 @@ class _ShopItemState extends State<ShopItem> {
       onTapDown: (_) => setState(() => _pressed = true),
       onTapUp: (_) => setState(() => _pressed = false),
       onTapCancel: () => setState(() => _pressed = false),
-      onTap: widget.onTap,
+      onTap: () {
+        Get.dialog(
+          CustomDialog(
+            title: '¿Quieres comprar este artículo?',
+            content:
+                '¡No te lo pierdas! Puedes comprar este artículo en cualquier momento.',
+            buttonAcceptText: 'Comprar',
+            buttonCancelText: 'Cancelar',
+            onAcceptPressed: () {
+              SnackbarService.show('Proximamente...', type: SnackbarType.info);
+            },
+          ),
+        );
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeOut,
