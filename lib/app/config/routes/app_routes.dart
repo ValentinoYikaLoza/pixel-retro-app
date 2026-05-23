@@ -10,9 +10,7 @@ class AppRoutes {
   static const String mission = '/mission';
   static const String shop = '/shop';
 
-  // Flujo de bienvenida
-  static const String waitToGame = '/wait-to-welcome-screen';
-  static const String waitToLayout = '/wait-to-home-screen';
+  // Intro de marca al entrar a un juego
   static const String welcome = '/welcome-screen';
 
   // Snake Game

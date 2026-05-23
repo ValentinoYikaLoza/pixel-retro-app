@@ -20,7 +20,11 @@ class _LayoutViewState extends State<LayoutView> {
   @override
   void initState() {
     super.initState();
+    // El layout es portrait. Al volver del juego (landscape) esto restaura la
+    // orientación; el fade de la ruta enmascara la rotación.
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      OrientationService.setPortrait();
+      OrientationService.setEdgeToEdge();
       OrientationService.setOverlayColor(AppColors.orange);
     });
   }

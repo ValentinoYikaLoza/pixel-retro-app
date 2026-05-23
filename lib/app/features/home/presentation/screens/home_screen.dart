@@ -47,7 +47,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
 
       // Pequeño delay antes de la navegación
       Future.delayed(Duration(milliseconds: 300), () {
-        AppRoutes.go(AppRoutes.waitToGame, arguments: {'gameMode': gameMode});
+        AppRoutes.go(AppRoutes.welcome, arguments: {'gameMode': gameMode});
       });
     }
   }

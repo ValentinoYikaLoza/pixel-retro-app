@@ -10,8 +10,6 @@ import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/sna
 import 'package:pixel_retro_app/app/shared/layouts/presentation/screens/layout_view.dart';
 import 'package:pixel_retro_app/app/shared/screens/ad_screen.dart';
 import 'package:pixel_retro_app/app/shared/screens/root_screen.dart';
-import 'package:pixel_retro_app/app/shared/screens/wait_to_game_screen.dart';
-import 'package:pixel_retro_app/app/shared/screens/wait_to_layout_screen.dart';
 import 'package:pixel_retro_app/app/shared/screens/welcome_screen.dart';
 import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
 
@@ -48,16 +46,8 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) =>
           _fade(state, const LayoutView(child: ShopScreen())),
     ),
-    // Flujo de bienvenida
-    GoRoute(
-      path: AppRoutes.waitToGame,
-      pageBuilder: (context, state) =>
-          _fade(state, WaitToGameScreen(arguments: _argsOf(state))),
-    ),
-    GoRoute(
-      path: AppRoutes.waitToLayout,
-      pageBuilder: (context, state) => _fade(state, const WaitToLayoutScreen()),
-    ),
+    // Intro de marca al entrar a un juego (también hace el cambio a landscape;
+    // el fade de la ruta enmascara la rotación).
     GoRoute(
       path: AppRoutes.welcome,
       pageBuilder: (context, state) =>
@@ -95,6 +85,8 @@ Map<String, dynamic> _argsOf(GoRouterState state) {
 CustomTransitionPage<void> _fade(GoRouterState state, Widget child) {
   return CustomTransitionPage<void>(
     key: state.pageKey,
+    // 400ms cubre la animación de rotación del SO en los cambios de orientación.
+    transitionDuration: const Duration(milliseconds: 400),
     child: child,
     transitionsBuilder: (context, animation, secondaryAnimation, child) =>
         FadeTransition(opacity: animation, child: child),

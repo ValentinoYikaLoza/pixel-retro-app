@@ -196,7 +196,7 @@ class GameBoardState extends ConsumerState<GameBoard> {
                         padding: const EdgeInsets.only(top: 20, left: 20),
                         child: CustomIconButton(
                           onPressed: () {
-                            AppRoutes.go(AppRoutes.waitToLayout);
+                            AppRoutes.go(AppRoutes.home);
                           },
                           width: 48,
                           height: 48,

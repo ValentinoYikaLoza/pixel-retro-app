@@ -20,6 +20,7 @@ class SnakeGameScreenState extends ConsumerState<SnakeGameScreen> {
   @override
   void initState() {
     super.initState();
+    setScreenConfig();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       ref.read(snakeGameProvider.notifier).initGame();
     });
@@ -46,7 +47,7 @@ class SnakeGameScreenState extends ConsumerState<SnakeGameScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) {
-          AppRoutes.go(AppRoutes.waitToLayout);
+          AppRoutes.go(AppRoutes.home);
         }
       },
       child: Scaffold(

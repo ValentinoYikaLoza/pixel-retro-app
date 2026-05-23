@@ -20,6 +20,7 @@ class _LevelSnakeGameScreenState extends State<LevelSnakeGameScreen> {
   @override
   void initState() {
     super.initState();
+    setScreenConfig();
   }
 
   void setScreenConfig() {
@@ -38,7 +39,7 @@ class _LevelSnakeGameScreenState extends State<LevelSnakeGameScreen> {
         canPop: false,
         onPopInvokedWithResult: (didPop, result) {
           if (!didPop) {
-            AppRoutes.go(AppRoutes.waitToLayout);
+            AppRoutes.go(AppRoutes.home);
           }
         },
         child: Scaffold(
@@ -57,7 +58,7 @@ class _LevelSnakeGameScreenState extends State<LevelSnakeGameScreen> {
                   left: 0,
                   child: CustomIconButton(
                     onPressed: () {
-                      AppRoutes.go(AppRoutes.waitToLayout);
+                      AppRoutes.go(AppRoutes.home);
                     },
                     width: 48,
                     height: 48,
