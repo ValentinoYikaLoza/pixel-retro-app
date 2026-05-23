@@ -1,100 +1,84 @@
 import 'package:pixel_retro_app/app/config/api/api.dart';
+import 'package:pixel_retro_app/app/config/constants/api_endpoints.dart';
+import 'package:pixel_retro_app/app/shared/layouts/data/dtos/get_user_response_dto.dart';
+import 'package:pixel_retro_app/app/shared/layouts/data/mappers/user_stats_mapper.dart';
 import 'package:pixel_retro_app/app/shared/layouts/domain/datasources/user_datasource.dart';
-import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
+import 'package:pixel_retro_app/app/shared/layouts/domain/entities/user_stats_entity.dart';
 import 'package:pixel_retro_app/app/shared/services/error_service.dart';
-import 'package:pixel_retro_app/main.dart';
-
-final api = Api();
-final userId = globalUserId;
+import 'package:pixel_retro_app/app/shared/services/session_service.dart';
 
 class UserDataSourceImpl implements UserDataSource {
+  UserDataSourceImpl(this._api, this._session);
+
+  final Api _api;
+  final SessionService _session;
+
   @override
-  Future<void> getUser() async {
+  Future<UserStatsEntity> getUser() async {
     try {
-      Map<String, String> formData = {'user_id': userId.toString()};
-      final response = await api.post('/getUser', data: formData);
-      if (response.statusCode == 200) {
-        return;
-      } else {
-        throw 'An error occurred, status code: ${response.statusCode}';
-      }
-    } catch (e) {
-      String errorMessage = ErrorService.verificarErrorBase(
-        'Ocurrió un error',
-        e,
+      final formData = {'user_id': _session.userId};
+      final response = await _api.post(ApiEndpoints.getUser, data: formData);
+      final dto = GetUserResponseDto.fromJson(
+        response.data as Map<String, dynamic>? ?? const {},
       );
-      throw ServiceException(errorMessage);
+      return UserStatsMapper.fromDto(dto);
+    } catch (e) {
+      throw ErrorService.toServiceException(
+        e,
+        fallback: 'Error al obtener el usuario',
+      );
     }
   }
 
   @override
   Future<void> updateCoins(int coins) async {
     try {
-      Map<String, String> formData = {
-        'user_id': userId.toString(),
-        'coins': '$coins',
-      };
-
-      final response = await api.post('/updateCoins', data: formData);
-      if (response.statusCode == 200) {
-        return;
-      } else {
-        throw 'An error occurred, status code: ${response.statusCode}';
-      }
+      final formData = {'user_id': _session.userId, 'coins': '$coins'};
+      await _api.post(ApiEndpoints.updateCoins, data: formData);
     } catch (e) {
-      String errorMessage = ErrorService.verificarErrorBase(
-        'Ocurrió un error',
+      throw ErrorService.toServiceException(
         e,
+        fallback: 'Error al actualizar las monedas',
       );
-      throw ServiceException(errorMessage);
     }
   }
 
   @override
   Future<void> updateLives(int lives) async {
     try {
-      Map<String, String> formData = {
-        'user_id': userId.toString(),
-        'lives': '$lives',
-      };
-
-      final response = await api.post('/updateLives', data: formData);
-      if (response.statusCode == 200) {
-        return;
-      } else {
-        throw 'An error occurred, status code: ${response.statusCode}';
-      }
+      final formData = {'user_id': _session.userId, 'lives': '$lives'};
+      await _api.post(ApiEndpoints.updateLives, data: formData);
     } catch (e) {
-      String errorMessage = ErrorService.verificarErrorBase(
-        'Ocurrió un error',
+      throw ErrorService.toServiceException(
         e,
+        fallback: 'Error al actualizar las vidas',
       );
-      throw ServiceException(errorMessage);
     }
   }
 
   @override
   Future<void> updateStreak() async {
     try {
-      Map<String, String> formData = {'user_id': userId.toString()};
-
-      final response = await api.post('/updateStreak', data: formData);
-      if (response.statusCode == 200) {
-        return;
-      } else {
-        throw 'An error occurred, status code: ${response.statusCode}';
-      }
+      final formData = {'user_id': _session.userId};
+      await _api.post(ApiEndpoints.updateStreak, data: formData);
     } catch (e) {
-      String errorMessage = ErrorService.verificarErrorBase(
-        'Ocurrió un error',
+      throw ErrorService.toServiceException(
         e,
+        fallback: 'Error al actualizar la racha',
       );
-      throw ServiceException(errorMessage);
     }
   }
 
   @override
-  Future<void> updateExp(int exp) {
-    return Future.delayed(const Duration(milliseconds: 200), () => null);
+  Future<void> updateExp(int exp) async {
+    try {
+      final formData = {'user_id': _session.userId, 'exp': '$exp'};
+      await _api.post(ApiEndpoints.updateExp, data: formData);
+    } catch (e) {
+      throw ErrorService.toServiceException(
+        e,
+        fallback: 'Error al actualizar la experiencia',
+      );
+    }
   }
 }

@@ -2,10 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
-import 'package:pixel_retro_app/app/shared/providers/data_sync_provider.dart';
+import 'package:pixel_retro_app/app/shared/services/dialog_service.dart';
 
 class RootScreen extends ConsumerStatefulWidget {
   const RootScreen({super.key});
@@ -42,9 +41,10 @@ class RootScreenState extends ConsumerState<RootScreen> {
   }
 
   Future<void> getData() async {
-    await ref.read(dataSyncProvider.notifier).sync();
+    // Cada pantalla carga sus propios datos; el splash solo da paso a Home.
+    await Future.delayed(const Duration(milliseconds: 800));
 
-    if (Get.isDialogOpen == true) return;
+    if (DialogService.isOpen) return;
 
     _timer?.cancel();
 

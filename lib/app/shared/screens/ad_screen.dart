@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
@@ -96,7 +95,7 @@ class AdScreenState extends ConsumerState<AdScreen> {
             }
 
             // Ir a la tienda luego del cierre
-            Get.offNamed(AppRoutes.shop);
+            AppRoutes.go(AppRoutes.shop);
           },
         );
 

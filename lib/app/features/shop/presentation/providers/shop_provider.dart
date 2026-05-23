@@ -1,19 +1,24 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/features/shop/domain/entities/advertisement_entity.dart';
 import 'package:pixel_retro_app/app/features/shop/domain/entities/coin_shop_entity.dart';
 import 'package:pixel_retro_app/app/features/shop/domain/entities/live_shop_entity.dart';
-import 'package:pixel_retro_app/app/features/shop/domain/models/get_advertisement_list_response_model.dart';
-import 'package:pixel_retro_app/app/features/shop/domain/models/get_coin_shop_list_response_model.dart';
-import 'package:pixel_retro_app/app/features/shop/domain/models/get_live_shop_list_response_model.dart';
 import 'package:pixel_retro_app/app/features/shop/domain/repositories/shop_repository.dart';
-import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
-import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
-import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/di.dart';
 
 final shopProvider = StateNotifierProvider<ShopNotifier, ShopState>((ref) {
   return ShopNotifier(ref);
+});
+
+/// Carga los datos de la tienda (se recarga al re-entrar a la pantalla).
+final shopInitProvider = FutureProvider.autoDispose<void>((ref) async {
+  final notifier = ref.read(shopProvider.notifier);
+  await Future.wait([
+    notifier.getAdvertisements(),
+    notifier.getCoinShopItems(),
+    notifier.getLiveShopItems(),
+  ]);
 });
 
 class ShopNotifier extends StateNotifier<ShopState> {
@@ -45,54 +50,28 @@ class ShopNotifier extends StateNotifier<ShopState> {
   }
 
   Future<void> getAdvertisements() async {
-    try {
-      final GetAdvertisementListResponseModel response = await repository
-          .getAdvertisements();
-      state = state.copyWith(advertisements: response.advertisementList);
-    } on ServiceException catch (_) {
-      SnackbarService.show(
-        'Error al cargar los anuncios',
-        type: SnackbarType.error,
-      );
-    }
+    final advertisements = await repository.getAdvertisements();
+    state = state.copyWith(advertisements: advertisements);
   }
 
   Future<void> getCoinShopItems() async {
-    try {
-      final GetCoinShopListResponseModel coinShopList = await repository
-          .getCoinShopList();
-      state = state.copyWith(coinShopItems: coinShopList.coinShopList);
-    } on ServiceException catch (_) {
-      SnackbarService.show(
-        'Error al cargar los items de la tienda de monedas',
-        type: SnackbarType.error,
-      );
-    }
+    final coinShopList = await repository.getCoinShopList();
+    state = state.copyWith(coinShopItems: coinShopList);
   }
 
   Future<void> getLiveShopItems() async {
-    try {
-      final GetLiveShopListResponseModel liveShopList = await repository
-          .getLiveShopList();
-      final List<LiveShopEntity> liveShopItemsUnitUsd = liveShopList
-          .liveShopList
-          .where((item) => item.typeId == 1)
-          .toList();
-      final List<LiveShopEntity> liveShopItemsUnitCoin = liveShopList
-          .liveShopList
-          .where((item) => item.typeId == 2)
-          .toList();
+    final liveShopList = await repository.getLiveShopList();
+    final List<LiveShopEntity> liveShopItemsUnitUsd = liveShopList
+        .where((item) => item.typeId == 1)
+        .toList();
+    final List<LiveShopEntity> liveShopItemsUnitCoin = liveShopList
+        .where((item) => item.typeId == 2)
+        .toList();
 
-      state = state.copyWith(
-        liveShopItemsUnitUsd: liveShopItemsUnitUsd,
-        liveShopItemsUnitCoin: liveShopItemsUnitCoin,
-      );
-    } on ServiceException catch (_) {
-      SnackbarService.show(
-        'Error al cargar los items de la tienda de vidas',
-        type: SnackbarType.error,
-      );
-    }
+    state = state.copyWith(
+      liveShopItemsUnitUsd: liveShopItemsUnitUsd,
+      liveShopItemsUnitCoin: liveShopItemsUnitCoin,
+    );
   }
 
   String getItemImagePath(int id, TypeItemShop type) {
@@ -138,13 +117,13 @@ class ShopNotifier extends StateNotifier<ShopState> {
 
 enum TypeItemShop { coin, live }
 
-class ShopState {
+class ShopState extends Equatable {
   final List<AdvertisementEntity> advertisements;
   final List<CoinShopEntity> coinShopItems;
   final List<LiveShopEntity> liveShopItemsUnitUsd;
   final List<LiveShopEntity> liveShopItemsUnitCoin;
 
-  ShopState({
+  const ShopState({
     this.advertisements = const [],
     this.coinShopItems = const [],
     this.liveShopItemsUnitUsd = const [],
@@ -165,4 +144,12 @@ class ShopState {
           liveShopItemsUnitCoin ?? this.liveShopItemsUnitCoin,
     );
   }
+
+  @override
+  List<Object?> get props => [
+    advertisements,
+    coinShopItems,
+    liveShopItemsUnitUsd,
+    liveShopItemsUnitCoin,
+  ];
 }

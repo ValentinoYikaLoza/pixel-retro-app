@@ -1,15 +1,17 @@
 import 'dart:async';
+import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:pixel_retro_app/app/features/time/domain/models/get_time_response_model.dart';
 import 'package:pixel_retro_app/app/features/time/domain/repositories/time_repository.dart';
-import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
-import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
-import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/di.dart';
 
 final timeProvider = StateNotifierProvider<TimeNotifier, TimeState>((ref) {
   return TimeNotifier(ref);
+});
+
+/// Carga la hora del servidor una sola vez (mantiene los timers activos).
+final timeInitProvider = FutureProvider<void>((ref) async {
+  await ref.read(timeProvider.notifier).getTime();
 });
 
 class TimeNotifier extends StateNotifier<TimeState> {
@@ -24,21 +26,21 @@ class TimeNotifier extends StateNotifier<TimeState> {
   Timer? _nextWeekTimer;
   Timer? _nextMonthTimer;
 
+  /// Lanza [ServiceException] si falla; la UI lo maneja vía AsyncValue.
   Future<void> getTime() async {
-    try {
-      final GetTimeResponseModel response = await repository.getTime();
-      state = state.copyWith(
-        serverDate: response.currentDate,
-        receivedAt: DateTime.now(),
-      );
-      _startMonthStream();
-      _startTimeUntilStreams();
-    } on ServiceException {
-      SnackbarService.show(
-        'Error obteniendo el tiempo',
-        type: SnackbarType.error,
-      );
-    }
+    final serverDate = await repository.getTime();
+    state = state.copyWith(serverDate: serverDate, receivedAt: DateTime.now());
+    _cancelTimers();
+    _startMonthStream();
+    _startTimeUntilStreams();
+  }
+
+  void _cancelTimers() {
+    _monthTimer?.cancel();
+    _nextDayTimer?.cancel();
+    _nextSeasonTimer?.cancel();
+    _nextWeekTimer?.cancel();
+    _nextMonthTimer?.cancel();
   }
 
   void _startMonthStream() {
@@ -109,16 +111,12 @@ class TimeNotifier extends StateNotifier<TimeState> {
 
   @override
   void dispose() {
-    _monthTimer?.cancel();
-    _nextDayTimer?.cancel();
-    _nextSeasonTimer?.cancel();
-    _nextWeekTimer?.cancel();
-    _nextMonthTimer?.cancel();
+    _cancelTimers();
     super.dispose();
   }
 }
 
-class TimeState {
+class TimeState extends Equatable {
   final DateTime? serverDate;
   final DateTime? receivedAt;
   final String currentMonth;
@@ -127,7 +125,7 @@ class TimeState {
   final TimeEntity timeUntilNextWeek;
   final TimeEntity timeUntilNextMonth;
 
-  TimeState({
+  const TimeState({
     this.serverDate,
     this.receivedAt,
     this.currentMonth = '',
@@ -161,6 +159,17 @@ class TimeState {
       timeUntilNextMonth: timeUntilNextMonth ?? this.timeUntilNextMonth,
     );
   }
+
+  @override
+  List<Object?> get props => [
+    serverDate,
+    receivedAt,
+    currentMonth,
+    timeUntilNextDay,
+    timeUntilNextSeason,
+    timeUntilNextWeek,
+    timeUntilNextMonth,
+  ];
 }
 
 final _monthMap = {
@@ -180,8 +189,11 @@ final _monthMap = {
 
 enum TimeUnit { seconds, minutes, hours, days }
 
-class TimeEntity {
+class TimeEntity extends Equatable {
   final int? time;
   final TimeUnit? unit;
   const TimeEntity({this.time, this.unit});
+
+  @override
+  List<Object?> get props => [time, unit];
 }

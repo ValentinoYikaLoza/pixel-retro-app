@@ -1,24 +1,30 @@
 import 'dart:async';
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/division_entity.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/user_rank_entity.dart';
-import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_division_list_response_model.dart';
-import 'package:pixel_retro_app/app/features/leaderboard/domain/models/get_user_list_response_model.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/repositories/leaderboard_repository.dart';
-import 'package:pixel_retro_app/app/features/leaderboard/presentation/data/user_mapper.dart';
-import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/data/mappers/user_mapper.dart';
+import 'package:pixel_retro_app/app/features/time/presentation/providers/time_provider.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
-import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
 import 'package:pixel_retro_app/app/shared/providers/web_socket_provider.dart';
-import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/di.dart';
 
 final leaderboardProvider =
     StateNotifierProvider<LeaderboardNotifier, LeaderboardState>((ref) {
       return LeaderboardNotifier(ref);
     });
+
+/// Carga los datos de la pantalla de leaderboard (se recarga al re-entrar).
+final leaderboardInitProvider = FutureProvider.autoDispose<void>((ref) async {
+  await ref.watch(userInitProvider.future);
+  await ref.watch(timeInitProvider.future);
+  final notifier = ref.read(leaderboardProvider.notifier);
+  // Divisiones y usuarios son independientes: cargan en paralelo.
+  await Future.wait([notifier.getDivisions(), notifier.getUsers()]);
+});
 
 class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
   LeaderboardNotifier(this.ref) : super(LeaderboardState()) {
@@ -48,26 +54,30 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
   Future<void> initDataUser() async {
     // Obtiene la instancia del socket desde Riverpod
     final socket = ref.read(websocketServiceProvider);
+    // Evita suscripciones duplicadas si se recarga la pantalla.
+    await _usersSub?.cancel();
     // 📊 Escucha las estadísticas en tiempo real
-    _usersSub = socket.usersStream.listen((users) {
-      // print('📊 [LeaderboardNotifier] Users recibidos: $users');
-
-      final GetUserListResponseModel model = UserMapper.fromSocketData(users);
-      // print('📊 [Provider] Usuarios actuales: ${model.users[0].name}');
-      state = state.copyWith(users: model.users);
+    _usersSub = socket.usersStream.listen((data) {
+      final users = UserMapper.fromSocketData(data);
+      state = state.copyWith(users: users);
     });
   }
 
+  /// Tamaño de página de la ventana de usuarios (paginación cliente).
+  static const int pageSize = 20;
+
+  /// Carga inicial vía HTTP + suscripción a actualizaciones en vivo.
+  /// Lanza [ServiceException] si falla; la UI lo maneja vía AsyncValue.
   Future<void> getUsers() async {
-    try {
-      await initDataUser();
-      await repository.getUsers();
-    } on ServiceException catch (_) {
-      SnackbarService.show(
-        'Error obteniendo los usuarios',
-        type: SnackbarType.error,
-      );
-    }
+    await initDataUser();
+    final users = await repository.getUsers();
+    state = state.copyWith(users: users, visibleUserCount: pageSize);
+  }
+
+  /// Muestra la siguiente página de usuarios (sobre la lista ya cargada).
+  void loadMoreUsers() {
+    if (!state.hasMoreUsers) return;
+    state = state.copyWith(visibleUserCount: state.visibleUserCount + pageSize);
   }
 
   String getDivision() {
@@ -79,6 +89,7 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
 
     final DivisionEntity currentDivision = divisions.firstWhere(
       (division) => division.id == userState.divisionId,
+      orElse: () => DivisionEntity(id: 0, name: ''),
     );
 
     final divisionName = currentDivision.name;
@@ -86,17 +97,10 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
     return divisionName;
   }
 
+  /// Lanza [ServiceException] si falla; la UI lo maneja vía AsyncValue.
   Future<void> getDivisions() async {
-    try {
-      final GetDivisionListResponseModel response = await repository
-          .getDivisions();
-      state = state.copyWith(divisions: response.divisions);
-    } on ServiceException catch (_) {
-      SnackbarService.show(
-        'Error obteniendo las divisiones',
-        type: SnackbarType.error,
-      );
-    }
+    final divisions = await repository.getDivisions();
+    state = state.copyWith(divisions: divisions);
   }
 
   String getDivisionImage(int index, int divisionId) {
@@ -144,21 +148,40 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
   }
 }
 
-class LeaderboardState {
+class LeaderboardState extends Equatable {
   final List<DivisionEntity> divisions;
   final List<UserDivisionEntity> users;
 
-  LeaderboardState({this.divisions = const [], this.users = const []});
+  /// Cuántos usuarios se muestran (ventana de paginación cliente).
+  final int visibleUserCount;
+
+  const LeaderboardState({
+    this.divisions = const [],
+    this.users = const [],
+    this.visibleUserCount = LeaderboardNotifier.pageSize,
+  });
+
+  /// Usuarios efectivamente visibles según la ventana actual.
+  List<UserDivisionEntity> get visibleUsers =>
+      users.take(visibleUserCount).toList();
+
+  /// Quedan usuarios por mostrar.
+  bool get hasMoreUsers => visibleUserCount < users.length;
 
   LeaderboardState copyWith({
     List<DivisionEntity>? divisions,
     List<UserDivisionEntity>? users,
+    int? visibleUserCount,
   }) {
     return LeaderboardState(
       divisions: divisions ?? this.divisions,
       users: users ?? this.users,
+      visibleUserCount: visibleUserCount ?? this.visibleUserCount,
     );
   }
+
+  @override
+  List<Object?> get props => [divisions, users, visibleUserCount];
 }
 
 enum LeaderboardStatus {

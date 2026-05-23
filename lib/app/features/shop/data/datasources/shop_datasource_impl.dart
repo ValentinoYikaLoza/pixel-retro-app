@@ -1,89 +1,113 @@
+import 'package:pixel_retro_app/app/config/api/api.dart';
+import 'package:pixel_retro_app/app/config/constants/api_endpoints.dart';
+import 'package:pixel_retro_app/app/features/shop/data/dtos/get_advertisement_list_response_dto.dart';
+import 'package:pixel_retro_app/app/features/shop/data/dtos/get_coin_shop_list_response_dto.dart';
+import 'package:pixel_retro_app/app/features/shop/data/dtos/get_live_shop_list_response_dto.dart';
+import 'package:pixel_retro_app/app/features/shop/data/mappers/shop_mapper.dart';
 import 'package:pixel_retro_app/app/features/shop/domain/datasources/shop_datasource.dart';
 import 'package:pixel_retro_app/app/features/shop/domain/entities/advertisement_entity.dart';
 import 'package:pixel_retro_app/app/features/shop/domain/entities/coin_shop_entity.dart';
 import 'package:pixel_retro_app/app/features/shop/domain/entities/live_shop_entity.dart';
-import 'package:pixel_retro_app/app/features/shop/domain/models/get_advertisement_list_response_model.dart';
-import 'package:pixel_retro_app/app/features/shop/domain/models/get_coin_shop_list_response_model.dart';
-import 'package:pixel_retro_app/app/features/shop/domain/models/get_live_shop_list_response_model.dart';
+import 'package:pixel_retro_app/app/shared/services/error_service.dart';
+import 'package:pixel_retro_app/app/shared/services/session_service.dart';
 
 class ShopDatasourceImpl implements ShopDatasource {
+  ShopDatasourceImpl(this._api, this._session);
+
+  final Api _api;
+  final SessionService _session;
+
   @override
-  Future<GetAdvertisementListResponseModel> getAdvertisements() {
-    return Future.delayed(Duration(milliseconds: 200), () {
-      return GetAdvertisementListResponseModel(
-        advertisementList: [
-          AdvertisementEntity(
-            id: 1,
-            description: 'Ver anuncio para obtener 10 monedas',
-            reward: 10,
-            typeId: 1,
-            isClaimed: false,
-          ),
-          AdvertisementEntity(
-            id: 2,
-            description: 'Ver anuncio para obtener 5 vidas adicionales',
-            reward: 5,
-            typeId: 2,
-            isClaimed: false,
-          ),
-        ],
+  Future<List<AdvertisementEntity>> getAdvertisements() async {
+    try {
+      final formData = {'user_id': _session.userId};
+      final response = await _api.post(
+        ApiEndpoints.listAdvertisements,
+        data: formData,
       );
-    });
-  }
-
-  @override
-  Future<GetCoinShopListResponseModel> getCoinShopList() {
-    return Future.delayed(Duration(milliseconds: 200), () {
-      return GetCoinShopListResponseModel(
-        coinShopList: [
-          CoinShopEntity(id: 1, quantity: 100, price: 1.99),
-          CoinShopEntity(id: 2, quantity: 300, price: 4.99),
-          CoinShopEntity(id: 3, quantity: 300, price: 9.99),
-          CoinShopEntity(id: 4, quantity: 1400, price: 19.99),
-        ],
+      final dto = GetAdvertisementListResponseDto.fromJson(
+        response.data as Map<String, dynamic>? ?? const {},
       );
-    });
-  }
-
-  @override
-  Future<GetLiveShopListResponseModel> getLiveShopList() {
-    return Future.delayed(Duration(milliseconds: 200), () {
-      return GetLiveShopListResponseModel(
-        liveShopList: [
-          LiveShopEntity(id: 1, quantity: 5, price: 1.99, typeId: 1),
-          LiveShopEntity(id: 2, quantity: 15, price: 4.99, typeId: 1),
-          LiveShopEntity(id: 3, quantity: 30, price: 8.99, typeId: 1),
-          LiveShopEntity(id: 4, quantity: 50, price: 14.99, typeId: 1),
-          LiveShopEntity(id: 5, quantity: 5, price: 120, typeId: 2),
-          LiveShopEntity(id: 6, quantity: 15, price: 300, typeId: 2),
-          LiveShopEntity(id: 7, quantity: 30, price: 540, typeId: 2),
-          LiveShopEntity(id: 8, quantity: 50, price: 900, typeId: 2),
-        ],
+      return ShopMapper.advertisementsFromDto(dto);
+    } catch (e) {
+      throw ErrorService.toServiceException(
+        e,
+        fallback: 'Error al cargar los anuncios',
       );
-    });
+    }
   }
 
   @override
-  Future<void> purchaseAdvertisement(int advertisementId) {
-    return Future.delayed(Duration(milliseconds: 200), () {
-      // Simula la compra exitosa del anuncio
-      return;
-    });
+  Future<List<CoinShopEntity>> getCoinShopList() async {
+    try {
+      final response = await _api.get(ApiEndpoints.listCoinShop);
+      final dto = GetCoinShopListResponseDto.fromJson(
+        response.data as Map<String, dynamic>? ?? const {},
+      );
+      return ShopMapper.coinShopFromDto(dto);
+    } catch (e) {
+      throw ErrorService.toServiceException(
+        e,
+        fallback: 'Error al cargar la tienda de monedas',
+      );
+    }
   }
 
   @override
-  Future<void> purchaseCoinShopItem(int itemId) {
-    return Future.delayed(Duration(milliseconds: 200), () {
-      // Simula la compra exitosa del item de la tienda de monedas
-      return;
-    });
+  Future<List<LiveShopEntity>> getLiveShopList() async {
+    try {
+      final response = await _api.get(ApiEndpoints.listLiveShop);
+      final dto = GetLiveShopListResponseDto.fromJson(
+        response.data as Map<String, dynamic>? ?? const {},
+      );
+      return ShopMapper.liveShopFromDto(dto);
+    } catch (e) {
+      throw ErrorService.toServiceException(
+        e,
+        fallback: 'Error al cargar la tienda de vidas',
+      );
+    }
   }
 
   @override
-  Future<void> purchaseLiveShopItem(int itemId) {
-    return Future.delayed(Duration(milliseconds: 200), () {
-      // Simula la compra exitosa del item de la tienda de vidas
-      return;
-    });
+  Future<void> purchaseAdvertisement(int advertisementId) async {
+    try {
+      final formData = {
+        'user_id': _session.userId,
+        'advertisement_id': '$advertisementId',
+      };
+      await _api.post(ApiEndpoints.purchaseAdvertisement, data: formData);
+    } catch (e) {
+      throw ErrorService.toServiceException(
+        e,
+        fallback: 'Error al reclamar el anuncio',
+      );
+    }
+  }
+
+  @override
+  Future<void> purchaseCoinShopItem(int itemId) async {
+    try {
+      final formData = {'user_id': _session.userId, 'item_id': '$itemId'};
+      await _api.post(ApiEndpoints.purchaseCoinShopItem, data: formData);
+    } catch (e) {
+      throw ErrorService.toServiceException(
+        e,
+        fallback: 'Error al comprar el paquete de monedas',
+      );
+    }
+  }
+
+  @override
+  Future<void> purchaseLiveShopItem(int itemId) async {
+    try {
+      final formData = {'user_id': _session.userId, 'item_id': '$itemId'};
+      await _api.post(ApiEndpoints.purchaseLiveShopItem, data: formData);
+    } catch (e) {
+      throw ErrorService.toServiceException(
+        e,
+        fallback: 'Error al comprar el paquete de vidas',
+      );
+    }
   }
 }

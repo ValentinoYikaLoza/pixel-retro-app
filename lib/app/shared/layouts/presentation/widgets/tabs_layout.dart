@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 
@@ -23,8 +23,9 @@ class _TabsLayoutState extends State<TabsLayout> {
   Widget build(BuildContext context) {
     EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
 
+    final currentLocation = GoRouterState.of(context).matchedLocation;
     int currentIndex = pageRoutes.indexWhere((route) {
-      return route == Get.currentRoute;
+      return route == currentLocation;
     });
 
     // Si no existe, asigna 0

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
+import 'package:pixel_retro_app/app/shared/services/dialog_service.dart';
 import 'package:pixel_retro_app/app/shared/widgets/no_internet_dialog.dart';
 
 class ConnectionDetector extends ConsumerStatefulWidget {
@@ -25,7 +25,7 @@ class ConnectionDetectorState extends ConsumerState<ConnectionDetector> {
           _showNoInternetDialog();
         } else if (hasInternet && _dialogShown) {
           _dialogShown = false;
-          if (Get.isDialogOpen == true) Get.back();
+          DialogService.close();
         }
       },
     );
@@ -34,7 +34,6 @@ class ConnectionDetectorState extends ConsumerState<ConnectionDetector> {
   }
 
   void _showNoInternetDialog() {
-    if (Get.isDialogOpen == true) return;
-    Get.dialog(const NoInternetDialog(), barrierDismissible: false);
+    DialogService.show(const NoInternetDialog(), barrierDismissible: false);
   }
 }

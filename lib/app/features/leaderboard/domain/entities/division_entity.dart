@@ -1,6 +1,11 @@
-class DivisionEntity {
+import 'package:equatable/equatable.dart';
+
+class DivisionEntity extends Equatable {
   final int id;
   final String name;
 
-  DivisionEntity({required this.id, required this.name});
+  const DivisionEntity({required this.id, required this.name});
+
+  @override
+  List<Object?> get props => [id, name];
 }

@@ -1,19 +1,8 @@
-import 'package:get/get.dart';
-import 'package:pixel_retro_app/app/features/home/presentation/screens/home_screen.dart';
-import 'package:pixel_retro_app/app/features/leaderboard/presentation/screens/leaderboard_screen.dart';
-import 'package:pixel_retro_app/app/features/mission/presentation/screens/mission_screen.dart';
-import 'package:pixel_retro_app/app/features/shop/presentation/screens/shop_screen.dart';
-import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/level_snake_game_screen.dart';
-import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/snake_game_screen.dart';
-import 'package:pixel_retro_app/app/shared/layouts/presentation/screens/layout_view.dart';
-import 'package:pixel_retro_app/app/shared/screens/ad_screen.dart';
-import 'package:pixel_retro_app/app/shared/screens/root_screen.dart';
-import 'package:pixel_retro_app/app/shared/screens/wait_to_layout_screen.dart';
-import 'package:pixel_retro_app/app/shared/screens/wait_to_game_screen.dart';
-import 'package:pixel_retro_app/app/shared/screens/welcome_screen.dart';
-import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
+import 'package:pixel_retro_app/app/config/routes/app_router.dart';
 
 class AppRoutes {
+  const AppRoutes._();
+
   // Tabs principales
   static const String root = '/';
   static const String home = '/home';
@@ -35,86 +24,13 @@ class AppRoutes {
   static const String adRewardedCoins = '/ad-rewardedCoins';
   static const String adRewardedLives = '/ad-rewardedLives';
 
-  static Future<void> go(
-    String route, {
-    Map<String, dynamic>? arguments,
-  }) async {
-    await Get.toNamed(route, arguments: arguments);
+  /// Navega reemplazando la ubicación actual (equivalente al flujo lineal
+  /// previo). `arguments` viaja como `extra` de go_router.
+  static void go(String route, {Object? arguments}) {
+    appRouter.go(route, extra: arguments);
   }
 
-  static final routes = [
-    // /
-    GetPage(
-      name: root,
-      page: () => const RootScreen(),
-      transition: Transition.fadeIn,
-    ),
-    // Tabs
-    GetPage(
-      name: home,
-      page: () => const LayoutView(child: HomeScreen()),
-      transition: Transition.fadeIn,
-    ),
-    GetPage(
-      name: leaderboard,
-      page: () => const LayoutView(child: LeaderboardScreen()),
-      transition: Transition.fadeIn,
-    ),
-    GetPage(
-      name: mission,
-      page: () => const LayoutView(child: MissionScreen()),
-      transition: Transition.fadeIn,
-    ),
-    GetPage(
-      name: shop,
-      page: () => const LayoutView(child: ShopScreen()),
-      transition: Transition.fadeIn,
-    ),
-
-    // Flujo bienvenida
-    GetPage(
-      name: waitToGame,
-      page: () => const WaitToGameScreen(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
-      name: waitToLayout,
-      page: () => const WaitToLayoutScreen(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
-      name: welcome,
-      page: () => const WelcomeScreen(),
-      transition: Transition.size,
-    ),
-
-    // Snake Game
-    GetPage(
-      name: levelSnakeGame,
-      page: () => const LevelSnakeGameScreen(),
-      transition: Transition.zoom,
-    ),
-    GetPage(
-      name: snakeGame,
-      page: () => const SnakeGameScreen(),
-      transition: Transition.downToUp,
-    ),
-    GetPage(
-      name: AppRoutes.adInterstitial,
-      page: () => const AdScreen(type: AdType.interstitial),
-      transition: Transition.fadeIn,
-    ),
-
-    GetPage(
-      name: AppRoutes.adRewardedCoins,
-      page: () => const AdScreen(type: AdType.rewardedCoins),
-      transition: Transition.fadeIn,
-    ),
-
-    GetPage(
-      name: AppRoutes.adRewardedLives,
-      page: () => const AdScreen(type: AdType.rewardedLives),
-      transition: Transition.fadeIn,
-    ),
-  ];
+  /// Ruta (path) actualmente activa.
+  static String get currentLocation =>
+      appRouter.routerDelegate.currentConfiguration.uri.path;
 }

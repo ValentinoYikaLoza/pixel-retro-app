@@ -1,5 +1,4 @@
 import 'package:pixel_retro_app/app/features/time/domain/datasources/time_datasource.dart';
-import 'package:pixel_retro_app/app/features/time/domain/models/get_time_response_model.dart';
 import 'package:pixel_retro_app/app/features/time/domain/repositories/time_repository.dart';
 
 class TimeRepositoryImpl implements TimeRepository {
@@ -8,7 +7,7 @@ class TimeRepositoryImpl implements TimeRepository {
   TimeRepositoryImpl(this.dataSource);
 
   @override
-  Future<GetTimeResponseModel> getTime() {
+  Future<DateTime> getTime() {
     return dataSource.getTime();
   }
 }

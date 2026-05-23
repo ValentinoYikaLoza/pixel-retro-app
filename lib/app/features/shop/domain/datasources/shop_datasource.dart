@@ -1,11 +1,11 @@
-import 'package:pixel_retro_app/app/features/shop/domain/models/get_advertisement_list_response_model.dart';
-import 'package:pixel_retro_app/app/features/shop/domain/models/get_coin_shop_list_response_model.dart';
-import 'package:pixel_retro_app/app/features/shop/domain/models/get_live_shop_list_response_model.dart';
+import 'package:pixel_retro_app/app/features/shop/domain/entities/advertisement_entity.dart';
+import 'package:pixel_retro_app/app/features/shop/domain/entities/coin_shop_entity.dart';
+import 'package:pixel_retro_app/app/features/shop/domain/entities/live_shop_entity.dart';
 
 abstract class ShopDatasource {
-  Future<GetAdvertisementListResponseModel> getAdvertisements();
-  Future<GetCoinShopListResponseModel> getCoinShopList();
-  Future<GetLiveShopListResponseModel> getLiveShopList();
+  Future<List<AdvertisementEntity>> getAdvertisements();
+  Future<List<CoinShopEntity>> getCoinShopList();
+  Future<List<LiveShopEntity>> getLiveShopList();
   Future<void> purchaseCoinShopItem(int itemId);
   Future<void> purchaseLiveShopItem(int itemId);
   Future<void> purchaseAdvertisement(int advertisementId);

@@ -1,17 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
+import 'package:pixel_retro_app/app/features/shop/domain/entities/advertisement_entity.dart';
 import 'package:pixel_retro_app/app/features/shop/presentation/providers/shop_provider.dart';
 import 'package:pixel_retro_app/app/features/shop/presentation/widgets/anuncio_container.dart';
 import 'package:pixel_retro_app/app/features/shop/presentation/widgets/section_title.dart';
+import 'package:pixel_retro_app/app/features/shop/presentation/widgets/shop_skeleton.dart';
 import 'package:pixel_retro_app/app/features/shop/presentation/widgets/show_item.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
+import 'package:pixel_retro_app/app/shared/widgets/screen_status.dart';
 
 class ShopScreen extends ConsumerWidget {
   const ShopScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final init = ref.watch(shopInitProvider);
+    return init.when(
+      loading: () => const ShopSkeleton(),
+      error: (_, __) =>
+          const ScreenError(message: 'No se pudo cargar la tienda'),
+      data: (_) => _buildContent(context, ref),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, WidgetRef ref) {
     final shopState = ref.watch(shopProvider);
 
     final internetStatusState = ref.watch(internetStatusProvider);
@@ -47,17 +60,18 @@ class ShopScreen extends ConsumerWidget {
                             const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final ad = shopState.advertisements[index];
+                          final isCoin = ad.rewardType == AdRewardType.coin;
                           return AnuncioContainerWidget(
-                            title: ad.description,
-                            type: ad.typeId == 1
+                            title:
+                                'Mira un anuncio y gana ${ad.reward} '
+                                '${isCoin ? 'monedas' : 'vidas'}',
+                            type: isCoin
                                 ? TypeItemShop.coin
                                 : TypeItemShop.live,
-                            imagePath: ad.typeId == 1
+                            imagePath: isCoin
                                 ? 'assets/icons/coin.svg'
                                 : 'assets/icons/heart.svg',
-                            color: ad.typeId == 1
-                                ? AppColors.yellow
-                                : AppColors.red,
+                            color: isCoin ? AppColors.yellow : AppColors.red,
                           );
                         },
                       ),
@@ -93,7 +107,7 @@ class ShopScreen extends ConsumerWidget {
                           return ShopItem(
                             imagePath: ref
                                 .read(shopProvider.notifier)
-                                .getItemImagePath(index + 1, TypeItemShop.coin),
+                                .getItemImagePath(item.id, TypeItemShop.coin),
                             quantity: item.quantity,
                             price: item.price,
                             unit: ShopItemUnit.usd,
@@ -139,7 +153,7 @@ class ShopScreen extends ConsumerWidget {
                           return ShopItem(
                             imagePath: ref
                                 .read(shopProvider.notifier)
-                                .getItemImagePath(index + 1, TypeItemShop.live),
+                                .getItemImagePath(item.id, TypeItemShop.live),
                             quantity: item.quantity,
                             price: item.price,
                             unit: ShopItemUnit.usd,
@@ -166,7 +180,7 @@ class ShopScreen extends ConsumerWidget {
                           return ShopItem(
                             imagePath: ref
                                 .read(shopProvider.notifier)
-                                .getItemImagePath(index + 1, TypeItemShop.live),
+                                .getItemImagePath(item.id, TypeItemShop.live),
                             quantity: item.quantity,
                             price: item.price,
                             unit: ShopItemUnit.coin,

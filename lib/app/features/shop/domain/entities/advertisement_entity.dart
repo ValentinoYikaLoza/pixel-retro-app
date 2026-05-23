@@ -1,15 +1,21 @@
-class AdvertisementEntity {
+import 'package:equatable/equatable.dart';
+
+/// Qué entrega el anuncio al verlo.
+enum AdRewardType { coin, life }
+
+class AdvertisementEntity extends Equatable {
   final int id;
-  final String description;
-  final double reward;
-  final int typeId;
+  final int reward;
+  final AdRewardType rewardType;
   final bool isClaimed;
 
-  AdvertisementEntity({
+  const AdvertisementEntity({
     required this.id,
-    required this.description,
     required this.reward,
-    required this.typeId,
+    required this.rewardType,
     required this.isClaimed,
   });
+
+  @override
+  List<Object?> get props => [id, reward, rewardType, isClaimed];
 }

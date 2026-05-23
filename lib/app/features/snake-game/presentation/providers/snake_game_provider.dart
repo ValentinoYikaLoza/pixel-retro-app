@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final snakeGameProvider =
-    StateNotifierProvider<SnakeGameNotifier, SnakeGameState>((ref) {
+    StateNotifierProvider.autoDispose<SnakeGameNotifier, SnakeGameState>((ref) {
       return SnakeGameNotifier(ref);
     });
 
@@ -190,9 +191,15 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
     _timer?.cancel();
     initGame();
   }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 }
 
-class SnakeGameState {
+class SnakeGameState extends Equatable {
   final List<Offset> snake;
   final Offset food;
   final Offset? extraFood;
@@ -203,7 +210,7 @@ class SnakeGameState {
   final int gridWidth; // Cambiado de gridSize
   final int gridHeight; // Nueva propiedad
 
-  SnakeGameState({
+  const SnakeGameState({
     this.snake = const [],
     this.food = const Offset(0, 0),
     this.extraFood,
@@ -239,6 +246,19 @@ class SnakeGameState {
       gridHeight: gridHeight ?? this.gridHeight,
     );
   }
+
+  @override
+  List<Object?> get props => [
+    snake,
+    food,
+    extraFood,
+    direction,
+    score,
+    hasLost,
+    isPaused,
+    gridWidth,
+    gridHeight,
+  ];
 }
 
 enum Direction { up, down, left, right }

@@ -1,7 +1,9 @@
+/// Respuesta de `GET /getTime`. Forma: `{ success, message, data: { time } }`.
+/// Parseo defensivo: una fecha inválida cae a `DateTime.now()` en vez de lanzar.
 class GetTimeResponseDto {
-  bool success;
-  String message;
-  Data data;
+  final bool success;
+  final String message;
+  final TimeData data;
 
   GetTimeResponseDto({
     required this.success,
@@ -9,27 +11,25 @@ class GetTimeResponseDto {
     required this.data,
   });
 
-  factory GetTimeResponseDto.fromJson(Map<String, dynamic> json) =>
-      GetTimeResponseDto(
-        success: json["success"],
-        message: json["message"],
-        data: Data.fromJson(json["data"]),
-      );
-
-  Map<String, dynamic> toJson() => {
-    "success": success,
-    "message": message,
-    "data": data.toJson(),
-  };
+  factory GetTimeResponseDto.fromJson(Map<String, dynamic> json) {
+    return GetTimeResponseDto(
+      success: json['success'] as bool? ?? false,
+      message: json['message']?.toString() ?? '',
+      data: TimeData.fromJson(
+        json['data'] as Map<String, dynamic>? ?? const {},
+      ),
+    );
+  }
 }
 
-class Data {
-  DateTime time;
+class TimeData {
+  final DateTime time;
 
-  Data({required this.time});
+  TimeData({required this.time});
 
-  factory Data.fromJson(Map<String, dynamic> json) =>
-      Data(time: DateTime.parse(json["time"]));
-
-  Map<String, dynamic> toJson() => {"time": time.toIso8601String()};
+  factory TimeData.fromJson(Map<String, dynamic> json) {
+    return TimeData(
+      time: DateTime.tryParse(json['time']?.toString() ?? '') ?? DateTime.now(),
+    );
+  }
 }

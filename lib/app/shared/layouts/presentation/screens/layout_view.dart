@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/widgets/tabs_layout.dart';
@@ -27,7 +27,7 @@ class _LayoutViewState extends State<LayoutView> {
 
   @override
   Widget build(BuildContext context) {
-    final String route = Get.currentRoute;
+    final String route = GoRouterState.of(context).matchedLocation;
 
     return Scaffold(
       appBar: route == AppRoutes.leaderboard || route == AppRoutes.mission

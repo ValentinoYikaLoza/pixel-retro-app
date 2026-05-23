@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
+import 'package:pixel_retro_app/app/shared/layouts/data/mappers/user_stats_mapper.dart';
 import 'package:pixel_retro_app/app/shared/layouts/domain/repositories/user_repository.dart';
 import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
 import 'package:pixel_retro_app/app/shared/providers/web_socket_provider.dart';
@@ -10,6 +12,12 @@ import 'package:pixel_retro_app/di.dart';
 
 final userProvider = StateNotifierProvider<UserNotifier, UserState>((ref) {
   return UserNotifier(ref);
+});
+
+/// Dispara la carga del usuario (datos del appbar). Se mantiene vivo durante
+/// toda la sesión: se carga una vez y el WebSocket lo mantiene al día.
+final userInitProvider = FutureProvider<void>((ref) async {
+  await ref.read(userProvider.notifier).getUser();
 });
 
 class UserNotifier extends StateNotifier<UserState> {
@@ -24,28 +32,33 @@ class UserNotifier extends StateNotifier<UserState> {
   Future<void> initData() async {
     // Obtiene la instancia del socket desde Riverpod
     final socket = ref.read(websocketServiceProvider);
+    // Evita suscripciones duplicadas si se recarga la pantalla.
+    await _statsSub?.cancel();
     // 📊 Escucha las estadísticas en tiempo real
     _statsSub = socket.statsStream.listen((stats) {
+      final model = UserStatsMapper.fromSocketData(stats);
       state = state.copyWith(
-        userId: stats['user']['id'] ?? state.userId,
-        coins: stats['user']['coins'] ?? state.coins,
-        lives: stats['user']['lives'] ?? state.lives,
-        streak: stats['user']['streak'] ?? state.streak,
-        divisionId: stats['user']['division_id'] ?? state.divisionId,
+        userId: model.userId,
+        coins: model.coins,
+        lives: model.lives,
+        streak: model.streak,
+        divisionId: model.divisionId,
       );
     });
   }
 
+  /// Carga inicial vía HTTP + suscripción a actualizaciones en vivo.
+  /// Lanza [ServiceException] si falla; la UI lo maneja vía AsyncValue.
   Future<void> getUser() async {
-    try {
-      await initData();
-      await repository.getUser();
-    } on ServiceException catch (_) {
-      SnackbarService.show(
-        'Error obteniendo los datos del usuario',
-        type: SnackbarType.error,
-      );
-    }
+    await initData();
+    final stats = await repository.getUser();
+    state = state.copyWith(
+      userId: stats.userId,
+      coins: stats.coins,
+      lives: stats.lives,
+      streak: stats.streak,
+      divisionId: stats.divisionId,
+    );
   }
 
   Future<void> updateCoins(int coins) async {
@@ -88,14 +101,14 @@ class UserNotifier extends StateNotifier<UserState> {
   }
 }
 
-class UserState {
+class UserState extends Equatable {
   final int coins;
   final int lives;
   final int streak;
   final int userId;
   final int divisionId;
 
-  UserState({
+  const UserState({
     this.coins = 0,
     this.lives = 0,
     this.streak = 0,
@@ -118,4 +131,7 @@ class UserState {
       divisionId: divisionId ?? this.divisionId,
     );
   }
+
+  @override
+  List<Object?> get props => [coins, lives, streak, userId, divisionId];
 }

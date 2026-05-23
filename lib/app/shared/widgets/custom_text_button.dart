@@ -94,7 +94,7 @@ class _CustomTextButtonState extends State<CustomTextButton>
                 boxShadow: [
                   if (!_isPressed)
                     BoxShadow(
-                      color: widget.flashColor.withOpacity(0.3),
+                      color: widget.flashColor.withValues(alpha: 0.3),
                       blurRadius: 8,
                       spreadRadius: 1,
                       offset: const Offset(0, 4),
@@ -102,7 +102,7 @@ class _CustomTextButtonState extends State<CustomTextButton>
                   // Efecto de luz interna para el flash
                   if (_isPressed)
                     BoxShadow(
-                      color: widget.flashColor.withOpacity(0.8),
+                      color: widget.flashColor.withValues(alpha: 0.8),
                       blurRadius: 15,
                       spreadRadius: 3,
                     ),
@@ -116,9 +116,9 @@ class _CustomTextButtonState extends State<CustomTextButton>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    _colorAnimation.value!.withOpacity(0.9),
+                    _colorAnimation.value!.withValues(alpha: 0.9),
                     _colorAnimation.value!,
-                    _colorAnimation.value!.withOpacity(0.9),
+                    _colorAnimation.value!.withValues(alpha: 0.9),
                   ],
                   stops: const [0.0, 0.5, 1.0],
                 ),

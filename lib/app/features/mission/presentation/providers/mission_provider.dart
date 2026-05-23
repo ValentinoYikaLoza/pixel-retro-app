@@ -1,21 +1,25 @@
 import 'dart:async';
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/features/mission/domain/entities/mission_entity.dart';
-import 'package:pixel_retro_app/app/features/mission/domain/models/get_mission_list_response_model.dart';
 import 'package:pixel_retro_app/app/features/mission/domain/repositories/mission_repository.dart';
-import 'package:pixel_retro_app/app/features/mission/presentation/data/mission_mapper.dart';
-import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
-import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
+import 'package:pixel_retro_app/app/features/mission/data/mappers/mission_mapper.dart';
+import 'package:pixel_retro_app/app/features/time/presentation/providers/time_provider.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
 import 'package:pixel_retro_app/app/shared/providers/web_socket_provider.dart';
-import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/di.dart';
 
 final missionProvider = StateNotifierProvider<MissionNotifier, MissionState>((
   ref,
 ) {
   return MissionNotifier(ref);
+});
+
+/// Carga los datos de la pantalla de misiones (se recarga al re-entrar).
+final missionInitProvider = FutureProvider.autoDispose<void>((ref) async {
+  await ref.watch(timeInitProvider.future);
+  await ref.read(missionProvider.notifier).getMissions();
 });
 
 class MissionNotifier extends StateNotifier<MissionState> {
@@ -51,31 +55,29 @@ class MissionNotifier extends StateNotifier<MissionState> {
   Future<void> initDataMissions() async {
     // Obtiene la instancia del socket desde Riverpod
     final socket = ref.read(websocketServiceProvider);
+    // Evita suscripciones duplicadas si se recarga la pantalla.
+    await _missionsSub?.cancel();
     // 🎯 Escucha las misiones en tiempo real
     _missionsSub = socket.missionsStream.listen((missions) {
-      // print('🎯 [MissionNotifier] Misiones recibidas: $missions');
-
-      final GetMissionListResponseModel model = MissionMapper.fromSocketData(
-        missions,
-      );
+      final board = MissionMapper.fromSocketData(missions);
       state = state.copyWith(
-        dailyRewards: model.dailyRewards,
-        weeklyReward: model.weeklyReward,
-        monthlyReward: model.monthlyReward,
+        dailyRewards: board.dailyRewards,
+        weeklyReward: board.weeklyReward,
+        monthlyReward: board.monthlyReward,
       );
     });
   }
 
+  /// Carga inicial vía HTTP + suscripción a actualizaciones en vivo.
+  /// Lanza [ServiceException] si falla; la UI lo maneja vía AsyncValue.
   Future<void> getMissions() async {
-    try {
-      await initDataMissions();
-      await repository.getMissions();
-    } on ServiceException catch (_) {
-      SnackbarService.show(
-        'Error obteniendo la lista de misiones',
-        type: SnackbarType.error,
-      );
-    }
+    await initDataMissions();
+    final board = await repository.getMissions();
+    state = state.copyWith(
+      dailyRewards: board.dailyRewards,
+      weeklyReward: board.weeklyReward,
+      monthlyReward: board.monthlyReward,
+    );
   }
 
   String getRewardImage(RewardCategory category) {
@@ -96,7 +98,7 @@ class MissionNotifier extends StateNotifier<MissionState> {
   }
 }
 
-class MissionState {
+class MissionState extends Equatable {
   final MissionEntity? monthlyReward;
   final MissionEntity? weeklyReward;
   final List<MissionEntity> dailyRewards;
@@ -118,4 +120,7 @@ class MissionState {
       dailyRewards: dailyRewards ?? this.dailyRewards,
     );
   }
+
+  @override
+  List<Object?> get props => [monthlyReward, weeklyReward, dailyRewards];
 }

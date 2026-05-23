@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
+import 'package:pixel_retro_app/app/shared/services/dialog_service.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_dialog.dart';
 
@@ -38,7 +38,7 @@ class _ShopItemState extends State<ShopItem> {
       onTapUp: (_) => setState(() => _pressed = false),
       onTapCancel: () => setState(() => _pressed = false),
       onTap: () {
-        Get.dialog(
+        DialogService.show(
           CustomDialog(
             title: '¿Quieres comprar este artículo?',
             content:
@@ -58,7 +58,7 @@ class _ShopItemState extends State<ShopItem> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         decoration: BoxDecoration(
           color: _pressed
-              ? AppColors.white.withOpacity(0.3)
+              ? AppColors.white.withValues(alpha: 0.3)
               : AppColors.backgroundDark,
           borderRadius: BorderRadius.circular(15),
           border: Border.all(color: AppColors.orange, width: 2),
@@ -67,13 +67,13 @@ class _ShopItemState extends State<ShopItem> {
           boxShadow: [
             if (_pressed)
               BoxShadow(
-                color: AppColors.orange.withOpacity(0.55),
+                color: AppColors.orange.withValues(alpha: 0.55),
                 blurRadius: 22,
                 spreadRadius: 2,
               )
             else
               BoxShadow(
-                color: AppColors.orange.withOpacity(0.25),
+                color: AppColors.orange.withValues(alpha: 0.25),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),

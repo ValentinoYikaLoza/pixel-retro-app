@@ -5,8 +5,8 @@ import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:pixel_retro_app/app/shared/providers/data_sync_provider.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
+import 'package:pixel_retro_app/app/shared/widgets/skeleton.dart';
 
 class CustomAppbar extends ConsumerStatefulWidget
     implements PreferredSizeWidget {
@@ -31,14 +31,12 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
     final userState = ref.watch(userProvider);
 
     final internetStatusState = ref.watch(internetStatusProvider);
-    final dataAsyncStatusState = ref.watch(dataSyncProvider);
+    final userInit = ref.watch(userInitProvider);
 
     final hasIntenetConnection = internetStatusState.value ?? false;
-    final hasDataAsync = dataAsyncStatusState.syncStatus == SyncStatus.success;
-    final isDataSyncning =
-        dataAsyncStatusState.syncStatus == SyncStatus.syncing;
-    final isDataSyncFailed =
-        dataAsyncStatusState.syncStatus == SyncStatus.error;
+    final hasDataAsync = userInit.hasValue;
+    final isDataSyncning = userInit.isLoading;
+    final isDataSyncFailed = userInit.hasError;
 
     return AppBar(
       automaticallyImplyLeading: false,
@@ -88,6 +86,8 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
                       ],
                     ),
                   )
+                : isDataSyncning
+                ? _buildSkeletonBar(safeAreaPadding.top)
                 : Container(
                     padding: EdgeInsets.only(
                       left: 20,
@@ -105,30 +105,15 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       spacing: 20,
                       children: [
-                        isDataSyncning
-                            ? SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  color: AppColors.gray,
-                                  strokeWidth: 5,
-                                ),
-                              )
-                            : isDataSyncFailed
-                            ? Icon(
-                                Icons.error_outline_rounded,
-                                color: AppColors.gray,
-                                size: 24,
-                              )
-                            : Icon(
-                                Icons.arrow_downward_rounded,
-                                color: AppColors.gray,
-                                size: 24,
-                              ),
+                        Icon(
+                          isDataSyncFailed
+                              ? Icons.error_outline_rounded
+                              : Icons.arrow_downward_rounded,
+                          color: AppColors.gray,
+                          size: 24,
+                        ),
                         Text(
-                          isDataSyncning
-                              ? 'CARGANDO DATOS'
-                              : isDataSyncFailed
+                          isDataSyncFailed
                               ? 'OCURRIÓ UN ERROR'
                               : 'SINCRONIZAR DATOS',
                           style: TextStyle(
@@ -171,6 +156,28 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
                 ],
               ),
             ),
+    );
+  }
+
+  /// Skeleton del appbar mientras se cargan los datos del usuario (HTTP).
+  Widget _buildSkeletonBar(double topPadding) {
+    return Container(
+      padding: EdgeInsets.only(left: 20, right: 20, top: topPadding),
+      height: 62 + topPadding,
+      decoration: const BoxDecoration(
+        color: AppColors.backgroundDark,
+        border: Border(bottom: BorderSide(color: AppColors.orange, width: 2)),
+      ),
+      child: const Shimmer(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            SkeletonBox(width: 70, height: 28),
+            SkeletonBox(width: 70, height: 28),
+            SkeletonBox(width: 70, height: 28),
+          ],
+        ),
+      ),
     );
   }
 }

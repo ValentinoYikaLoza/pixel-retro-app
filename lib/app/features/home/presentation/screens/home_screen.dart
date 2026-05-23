@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/home/presentation/providers/home_provider.dart';
+import 'package:pixel_retro_app/app/features/home/presentation/widgets/home_skeleton.dart';
+import 'package:pixel_retro_app/app/shared/widgets/screen_status.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -51,6 +53,16 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final init = ref.watch(homeInitProvider);
+    return init.when(
+      loading: () => const HomeSkeleton(),
+      error: (_, __) =>
+          const ScreenError(message: 'No se pudieron cargar los juegos'),
+      data: (_) => _buildContent(context),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
     final homeState = ref.watch(homeProvider);
 
     return Center(
@@ -104,7 +116,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
               curve: Curves.easeInOut,
               turns: shouldRotate ? rotationAngle / (2 * 3.14159) : 0,
               onEnd: () =>
-                  _handleAnimationComplete(homeState.gameSelected?.name ?? ''),
+                  _handleAnimationComplete(homeState.gameSelected?.code ?? ''),
               child: CarouselSlider(
                 options: CarouselOptions(
                   height: 271,
@@ -128,7 +140,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 10,
                               offset: Offset(0, 5),
                             ),
@@ -141,7 +153,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                         child: GestureDetector(
                           onTap: _startAnimation,
                           child: Image.asset(
-                            'assets/images/${game.name}.png',
+                            'assets/images/${game.code}.png',
                             fit: BoxFit.contain,
                           ),
                         ),

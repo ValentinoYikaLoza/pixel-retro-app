@@ -1,33 +1,40 @@
 import 'package:dio/dio.dart';
+import 'package:pixel_retro_app/app/shared/models/service_exception.dart';
 
+/// Traduce errores crudos (de Dio u otros) a un [ServiceException] tipado.
+///
+/// La capa de datos siempre debe lanzar [ServiceException]; la presentación
+/// solo conoce este tipo de error.
 class ErrorService {
-  static String verificarErrorBase(
-    String errorMessage,
-    Object e, {
-    bool mensajeServicio = false,
+  const ErrorService._();
+
+  /// Claves usuales que el backend usa para el mensaje de error.
+  static const _messageKeys = ['message', 'mensaje', 'msg'];
+
+  static ServiceException toServiceException(
+    Object error, {
+    String fallback = 'Ocurrió un error inesperado',
   }) {
-    if (e is DioException) {
-      try {
-        if (mensajeServicio) {
-          // Si toma el mensaje de error del servicio
-          if (e.response?.data['message'] != null &&
-              e.response?.data['message'] != '') {
-            errorMessage = e.response?.data['message'];
-          }
+    if (error is ServiceException) return error;
 
-          if (e.response?.data['mensaje'] != null &&
-              e.response?.data['mensaje'] != '') {
-            errorMessage = e.response?.data['mensaje'];
-          }
-
-          if (e.response?.data['msg'] != null &&
-              e.response?.data['msg'] != '') {
-            errorMessage = e.response?.data['msg'];
+    if (error is DioException) {
+      final data = error.response?.data;
+      String? message;
+      if (data is Map) {
+        for (final key in _messageKeys) {
+          final value = data[key];
+          if (value is String && value.trim().isNotEmpty) {
+            message = value;
+            break;
           }
         }
-      } catch (_) {}
+      }
+      return ServiceException(
+        message ?? fallback,
+        statusCode: error.response?.statusCode,
+      );
     }
 
-    return errorMessage;
+    return ServiceException(fallback);
   }
 }

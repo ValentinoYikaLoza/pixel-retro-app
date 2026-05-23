@@ -4,9 +4,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/domain/entities/user_rank_entity.dart';
 import 'package:pixel_retro_app/app/features/leaderboard/presentation/providers/leaderboard_provider.dart';
+import 'package:pixel_retro_app/app/features/leaderboard/presentation/widgets/leaderboard_skeleton.dart';
 import 'package:pixel_retro_app/app/features/time/presentation/widgets/time_widget.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
+import 'package:pixel_retro_app/app/shared/widgets/screen_status.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
   const LeaderboardScreen({super.key});
@@ -23,6 +25,16 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final init = ref.watch(leaderboardInitProvider);
+    return init.when(
+      loading: () => const LeaderboardSkeleton(),
+      error: (_, __) =>
+          const ScreenError(message: 'No se pudieron cargar las ligas'),
+      data: (_) => _buildContent(context),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
     EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
     final leaderboardState = ref.watch(leaderboardProvider);
     final userState = ref.watch(userProvider);
@@ -32,6 +44,7 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
     final hasDivisions = leaderboardState.divisions.isNotEmpty;
     final hasUsers = leaderboardState.users.isNotEmpty;
+    final visibleUsers = leaderboardState.visibleUsers;
 
     final String currentDivisionName = ref
         .read(leaderboardProvider.notifier)
@@ -117,37 +130,47 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
               // --- LISTA DE USUARIOS ---
               Expanded(
-                child: CustomScrollView(
-                  slivers: [
-                    SliverList.builder(
-                      itemBuilder: (context, index) {
-                        final user = leaderboardState.users[index];
-                        return Column(
-                          spacing: 20,
-                          children: [
-                            UserRow(
-                              isCurrentUser: userState.userId == user.id,
-                              user: user,
-                              index: index + 1,
-                            ),
-                            if (index + 1 == 5)
-                              Separator(
-                                text: "ZONA DE ASCENSO",
-                                color: AppColors.emerald,
-                                icon: 'assets/icons/arrow-up.svg',
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    // Al acercarse al final, muestra la siguiente página.
+                    if (notification.metrics.pixels >=
+                        notification.metrics.maxScrollExtent - 200) {
+                      ref.read(leaderboardProvider.notifier).loadMoreUsers();
+                    }
+                    return false;
+                  },
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverList.builder(
+                        itemBuilder: (context, index) {
+                          final user = visibleUsers[index];
+                          return Column(
+                            spacing: 20,
+                            children: [
+                              UserRow(
+                                isCurrentUser: userState.userId == user.id,
+                                user: user,
+                                index: index + 1,
                               ),
-                            if (index + 1 == 15)
-                              Separator(
-                                text: "ZONA DE DESCENSO",
-                                color: AppColors.ruby,
-                                icon: 'assets/icons/arrow-down.svg',
-                              ),
-                          ],
-                        );
-                      },
-                      itemCount: leaderboardState.users.length,
-                    ),
-                  ],
+                              if (index + 1 == 5)
+                                Separator(
+                                  text: "ZONA DE ASCENSO",
+                                  color: AppColors.emerald,
+                                  icon: 'assets/icons/arrow-up.svg',
+                                ),
+                              if (index + 1 == 15)
+                                Separator(
+                                  text: "ZONA DE DESCENSO",
+                                  color: AppColors.ruby,
+                                  icon: 'assets/icons/arrow-down.svg',
+                                ),
+                            ],
+                          );
+                        },
+                        itemCount: visibleUsers.length,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

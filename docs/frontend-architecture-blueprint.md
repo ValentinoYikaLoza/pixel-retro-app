@@ -288,4 +288,107 @@ void main() async {
   <application android:usesCleartextTraffic="true" />
   ```
 - **Android Gradle**: usar **un solo** DSL (Groovy `.gradle` *o* Kotlin `.gradle.kts`), nunca ambos; un único `MainActivity.kt` por paquete.
+
+---
+
+## 9. Skeleton loaders (estados de carga)
+
+**Regla:** cada pantalla que carga datos muestra un **skeleton** que imita su
+layout (no un spinner genérico), con efecto *shimmer* en la **paleta de la app**.
+Se integra con `AsyncValue.when`:
+
+```dart
+ref.watch(fooInitProvider).when(
+  loading: () => const FooSkeleton(),     // placeholder con la forma de la vista
+  error:   (e, _) => const ScreenError(message: '...'),
+  data:    (_) => _buildContent(context), // UI real (lee el StateNotifier)
+);
 ```
+
+### 9.1 Shimmer base (un solo `AnimationController` por vista)
+`shared/widgets/skeleton.dart`: un `Shimmer` que envuelve el layout y aplica un
+`ShaderMask` con gradiente en movimiento (base gris + barrido tintado del color
+de marca). Los bloques (`SkeletonBox`, `SkeletonCircle`) son opacos; el `Shimmer`
+padre los "pinta".
+
+```dart
+class Shimmer extends StatefulWidget {
+  const Shimmer({super.key, required this.child});
+  final Widget child;
+  static const base = AppColors.gray;
+  static final highlight = Color.lerp(AppColors.gray, AppColors.orange, .3)!;
+  // AnimationController(repeat) → ShaderMask(srcATop) con
+  // LinearGradient(colors:[base,highlight,base], stops:[v-.3, v, v+.3] clamp)
+}
+class SkeletonBox extends StatelessWidget { /* Container opaco redondeado */ }
+class SkeletonCircle extends StatelessWidget { /* Container opaco circular */ }
+```
+
+### 9.2 Skeleton por vista
+Uno por pantalla (`<feature>/presentation/widgets/<feature>_skeleton.dart`) que
+replica la estructura real: p. ej. el de leaderboard = cabecera + fila de
+trofeos + N filas (círculo + barras + score); el de una grilla = filas de
+`Expanded(SkeletonBox)`. Listas largas en `SingleChildScrollView`/`Expanded`
+para no desbordar.
+
+### 9.3 No negociables
+- **Skeleton, no spinner**, en las vistas con datos.
+- **Mismo `Shimmer` para todo el subárbol** (1 controller; eficiente y cohesivo).
+- Colores **desde `AppColors`** (nunca hardcodear).
+- `connectTimeout` razonable (≈10 s) para que el skeleton no se eternice si el
+  backend no responde.
+
+---
+
+## 10. WebSockets / tiempo real (si el proyecto los usa)
+
+> Sección **opcional**: aplicar solo si la app tiene datos en vivo (ranking,
+> chat, estado del usuario, etc.). Si no, omitir.
+
+### 10.1 Patrón (HTTP + socket)
+- **HTTP = carga inicial** al entrar a la vista (primer pintado garantizado).
+- **WebSocket = solo actualizaciones en vivo** sobre ese estado ya cargado.
+- El contrato de cada canal (snapshot/deltas) se documenta aparte
+  (ver `docs/backend-contract.md`).
+
+### 10.2 Servicio (`shared/services/web_socket_service.dart`)
+- `StreamController.broadcast()` por tipo de evento; expone `Stream` de solo
+  lectura.
+- **Reconexión** automática con backoff y `dispose()` que cierra sink +
+  controllers + timer.
+- Parseo de mensajes tipado vía **mapper** (`*_mapper.dart`), nunca `dynamic`
+  encadenado en la UI.
+
+### 10.3 Provider del socket
+```dart
+final websocketServiceProvider = Provider<WebSocketService>((ref) {
+  final socket = WebSocketService(url: Environment.urlBaseSocket, userId: ...);
+  socket.connect();
+  ref.onDispose(socket.dispose);   // cierra al no usarse
+  return socket;
+});
+```
+
+### 10.4 Consumo en el StateNotifier
+```dart
+StreamSubscription<Map<String, dynamic>>? _sub;
+
+Future<void> _subscribe() async {
+  final socket = ref.read(websocketServiceProvider);
+  await _sub?.cancel();                       // ← guard anti-duplicado al recargar
+  _sub = socket.fooStream.listen((data) {
+    state = state.copyWith(foo: FooMapper.fromSocketData(data)); // solo update
+  });
+}
+
+@override
+void dispose() { _sub?.cancel(); super.dispose(); }   // ← SIEMPRE cancelar
+```
+
+### 10.5 No negociables
+- **Cancelar** toda `StreamSubscription` en `dispose()` + **guard** antes de
+  re-suscribir.
+- El socket **no** es el origen del primer pintado (eso es HTTP); solo actualiza.
+- Payloads del socket → **mapper tipado → Entity** (mismo flujo que HTTP).
+- Un **único** `WebSocketService` (singleton vía provider); no abrir conexiones
+  por pantalla.

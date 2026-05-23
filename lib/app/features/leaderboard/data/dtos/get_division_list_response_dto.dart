@@ -1,7 +1,9 @@
+/// Respuesta de `GET /listDivisions`. Forma: `{ success, message, data: [...] }`.
+/// Parseo defensivo: campos faltantes usan valores por defecto.
 class GetDivisionListResponseDto {
-  bool success;
-  String message;
-  List<Datum> data;
+  final bool success;
+  final String message;
+  final List<DivisionDto> data;
 
   GetDivisionListResponseDto({
     required this.success,
@@ -9,28 +11,29 @@ class GetDivisionListResponseDto {
     required this.data,
   });
 
-  factory GetDivisionListResponseDto.fromJson(Map<String, dynamic> json) =>
-      GetDivisionListResponseDto(
-        success: json["success"],
-        message: json["message"],
-        data: List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
-      );
-
-  Map<String, dynamic> toJson() => {
-    "success": success,
-    "message": message,
-    "data": List<dynamic>.from(data.map((x) => x.toJson())),
-  };
+  factory GetDivisionListResponseDto.fromJson(Map<String, dynamic> json) {
+    return GetDivisionListResponseDto(
+      success: json['success'] as bool? ?? false,
+      message: json['message']?.toString() ?? '',
+      data: (json['data'] as List<dynamic>? ?? [])
+          .map(
+            (e) => DivisionDto.fromJson(e as Map<String, dynamic>? ?? const {}),
+          )
+          .toList(),
+    );
+  }
 }
 
-class Datum {
-  int id;
-  String name;
+class DivisionDto {
+  final int id;
+  final String name;
 
-  Datum({required this.id, required this.name});
+  DivisionDto({required this.id, required this.name});
 
-  factory Datum.fromJson(Map<String, dynamic> json) =>
-      Datum(id: json["id"], name: json["name"]);
-
-  Map<String, dynamic> toJson() => {"id": id, "name": name};
+  factory DivisionDto.fromJson(Map<String, dynamic> json) {
+    return DivisionDto(
+      id: json['id'] as int? ?? 0,
+      name: json['name']?.toString() ?? '',
+    );
+  }
 }

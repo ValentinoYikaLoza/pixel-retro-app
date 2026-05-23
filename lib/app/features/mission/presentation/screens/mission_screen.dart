@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/features/mission/presentation/providers/mission_provider.dart';
+import 'package:pixel_retro_app/app/features/mission/presentation/widgets/mission_skeleton.dart';
 import 'package:pixel_retro_app/app/features/time/presentation/providers/time_provider.dart';
 import 'package:pixel_retro_app/app/features/time/presentation/widgets/time_widget.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
+import 'package:pixel_retro_app/app/shared/widgets/screen_status.dart';
 
 class MissionScreen extends ConsumerStatefulWidget {
   const MissionScreen({super.key});
@@ -22,6 +24,16 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final init = ref.watch(missionInitProvider);
+    return init.when(
+      loading: () => const MissionSkeleton(),
+      error: (_, __) =>
+          const ScreenError(message: 'No se pudieron cargar las misiones'),
+      data: (_) => _buildContent(context),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
     EdgeInsets safeAreaPadding = MediaQuery.of(context).padding;
     final missionState = ref.watch(missionProvider);
     final timeState = ref.watch(timeProvider);

@@ -2,33 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/app.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/constants/environment.dart';
 import 'package:pixel_retro_app/app/config/constants/storage_keys.dart';
 import 'package:pixel_retro_app/app/config/theme/app_theme.dart';
-import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
+import 'package:pixel_retro_app/app/config/routes/app_router.dart';
 import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
 import 'package:pixel_retro_app/app/shared/services/internet_service.dart';
 import 'package:pixel_retro_app/app/shared/services/storage_service.dart';
 import 'package:pixel_retro_app/di.dart';
 
-late String globalUserId;
-
 void main() async {
-  await Environment.initEnvironment();
   WidgetsFlutterBinding.ensureInitialized();
+  await Environment.initEnvironment();
 
   await StorageService.set<String>(StorageKeys.userId, '1');
-  globalUserId = await StorageService.get<String>(StorageKeys.userId) ?? '';
+  final userId = await StorageService.get<String>(StorageKeys.userId) ?? '';
 
   await AdsService.instance.initialize();
 
   // ⬇️ Aquí inicializamos la escucha en tiempo real
   await InternetService.instance.initialize();
 
-  setup();
+  setup(userId: userId);
 
   WidgetsBinding.instance.addPostFrameCallback((_) async {
     SystemChrome.setSystemUIOverlayStyle(
@@ -48,11 +45,10 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
+    return MaterialApp.router(
       title: 'Pixel Retro',
       debugShowCheckedModeBanner: false,
-      initialRoute: AppRoutes.root,
-      getPages: AppRoutes.routes,
+      routerConfig: appRouter,
       theme: AppTheme.getTheme(),
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       supportedLocales: const [Locale('es')],

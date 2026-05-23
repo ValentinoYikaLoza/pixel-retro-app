@@ -1,5 +1,1 @@
-enum SnackbarType {
-  info,
-  success,
-  error,
-}
+enum SnackbarType { info, success, error }

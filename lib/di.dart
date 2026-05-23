@@ -1,4 +1,6 @@
 import 'package:get_it/get_it.dart';
+import 'package:pixel_retro_app/app/config/api/api.dart';
+import 'package:pixel_retro_app/app/shared/services/session_service.dart';
 import 'package:pixel_retro_app/app/features/home/data/datasources/home_datasource_impl.dart';
 import 'package:pixel_retro_app/app/features/home/data/repositories/home_repository_impl.dart';
 import 'package:pixel_retro_app/app/features/home/domain/datasources/home_datasource.dart';
@@ -26,16 +28,32 @@ import 'package:pixel_retro_app/app/shared/layouts/domain/repositories/user_repo
 
 final getIt = GetIt.instance;
 
-void setup() {
-  // Data sources
-  getIt.registerLazySingleton<UserDataSource>(() => UserDataSourceImpl());
-  getIt.registerLazySingleton<HomeDataSource>(() => HomeDataSourceImpl());
-  getIt.registerLazySingleton<LeaderboardDatasource>(
-    () => LeaderboardDatasourceImpl(),
+void setup({required String userId}) {
+  // Session (current user) + HTTP client (single Dio shared across the app)
+  getIt.registerLazySingleton<SessionService>(
+    () => SessionService(userId: userId),
   );
-  getIt.registerLazySingleton<MissionDataSource>(() => MissionDataSourceImpl());
-  getIt.registerLazySingleton<ShopDatasource>(() => ShopDatasourceImpl());
-  getIt.registerLazySingleton<TimeDataSource>(() => TimeDataSourceImpl());
+  getIt.registerLazySingleton<Api>(() => Api());
+
+  // Data sources
+  getIt.registerLazySingleton<UserDataSource>(
+    () => UserDataSourceImpl(getIt<Api>(), getIt<SessionService>()),
+  );
+  getIt.registerLazySingleton<HomeDataSource>(
+    () => HomeDataSourceImpl(getIt<Api>()),
+  );
+  getIt.registerLazySingleton<LeaderboardDatasource>(
+    () => LeaderboardDatasourceImpl(getIt<Api>(), getIt<SessionService>()),
+  );
+  getIt.registerLazySingleton<MissionDataSource>(
+    () => MissionDataSourceImpl(getIt<Api>(), getIt<SessionService>()),
+  );
+  getIt.registerLazySingleton<ShopDatasource>(
+    () => ShopDatasourceImpl(getIt<Api>(), getIt<SessionService>()),
+  );
+  getIt.registerLazySingleton<TimeDataSource>(
+    () => TimeDataSourceImpl(getIt<Api>()),
+  );
 
   // Repositories
   getIt.registerLazySingleton<UserRepository>(

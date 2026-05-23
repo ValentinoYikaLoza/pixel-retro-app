@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 
@@ -59,11 +58,11 @@ class _NoInternetDialogState extends State<NoInternetDialog> {
           onTapDown: (_) => setState(() => _pressed = true),
           onTapUp: (_) {
             setState(() => _pressed = false);
-            Get.back();
+            Navigator.of(context).pop();
 
-            Get.currentRoute == AppRoutes.root
-                ? AppRoutes.go(AppRoutes.home)
-                : () {};
+            if (AppRoutes.currentLocation == AppRoutes.root) {
+              AppRoutes.go(AppRoutes.home);
+            }
           },
           onTapCancel: () => setState(() => _pressed = false),
           child: AnimatedContainer(
@@ -71,12 +70,12 @@ class _NoInternetDialogState extends State<NoInternetDialog> {
             height: 48,
             decoration: BoxDecoration(
               color: _pressed
-                  ? AppColors.white.withOpacity(0.5)
+                  ? AppColors.white.withValues(alpha: 0.5)
                   : AppColors.white,
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.orange.withOpacity(0.15),
+                  color: AppColors.orange.withValues(alpha: 0.15),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),

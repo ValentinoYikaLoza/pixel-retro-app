@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 
 class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({super.key});
+  const WelcomeScreen({super.key, this.arguments = const {}});
+
+  final Map<String, dynamic> arguments;
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
-  Map<String, dynamic> arguments = {};
   String title = '';
   String imagePath = '';
 
@@ -20,16 +20,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void initState() {
     super.initState();
 
-    // Verificar y castear los arguments inmediatamente
-    if (Get.arguments != null && Get.arguments is Map<String, dynamic>) {
-      arguments = Get.arguments as Map<String, dynamic>;
-    }
-
-    title = arguments['title']?.toString() ?? '';
-    imagePath = arguments['imagePath']?.toString() ?? '';
+    title = widget.arguments['title']?.toString() ?? '';
+    imagePath = widget.arguments['imagePath']?.toString() ?? '';
 
     Future.delayed(const Duration(milliseconds: 1500), () {
-      AppRoutes.go(arguments['nextScreen']?.toString() ?? AppRoutes.home);
+      AppRoutes.go(
+        widget.arguments['nextScreen']?.toString() ?? AppRoutes.home,
+      );
     });
   }
 

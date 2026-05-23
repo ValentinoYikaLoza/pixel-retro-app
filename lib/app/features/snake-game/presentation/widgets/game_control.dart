@@ -149,7 +149,7 @@ class _ControlButtonState extends State<_ControlButton> {
           boxShadow: [
             if (!_isPressed)
               BoxShadow(
-                color: AppColors.orange.withOpacity(0.15),
+                color: AppColors.orange.withValues(alpha: 0.15),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),

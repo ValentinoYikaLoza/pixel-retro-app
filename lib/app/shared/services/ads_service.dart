@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 enum AdType { interstitial, rewardedCoins, rewardedLives }
@@ -29,11 +30,11 @@ class AdsService {
       size: AdSize.banner,
       listener: BannerAdListener(
         onAdLoaded: (ad) {
-          print("Banner loaded");
+          debugPrint("Banner loaded");
           completer.complete(ad as BannerAd);
         },
         onAdFailedToLoad: (ad, err) {
-          print("Banner error: $err");
+          debugPrint("Banner error: $err");
           ad.dispose();
           completer.complete(null);
         },

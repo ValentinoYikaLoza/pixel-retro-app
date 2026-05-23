@@ -41,7 +41,9 @@ class GameBoardState extends ConsumerState<GameBoard> {
                           child: Container(
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: AppColors.neonPurple.withOpacity(0.3),
+                                color: AppColors.neonPurple.withValues(
+                                  alpha: 0.3,
+                                ),
                                 width: 0.5,
                               ),
                             ),
@@ -66,7 +68,7 @@ class GameBoardState extends ConsumerState<GameBoard> {
                   borderRadius: BorderRadius.circular(cellWidth / 2),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.neonPurple.withOpacity(0.5),
+                      color: AppColors.neonPurple.withValues(alpha: 0.5),
                       blurRadius: 4,
                       spreadRadius: 1,
                     ),
@@ -118,7 +120,7 @@ class GameBoardState extends ConsumerState<GameBoard> {
                         : BorderRadius.circular(cellWidth / 6),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 2,
                         offset: const Offset(1, 1),
                       ),
@@ -151,7 +153,7 @@ class GameBoardState extends ConsumerState<GameBoard> {
             if (gameState.hasLost || gameState.isPaused)
               Container(
                 width: double.infinity,
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 child: Stack(
                   children: [
                     Positioned(

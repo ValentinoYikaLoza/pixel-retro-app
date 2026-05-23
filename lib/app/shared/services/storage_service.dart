@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StorageService {
@@ -14,6 +15,7 @@ class StorageService {
       final value = jsonDecode(data);
       return value['data'] as T;
     } catch (e) {
+      debugPrint('StorageService.get("$key") failed: $e');
       return null;
     }
   }

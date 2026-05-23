@@ -1,7 +1,12 @@
+/// Respuesta de `POST /listMissions`.
+///
+/// Forma: `{ success, message, data: { dailyMissions, weeklyMissions,
+/// monthlyMissions } }`. El parseo es defensivo: si falta un campo se usa un
+/// valor por defecto en lugar de lanzar.
 class GetMissionListResponseDto {
-  bool success;
-  String message;
-  Data data;
+  final bool success;
+  final String message;
+  final MissionListData data;
 
   GetMissionListResponseDto({
     required this.success,
@@ -9,61 +14,52 @@ class GetMissionListResponseDto {
     required this.data,
   });
 
-  factory GetMissionListResponseDto.fromJson(Map<String, dynamic> json) =>
-      GetMissionListResponseDto(
-        success: json["success"],
-        message: json["message"],
-        data: Data.fromJson(json["data"]),
-      );
-
-  Map<String, dynamic> toJson() => {
-    "success": success,
-    "message": message,
-    "data": data.toJson(),
-  };
+  factory GetMissionListResponseDto.fromJson(Map<String, dynamic> json) {
+    return GetMissionListResponseDto(
+      success: json['success'] as bool? ?? false,
+      message: json['message']?.toString() ?? '',
+      data: MissionListData.fromJson(
+        json['data'] as Map<String, dynamic>? ?? const {},
+      ),
+    );
+  }
 }
 
-class Data {
-  List<LyMission> dailyMissions;
-  List<LyMission> weeklyMissions;
-  List<LyMission> monthlyMissions;
+class MissionListData {
+  final List<MissionDto> dailyMissions;
+  final List<MissionDto> weeklyMissions;
+  final List<MissionDto> monthlyMissions;
 
-  Data({
+  MissionListData({
     required this.dailyMissions,
     required this.weeklyMissions,
     required this.monthlyMissions,
   });
 
-  factory Data.fromJson(Map<String, dynamic> json) => Data(
-    dailyMissions: List<LyMission>.from(
-      json["dailyMissions"].map((x) => LyMission.fromJson(x)),
-    ),
-    weeklyMissions: List<LyMission>.from(
-      json["weeklyMissions"].map((x) => LyMission.fromJson(x)),
-    ),
-    monthlyMissions: List<LyMission>.from(
-      json["monthlyMissions"].map((x) => LyMission.fromJson(x)),
-    ),
-  );
+  factory MissionListData.fromJson(Map<String, dynamic> json) {
+    return MissionListData(
+      dailyMissions: _parseList(json['dailyMissions']),
+      weeklyMissions: _parseList(json['weeklyMissions']),
+      monthlyMissions: _parseList(json['monthlyMissions']),
+    );
+  }
 
-  Map<String, dynamic> toJson() => {
-    "dailyMissions": List<dynamic>.from(dailyMissions.map((x) => x.toJson())),
-    "weeklyMissions": List<dynamic>.from(weeklyMissions.map((x) => x.toJson())),
-    "monthlyMissions": List<dynamic>.from(
-      monthlyMissions.map((x) => x.toJson()),
-    ),
-  };
+  static List<MissionDto> _parseList(dynamic value) {
+    return (value as List<dynamic>? ?? [])
+        .map((e) => MissionDto.fromJson(e as Map<String, dynamic>? ?? const {}))
+        .toList();
+  }
 }
 
-class LyMission {
-  int id;
-  int currentValue;
-  String description;
-  int totalValue;
-  int rewardId;
-  int statusId;
+class MissionDto {
+  final int id;
+  final int currentValue;
+  final String description;
+  final int totalValue;
+  final int rewardId;
+  final int statusId;
 
-  LyMission({
+  MissionDto({
     required this.id,
     required this.currentValue,
     required this.description,
@@ -72,21 +68,14 @@ class LyMission {
     required this.statusId,
   });
 
-  factory LyMission.fromJson(Map<String, dynamic> json) => LyMission(
-    id: json["id"],
-    currentValue: json["current_value"],
-    description: json["description"],
-    totalValue: json["total_value"],
-    rewardId: json["reward_id"],
-    statusId: json["status_id"],
-  );
-
-  Map<String, dynamic> toJson() => {
-    "id": id,
-    "current_value": currentValue,
-    "description": description,
-    "total_value": totalValue,
-    "reward_id": rewardId,
-    "status_id": statusId,
-  };
+  factory MissionDto.fromJson(Map<String, dynamic> json) {
+    return MissionDto(
+      id: json['id'] as int? ?? 0,
+      currentValue: json['current_value'] as int? ?? 0,
+      description: json['description']?.toString() ?? '',
+      totalValue: json['total_value'] as int? ?? 0,
+      rewardId: json['reward_id'] as int? ?? 0,
+      statusId: json['status_id'] as int? ?? 0,
+    );
+  }
 }

@@ -1,4 +1,6 @@
-class MissionEntity {
+import 'package:equatable/equatable.dart';
+
+class MissionEntity extends Equatable {
   final int id;
   final String description;
   final int currentPoints;
@@ -6,7 +8,7 @@ class MissionEntity {
   final RewardState isClaimed;
   final RewardCategory category;
 
-  MissionEntity({
+  const MissionEntity({
     required this.id,
     required this.description,
     required this.currentPoints,
@@ -14,6 +16,16 @@ class MissionEntity {
     required this.isClaimed,
     required this.category,
   });
+
+  @override
+  List<Object?> get props => [
+    id,
+    description,
+    currentPoints,
+    totalPoints,
+    isClaimed,
+    category,
+  ];
 }
 
 enum RewardCategory { bronzeChest, silverChest, goldChest }

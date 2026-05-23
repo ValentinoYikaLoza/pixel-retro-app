@@ -1,4 +1,5 @@
 import 'package:pixel_retro_app/app/shared/layouts/domain/datasources/user_datasource.dart';
+import 'package:pixel_retro_app/app/shared/layouts/domain/entities/user_stats_entity.dart';
 import 'package:pixel_retro_app/app/shared/layouts/domain/repositories/user_repository.dart';
 
 class UserRepositoryImpl implements UserRepository {
@@ -7,7 +8,7 @@ class UserRepositoryImpl implements UserRepository {
   UserRepositoryImpl(this._dataSource);
 
   @override
-  Future<void> getUser() {
+  Future<UserStatsEntity> getUser() {
     return _dataSource.getUser();
   }
 
