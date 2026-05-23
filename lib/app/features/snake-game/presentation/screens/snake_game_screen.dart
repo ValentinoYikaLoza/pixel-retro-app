@@ -53,9 +53,8 @@ class SnakeGameScreenState extends ConsumerState<SnakeGameScreen> {
       isLost: st.hasLost,
       isPaused: st.isPaused,
       togglePause: notifier.togglePause,
-      onLeave: () async {
-        // Muestra el loader de salida mientras se cierra la sesión, luego sale.
-        await notifier.exitGame();
+      onLeave: () {
+        notifier.abandon();
         AppRoutes.go(AppRoutes.levelSnakeGame);
       },
     );
@@ -101,12 +100,7 @@ class SnakeGameScreenState extends ConsumerState<SnakeGameScreen> {
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.neonPurple, width: 4),
             ),
-            child: gameState.isExiting
-                ? const StartingLoader(
-                    title: 'SALIENDO',
-                    subtitle: 'Cerrando la partida',
-                  )
-                : gameState.isStarting
+            child: gameState.isStarting
                 ? const StartingLoader()
                 : Row(
                     children: [
