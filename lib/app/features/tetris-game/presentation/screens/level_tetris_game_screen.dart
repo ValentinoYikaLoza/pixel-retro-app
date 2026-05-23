@@ -248,21 +248,25 @@ class _LevelCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _Chip(
-                        label: 'Meta ${level.targetScore}',
-                        color: AppColors.purple,
-                      ),
-                      const SizedBox(width: 8),
-                      _Chip(
-                        label: 'Mejor ${level.bestScore}',
-                        color: level.bestScore > 0
-                            ? AppColors.orange
-                            : AppColors.gray,
-                      ),
-                    ],
+                  // Meta y mejor en LÍNEAS (la unidad del objetivo del Tetris).
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _Chip(
+                          label: 'Meta ${level.targetScore} líneas',
+                          color: AppColors.purple,
+                        ),
+                        const SizedBox(width: 8),
+                        _Chip(
+                          label: 'Mejor ${level.bestScore} líneas',
+                          color: level.bestScore > 0
+                              ? AppColors.orange
+                              : AppColors.gray,
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 12),
                   SizedBox(

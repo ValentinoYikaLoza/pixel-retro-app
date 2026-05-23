@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/tetris-game/presentation/providers/tetris_game_provider.dart';
@@ -7,6 +8,7 @@ import 'package:pixel_retro_app/app/features/tetris-game/presentation/widgets/te
 import 'package:pixel_retro_app/app/features/tetris-game/presentation/widgets/tetris_controls.dart';
 import 'package:pixel_retro_app/app/features/tetris-game/presentation/widgets/tetris_starting_loader.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
+import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
 import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
 import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
@@ -70,6 +72,7 @@ class _TetrisGameScreenState extends ConsumerState<TetrisGameScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(tetrisGameProvider);
+    final lives = ref.watch(userProvider).lives;
 
     ref.listen(tetrisGameProvider.select((s) => s.startFailed), (_, failed) {
       if (failed == true) {
@@ -103,7 +106,7 @@ class _TetrisGameScreenState extends ConsumerState<TetrisGameScreen> {
                     padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                     child: Column(
                       children: [
-                        _TopBar(state: state),
+                        _TopBar(state: state, lives: lives),
                         const SizedBox(height: 8),
                         Expanded(
                           child: Center(
@@ -125,11 +128,12 @@ class _TetrisGameScreenState extends ConsumerState<TetrisGameScreen> {
   }
 }
 
-/// Barra superior (vertical/portrait): hold, siguientes piezas y stats.
+/// Barra superior (vertical/portrait): hold, siguientes piezas, vidas y stats.
 class _TopBar extends StatelessWidget {
   final TetrisGameState state;
+  final int lives;
 
-  const _TopBar({required this.state});
+  const _TopBar({required this.state, required this.lives});
 
   @override
   Widget build(BuildContext context) {
@@ -165,10 +169,18 @@ class _TopBar extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            _StrokedText('NIVEL ${state.level}', fontSize: 18),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _Lives(lives),
+                const SizedBox(width: 10),
+                _StrokedText('NIVEL ${state.level}', fontSize: 18),
+              ],
+            ),
             const SizedBox(height: 2),
+            // Objetivo del nivel en LÍNEAS (Tetris se supera por líneas).
             Text(
-              '${state.score} pts',
+              '${state.lines} / ${state.targetScore} líneas',
               style: const TextStyle(
                 color: AppColors.white,
                 fontSize: 16,
@@ -176,7 +188,7 @@ class _TopBar extends StatelessWidget {
               ),
             ),
             Text(
-              '${state.lines} líneas · meta ${state.targetScore}',
+              '${state.score} pts',
               style: TextStyle(
                 color: AppColors.white.withValues(alpha: 0.7),
                 fontSize: 12,
@@ -185,6 +197,32 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Indicador compacto de vidas (corazón + número), al estilo del app bar.
+class _Lives extends StatelessWidget {
+  final int lives;
+
+  const _Lives(this.lives);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SvgPicture.asset('assets/icons/heart.svg', height: 20, width: 20),
+        const SizedBox(width: 4),
+        Text(
+          '$lives',
+          style: const TextStyle(
+            color: AppColors.red,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ],
     );
