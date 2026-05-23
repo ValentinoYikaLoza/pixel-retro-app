@@ -101,21 +101,13 @@ class ShopNotifier extends StateNotifier<ShopState> {
 
   String _getLiveImagePath(int id) {
     switch (id) {
-      case 1:
+      case 1 || 5:
         return 'assets/icons/heart.svg';
-      case 2:
+      case 2 || 6:
         return 'assets/icons/group-hearts-second.svg';
-      case 3:
+      case 3 || 7:
         return 'assets/icons/group-hearts-third.svg';
-      case 4:
-        return 'assets/icons/group-hearts-third.svg';
-      case 5:
-        return 'assets/icons/heart.svg';
-      case 6:
-        return 'assets/icons/group-hearts-second.svg';
-      case 7:
-        return 'assets/icons/group-hearts-third.svg';
-      case 8:
+      case 4 || 8:
         return 'assets/icons/group-hearts-third.svg';
       default:
         return 'assets/icons/heart.svg';
