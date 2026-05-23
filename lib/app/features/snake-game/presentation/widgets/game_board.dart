@@ -8,6 +8,7 @@ import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
 import 'package:pixel_retro_app/app/shared/services/dialog_service.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
+import 'package:pixel_retro_app/app/shared/widgets/confirm_dialog.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/inline_banner_ad.dart';
 import 'package:pixel_retro_app/app/shared/widgets/rewarded_ad_offer_dialog.dart';
@@ -239,7 +240,7 @@ class GameBoardState extends ConsumerState<GameBoard> {
                               ),
                               // Texto de relleno
                               Text(
-                                gameState.isPaused ? 'Pausa' : 'Perdió',
+                                gameState.isPaused ? 'Pausa' : 'Perdiste',
                                 style: TextStyle(
                                   color: AppColors.purple,
                                   fontSize: 48,
@@ -327,10 +328,17 @@ class GameBoardState extends ConsumerState<GameBoard> {
                             radius: 12,
                             label: 'SALIR',
                             baseColor: AppColors.backgroundDark,
-                            onPressed: () {
-                              ref.read(snakeGameProvider.notifier).abandon();
-                              AppRoutes.go(AppRoutes.levelSnakeGame);
-                            },
+                            onPressed: () => confirmGameExit(
+                              isLost: gameState.hasLost,
+                              isPaused: gameState.isPaused,
+                              togglePause: ref
+                                  .read(snakeGameProvider.notifier)
+                                  .togglePause,
+                              onLeave: () {
+                                ref.read(snakeGameProvider.notifier).abandon();
+                                AppRoutes.go(AppRoutes.levelSnakeGame);
+                              },
+                            ),
                           ),
                         ],
                       ),

@@ -11,6 +11,7 @@ import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
 import 'package:pixel_retro_app/app/shared/services/dialog_service.dart';
 import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
+import 'package:pixel_retro_app/app/shared/widgets/confirm_dialog.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/rewarded_ad_offer_dialog.dart';
 
@@ -41,8 +42,18 @@ class _TetrisGameScreenState extends ConsumerState<TetrisGameScreen> {
   }
 
   void _exit() {
-    ref.read(tetrisGameProvider.notifier).abandon();
-    AppRoutes.go(AppRoutes.levelTetrisGame);
+    // Confirma antes de abandonar (avisa que se pierde vida y progreso).
+    final st = ref.read(tetrisGameProvider);
+    final notifier = ref.read(tetrisGameProvider.notifier);
+    confirmGameExit(
+      isLost: st.hasLost,
+      isPaused: st.isPaused,
+      togglePause: notifier.togglePause,
+      onLeave: () {
+        notifier.abandon();
+        AppRoutes.go(AppRoutes.levelTetrisGame);
+      },
+    );
   }
 
   /// Overlay que se dibuja dentro del tablero: game over o pausa.
@@ -246,7 +257,7 @@ class _GameOver extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _StrokedText(
-              result?.levelCleared == true ? '¡SUPERADO!' : 'GAME OVER',
+              result?.levelCleared == true ? '¡SUPERADO!' : 'Perdiste',
               fontSize: 20,
             ),
             const SizedBox(height: 6),

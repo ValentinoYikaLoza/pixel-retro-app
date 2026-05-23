@@ -278,7 +278,14 @@ class TetrisGameNotifier extends StateNotifier<TetrisGameState> {
 
   void togglePause() {
     if (state.hasLost) return;
-    state = state.copyWith(isPaused: !state.isPaused);
+    final pausing = !state.isPaused;
+    // La duración no cuenta el tiempo en pausa.
+    if (pausing) {
+      _runWatch.stop();
+    } else {
+      _runWatch.start();
+    }
+    state = state.copyWith(isPaused: pausing);
   }
 
   void resetGame() {

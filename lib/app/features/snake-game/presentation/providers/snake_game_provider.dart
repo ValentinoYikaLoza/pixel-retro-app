@@ -312,12 +312,14 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
     if (state.hasLost) return;
 
     if (state.isPaused) {
+      _runWatch.start(); // reanuda: el cronómetro vuelve a contar
       _timer = Timer.periodic(
         Duration(milliseconds: state.tickMs),
         (_) => _move(),
       );
     } else {
       _timer?.cancel();
+      _runWatch.stop(); // pausa: la duración no cuenta el tiempo en pausa
     }
 
     state = state.copyWith(isPaused: !state.isPaused);

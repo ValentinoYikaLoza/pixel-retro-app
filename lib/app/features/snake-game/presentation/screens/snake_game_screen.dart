@@ -11,6 +11,7 @@ import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_p
 import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
 import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
+import 'package:pixel_retro_app/app/shared/widgets/confirm_dialog.dart';
 
 class SnakeGameScreen extends ConsumerStatefulWidget {
   final int level;
@@ -45,9 +46,18 @@ class SnakeGameScreenState extends ConsumerState<SnakeGameScreen> {
   }
 
   void _exit() {
-    // Abandona la partida y vuelve al selector de niveles.
-    ref.read(snakeGameProvider.notifier).abandon();
-    AppRoutes.go(AppRoutes.levelSnakeGame);
+    // Confirma antes de abandonar (avisa que se pierde vida y progreso).
+    final st = ref.read(snakeGameProvider);
+    final notifier = ref.read(snakeGameProvider.notifier);
+    confirmGameExit(
+      isLost: st.hasLost,
+      isPaused: st.isPaused,
+      togglePause: notifier.togglePause,
+      onLeave: () {
+        notifier.abandon();
+        AppRoutes.go(AppRoutes.levelSnakeGame);
+      },
+    );
   }
 
   @override
