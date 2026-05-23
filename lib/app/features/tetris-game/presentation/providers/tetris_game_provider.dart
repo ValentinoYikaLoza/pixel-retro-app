@@ -34,7 +34,9 @@ class TetrisGameNotifier extends StateNotifier<TetrisGameState> {
   final List<PieceType> _bag = [];
 
   int? _sessionId;
-  DateTime? _startedAt;
+
+  /// Reloj monótono para la duración (inmune a cambios de hora del dispositivo).
+  final Stopwatch _runWatch = Stopwatch();
   bool _closed = false;
 
   // Acumuladores del bucle (ms).
@@ -60,7 +62,9 @@ class TetrisGameNotifier extends StateNotifier<TetrisGameState> {
       _sessionId = session.sessionId;
       _rng = Random(session.seed);
       _bag.clear();
-      _startedAt = DateTime.now();
+      _runWatch
+        ..reset()
+        ..start();
       _closed = false;
       _fallAccum = 0;
       _lockAccum = 0;
@@ -473,9 +477,7 @@ class TetrisGameNotifier extends StateNotifier<TetrisGameState> {
     if (_closed || sessionId == null) return;
     _closed = true;
 
-    final durationMs = _startedAt == null
-        ? 0
-        : DateTime.now().difference(_startedAt!).inMilliseconds;
+    final durationMs = _runWatch.elapsedMilliseconds;
 
     state = state.copyWith(isSubmitting: true);
     try {

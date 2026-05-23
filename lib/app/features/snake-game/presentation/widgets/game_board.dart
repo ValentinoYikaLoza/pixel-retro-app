@@ -8,7 +8,7 @@ import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
 import 'package:pixel_retro_app/app/shared/services/dialog_service.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
-import 'package:pixel_retro_app/app/shared/widgets/custom_icon_button.dart';
+import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/inline_banner_ad.dart';
 import 'package:pixel_retro_app/app/shared/widgets/rewarded_ad_offer_dialog.dart';
 
@@ -217,23 +217,6 @@ class GameBoardState extends ConsumerState<GameBoard> {
                 color: Colors.black.withValues(alpha: 0.5),
                 child: Stack(
                   children: [
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 20, left: 20),
-                        child: CustomIconButton(
-                          onPressed: () {
-                            // Libera la sesión y vuelve al selector de niveles.
-                            ref.read(snakeGameProvider.notifier).abandon();
-                            AppRoutes.go(AppRoutes.levelSnakeGame);
-                          },
-                          width: 48,
-                          height: 48,
-                          imagePath: 'assets/icons/back.svg',
-                        ),
-                      ),
-                    ),
                     Align(
                       alignment: Alignment.center,
                       child: Column(
@@ -334,6 +317,21 @@ class GameBoardState extends ConsumerState<GameBoard> {
                               ),
                             ),
                           ],
+
+                          // Botón de salir (vuelve al selector de niveles),
+                          // visible en pausa y al perder.
+                          const SizedBox(height: 20),
+                          CustomTextButton(
+                            width: 150,
+                            height: 44,
+                            radius: 12,
+                            label: 'SALIR',
+                            baseColor: AppColors.backgroundDark,
+                            onPressed: () {
+                              ref.read(snakeGameProvider.notifier).abandon();
+                              AppRoutes.go(AppRoutes.levelSnakeGame);
+                            },
+                          ),
                         ],
                       ),
                     ),

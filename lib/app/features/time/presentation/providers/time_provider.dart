@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:equatable/equatable.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:pixel_retro_app/app/features/time/domain/repositories/time_repository.dart';
@@ -9,52 +11,77 @@ final timeProvider = StateNotifierProvider<TimeNotifier, TimeState>((ref) {
   return TimeNotifier(ref);
 });
 
-/// Carga la hora del servidor una sola vez (mantiene los timers activos).
+/// Carga la hora del servidor una sola vez (mantiene el ticker activo).
 final timeInitProvider = FutureProvider<void>((ref) async {
   await ref.read(timeProvider.notifier).getTime();
 });
 
-class TimeNotifier extends StateNotifier<TimeState> {
-  TimeNotifier(this.ref) : super(TimeState());
+class TimeNotifier extends StateNotifier<TimeState>
+    with WidgetsBindingObserver {
+  TimeNotifier(this.ref) : super(const TimeState()) {
+    WidgetsBinding.instance.addObserver(this);
+  }
 
   final Ref ref;
   final TimeRepository repository = getIt<TimeRepository>();
 
-  Timer? _monthTimer;
-  Timer? _nextDayTimer;
-  Timer? _nextSeasonTimer;
-  Timer? _nextWeekTimer;
-  Timer? _nextMonthTimer;
+  /// Reloj monótono: mide el tiempo transcurrido real desde la sincronización,
+  /// inmune a que el usuario cambie la hora del dispositivo.
+  final Stopwatch _watch = Stopwatch();
+  Timer? _ticker;
 
   /// Lanza [ServiceException] si falla; la UI lo maneja vía AsyncValue.
   Future<void> getTime() async {
-    final serverDate = await repository.getTime();
-    state = state.copyWith(serverDate: serverDate, receivedAt: DateTime.now());
-    _cancelTimers();
-    _startMonthStream();
-    _startTimeUntilStreams();
+    final serverDate = await repository.getTime(); // instante UTC del servidor
+    _watch
+      ..reset()
+      ..start();
+    state = state.copyWith(serverDate: serverDate);
+
+    _ticker?.cancel();
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+    _tick();
   }
 
-  void _cancelTimers() {
-    _monthTimer?.cancel();
-    _nextDayTimer?.cancel();
-    _nextSeasonTimer?.cancel();
-    _nextWeekTimer?.cancel();
-    _nextMonthTimer?.cancel();
+  /// Hora actual del servidor (UTC) = base + transcurrido monótono.
+  DateTime? _syncedNow() {
+    final base = state.serverDate;
+    if (base == null) return null;
+    return base.add(_watch.elapsed);
   }
 
-  void _startMonthStream() {
-    _monthTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final now = state.currentDateSynced;
-      if (now == null) return;
+  /// Un solo ticker (1s) recalcula mes, clave de período y los countdowns. Las
+  /// fronteras se calculan en UTC: los resets son globales y coinciden con las
+  /// ventanas del backend.
+  void _tick() {
+    final now = _syncedNow();
+    if (now == null) return;
 
-      final name = _monthMap[DateFormat('MMMM').format(now)] ?? '';
+    final sunday = now.add(Duration(days: 7 - now.weekday));
+    final lastDay = DateTime.utc(now.year, now.month + 1, 0);
+
+    state = state.copyWith(
+      currentMonth: _monthMap[DateFormat('MMMM').format(now)] ?? '',
       // Clave de día (UTC): cambia al cruzar cualquier frontera (las de semana
-      // y mes también ocurren en un cambio de día). La UI la observa para
-      // refrescar las misiones cuando expira el período.
-      final key = '${now.year}-${now.month}-${now.day}';
-      state = state.copyWith(currentMonth: name, periodKey: key);
-    });
+      // y mes también ocurren en un cambio de día). La UI la observa.
+      periodKey: '${now.year}-${now.month}-${now.day}',
+      timeUntilNextDay: _computeDifference(
+        now,
+        DateTime.utc(now.year, now.month, now.day + 1),
+      ),
+      timeUntilNextSeason: _computeDifference(
+        now,
+        DateTime.utc(sunday.year, sunday.month, sunday.day, 20, 0),
+      ),
+      timeUntilNextWeek: _computeDifference(
+        now,
+        DateTime.utc(sunday.year, sunday.month, sunday.day + 1),
+      ),
+      timeUntilNextMonth: _computeDifference(
+        now,
+        DateTime.utc(lastDay.year, lastDay.month, lastDay.day + 1),
+      ),
+    );
   }
 
   TimeEntity _computeDifference(DateTime now, DateTime target) {
@@ -70,61 +97,25 @@ class TimeNotifier extends StateNotifier<TimeState> {
     }
   }
 
-  void _startTimeUntilStreams() {
-    // Las fronteras se calculan en UTC (DateTime.utc) sobre el instante del
-    // servidor: el reset es global y coincide con las ventanas del backend.
-    _nextDayTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final now = state.currentDateSynced;
-      if (now == null) return;
-      final target = DateTime.utc(now.year, now.month, now.day + 1);
-      state = state.copyWith(timeUntilNextDay: _computeDifference(now, target));
-    });
-
-    _nextSeasonTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final now = state.currentDateSynced;
-      if (now == null) return;
-      final next = now.add(Duration(days: 7 - now.weekday));
-      final target = DateTime.utc(next.year, next.month, next.day, 20, 0);
-      state = state.copyWith(
-        timeUntilNextSeason: _computeDifference(now, target),
-      );
-    });
-
-    _nextWeekTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final now = state.currentDateSynced;
-      if (now == null) return;
-      final nextSunday = now.add(Duration(days: 7 - now.weekday));
-      final target = DateTime.utc(
-        nextSunday.year,
-        nextSunday.month,
-        nextSunday.day + 1,
-      );
-      state = state.copyWith(
-        timeUntilNextWeek: _computeDifference(now, target),
-      );
-    });
-
-    _nextMonthTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final now = state.currentDateSynced;
-      if (now == null) return;
-      final lastDay = DateTime.utc(now.year, now.month + 1, 0);
-      final target = DateTime.utc(lastDay.year, lastDay.month, lastDay.day + 1);
-      state = state.copyWith(
-        timeUntilNextMonth: _computeDifference(now, target),
-      );
-    });
+  /// Al volver del background re-sincroniza con el servidor (corrige el drift
+  /// acumulado durante la suspensión).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState lifecycle) {
+    if (lifecycle == AppLifecycleState.resumed && state.serverDate != null) {
+      getTime();
+    }
   }
 
   @override
   void dispose() {
-    _cancelTimers();
+    WidgetsBinding.instance.removeObserver(this);
+    _ticker?.cancel();
     super.dispose();
   }
 }
 
 class TimeState extends Equatable {
   final DateTime? serverDate;
-  final DateTime? receivedAt;
   final String currentMonth;
 
   /// Clave de día (UTC). Cambia al cruzar la frontera de período; la UI la
@@ -137,7 +128,6 @@ class TimeState extends Equatable {
 
   const TimeState({
     this.serverDate,
-    this.receivedAt,
     this.currentMonth = '',
     this.periodKey = '',
     this.timeUntilNextDay = const TimeEntity(),
@@ -146,17 +136,8 @@ class TimeState extends Equatable {
     this.timeUntilNextMonth = const TimeEntity(),
   });
 
-  /// Instante actual del servidor en UTC (referencia global). Los countdowns y
-  /// el "mes" de misiones se calculan sobre esto, igual que el backend; para
-  /// mostrar una fecha absoluta se haría un `.toLocal()` puntual donde aplique.
-  DateTime? get currentDateSynced {
-    if (serverDate == null || receivedAt == null) return null;
-    return serverDate!.add(DateTime.now().difference(receivedAt!)).toUtc();
-  }
-
   TimeState copyWith({
     DateTime? serverDate,
-    DateTime? receivedAt,
     String? currentMonth,
     String? periodKey,
     TimeEntity? timeUntilNextDay,
@@ -166,7 +147,6 @@ class TimeState extends Equatable {
   }) {
     return TimeState(
       serverDate: serverDate ?? this.serverDate,
-      receivedAt: receivedAt ?? this.receivedAt,
       currentMonth: currentMonth ?? this.currentMonth,
       periodKey: periodKey ?? this.periodKey,
       timeUntilNextDay: timeUntilNextDay ?? this.timeUntilNextDay,
@@ -179,7 +159,6 @@ class TimeState extends Equatable {
   @override
   List<Object?> get props => [
     serverDate,
-    receivedAt,
     currentMonth,
     periodKey,
     timeUntilNextDay,

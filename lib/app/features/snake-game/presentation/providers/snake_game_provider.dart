@@ -33,7 +33,9 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
   Set<Offset> _walls = {};
 
   int? _sessionId;
-  DateTime? _startedAt;
+
+  /// Reloj monótono para la duración (inmune a cambios de hora del dispositivo).
+  final Stopwatch _runWatch = Stopwatch();
 
   /// Evita cerrar la partida dos veces (finish + abandon compiten al salir).
   bool _closed = false;
@@ -56,7 +58,9 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
       _sessionId = session.sessionId;
       _rng = Random(session.seed);
       _walls = session.walls.toSet();
-      _startedAt = DateTime.now();
+      _runWatch
+        ..reset()
+        ..start();
       _closed = false;
       _nextDirection = null;
 
@@ -207,9 +211,7 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
     if (_closed || sessionId == null) return;
     _closed = true;
 
-    final durationMs = _startedAt == null
-        ? 0
-        : DateTime.now().difference(_startedAt!).inMilliseconds;
+    final durationMs = _runWatch.elapsedMilliseconds;
 
     state = state.copyWith(isSubmitting: true);
     try {
