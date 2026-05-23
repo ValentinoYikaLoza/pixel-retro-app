@@ -13,6 +13,13 @@ class ApiEndpoints {
   // Home
   static const String listGames = '/listGames';
 
+  // Game session (partidas con autoridad del servidor)
+  static const String startGame = '/startGame';
+  static const String finishGame = '/finishGame';
+  static const String doubleGameReward = '/doubleGameReward';
+  static const String abandonGame = '/abandonGame';
+  static const String getGameLeaderboard = '/getGameLeaderboard';
+
   // Leaderboard
   static const String listUsers = '/listUsers';
   static const String listDivisions = '/listDivisions';

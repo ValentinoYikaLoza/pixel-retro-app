@@ -5,7 +5,6 @@ import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/providers/snake_game_provider.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
-import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
 import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
 import 'package:pixel_retro_app/app/shared/services/dialog_service.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
@@ -21,22 +20,31 @@ class GameBoard extends ConsumerStatefulWidget {
 }
 
 class GameBoardState extends ConsumerState<GameBoard> {
-  /// Ofrece vidas extra a cambio de ver un rewarded interstitial.
-  /// Muestra primero una pantalla de intro (requisito de AdMob).
-  void _offerExtraLives() {
+  /// Ofrece duplicar los puntos de la partida a cambio de ver un rewarded
+  /// interstitial. Muestra primero una pantalla de intro (requisito de AdMob).
+  void _offerDoublePoints() {
+    final score = ref.read(snakeGameProvider).score;
+
     DialogService.show(
       RewardedAdOfferDialog(
-        title: '¿Vidas extra?',
-        message: 'Mira un anuncio completo y suma vidas a tu cuenta.',
+        title: '¿Duplicar tus puntos?',
+        message:
+            'Mira un anuncio completo y duplica los $score puntos de tu partida.',
         onAccept: () async {
           final shown = await AdsService.instance.showRewardedInterstitial(
-            onReward: (amount) async {
+            // El servidor duplica la exp de la sesión (idempotente); el monto
+            // de AdMob se ignora.
+            onReward: (_) async {
               if (!mounted) return;
-              await ref.read(userProvider.notifier).updateLives(amount.toInt());
-              SnackbarService.show(
-                '¡Ganaste ${amount.toInt()} vidas!',
-                type: SnackbarType.success,
-              );
+              final bonus = await ref
+                  .read(snakeGameProvider.notifier)
+                  .doubleReward();
+              if (bonus > 0) {
+                SnackbarService.show(
+                  '¡Ganaste $bonus puntos extra!',
+                  type: SnackbarType.success,
+                );
+              }
             },
           );
           if (!shown) {
@@ -196,6 +204,8 @@ class GameBoardState extends ConsumerState<GameBoard> {
                         padding: const EdgeInsets.only(top: 20, left: 20),
                         child: CustomIconButton(
                           onPressed: () {
+                            // Libera la sesión en el servidor antes de salir.
+                            ref.read(snakeGameProvider.notifier).abandon();
                             AppRoutes.go(AppRoutes.home);
                           },
                           width: 48,
@@ -245,15 +255,24 @@ class GameBoardState extends ConsumerState<GameBoard> {
                             ),
                           ),
 
-                          // Oferta de vidas extra (solo al perder y si hay un
-                          // anuncio recompensado listo para mostrar).
+                          // Recompensas otorgadas por el servidor al cerrar la
+                          // partida (exp/coins/récord). Solo al perder.
+                          if (gameState.hasLost) _GameResult(state: gameState),
+
+                          // Oferta de duplicar puntos (solo al perder, con
+                          // score > 0 y si hay un anuncio recompensado listo).
+                          // Solo tras confirmar el cierre en el servidor
+                          // (result != null): así la sesión ya está finalizada
+                          // y se puede duplicar.
                           if (gameState.hasLost &&
+                              gameState.score > 0 &&
+                              gameState.result != null &&
                               AdsService
                                   .instance
                                   .isRewardedInterstitialReady) ...[
                             const SizedBox(height: 24),
                             GestureDetector(
-                              onTap: _offerExtraLives,
+                              onTap: _offerDoublePoints,
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 20,
@@ -282,7 +301,7 @@ class GameBoardState extends ConsumerState<GameBoard> {
                                     ),
                                     SizedBox(width: 6),
                                     Text(
-                                      'GANA VIDAS EXTRA',
+                                      'DUPLICA TUS PUNTOS',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -312,6 +331,111 @@ class GameBoardState extends ConsumerState<GameBoard> {
           ],
         );
       },
+    );
+  }
+}
+
+/// Recompensas que el servidor otorgó al cerrar la partida: mientras se envía
+/// muestra un loader; al volver, los chips de exp/coins y la insignia de récord.
+class _GameResult extends StatelessWidget {
+  final SnakeGameState state;
+
+  const _GameResult({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final result = state.result;
+
+    if (state.isSubmitting || result == null) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation(AppColors.neonPurple),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Guardando resultado...',
+              style: TextStyle(
+                color: AppColors.white.withValues(alpha: 0.8),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (result.isHighScore)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                '¡NUEVO RÉCORD!',
+                style: TextStyle(
+                  color: AppColors.emerald,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Pixel',
+                ),
+              ),
+            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _ResultChip(
+                label: '+${result.expGained} EXP',
+                color: AppColors.purple,
+              ),
+              const SizedBox(width: 10),
+              _ResultChip(
+                label: '+${result.coinsGained} 🪙',
+                color: AppColors.orange,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ResultChip extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _ResultChip({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color, width: 1.5),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }

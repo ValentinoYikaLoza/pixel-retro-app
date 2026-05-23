@@ -94,6 +94,17 @@ class UserNotifier extends StateNotifier<UserState> {
     }
   }
 
+  Future<void> updateExp(int exp) async {
+    try {
+      await repository.updateExp(exp);
+    } on ServiceException catch (_) {
+      SnackbarService.show(
+        'Error actualizando la experiencia del usuario',
+        type: SnackbarType.error,
+      );
+    }
+  }
+
   @override
   void dispose() {
     _statsSub?.cancel();
