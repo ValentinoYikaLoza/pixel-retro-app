@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/shared/services/dialog_service.dart';
-import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
 
 /// Diálogo genérico de la app (confirmación o aviso), reutilizable en cualquier
 /// parte del juego. Panel oscuro con borde/acento neón, ícono opcional y uno o
@@ -140,37 +139,47 @@ class ConfirmDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 22),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (cancelText != null) ...[
-                  CustomTextButton(
-                    width: 130,
-                    height: 44,
-                    radius: 12,
-                    label: cancelText!,
-                    baseColor: AppColors.backgroundDark,
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      onCancel?.call();
-                    },
+            if (cancelText != null)
+              Row(
+                children: [
+                  Expanded(
+                    child: _DialogButton(
+                      label: cancelText!,
+                      color: AppColors.neonPurple,
+                      filled: false,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        onCancel?.call();
+                      },
+                    ),
                   ),
                   const SizedBox(width: 12),
+                  Expanded(
+                    child: _DialogButton(
+                      label: confirmText,
+                      color: confirmFill,
+                      filled: true,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        onConfirm?.call();
+                      },
+                    ),
+                  ),
                 ],
-                CustomTextButton(
-                  width: cancelText != null ? 130 : 180,
-                  height: 44,
-                  radius: 12,
+              )
+            else
+              SizedBox(
+                width: 180,
+                child: _DialogButton(
                   label: confirmText,
-                  baseColor: confirmFill,
-                  flashColor: confirmFill,
-                  onPressed: () {
+                  color: confirmFill,
+                  filled: true,
+                  onTap: () {
                     Navigator.of(context).pop();
                     onConfirm?.call();
                   },
                 ),
-              ],
-            ),
+              ),
           ],
         ),
       ),
@@ -212,6 +221,74 @@ class _StrokedTitle extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Botón del diálogo. Texto siempre blanco para que sea legible sobre cualquier
+/// color: `filled` = fondo sólido del color; si no, contorno del color.
+class _DialogButton extends StatefulWidget {
+  const _DialogButton({
+    required this.label,
+    required this.color,
+    required this.filled,
+    required this.onTap,
+  });
+
+  final String label;
+  final Color color;
+  final bool filled;
+  final VoidCallback onTap;
+
+  @override
+  State<_DialogButton> createState() => _DialogButtonState();
+}
+
+class _DialogButtonState extends State<_DialogButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = widget.color;
+    final bg = widget.filled
+        ? (_pressed ? c.withValues(alpha: 0.8) : c)
+        : c.withValues(alpha: _pressed ? 0.3 : 0.15);
+
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 110),
+        height: 46,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: c, width: 2),
+          boxShadow: widget.filled && !_pressed
+              ? [
+                  BoxShadow(
+                    color: c.withValues(alpha: 0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          widget.label,
+          style: const TextStyle(
+            color: AppColors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Inter',
+          ),
+        ),
+      ),
     );
   }
 }

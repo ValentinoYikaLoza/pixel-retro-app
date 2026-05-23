@@ -6,12 +6,10 @@ import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/providers/snake_game_provider.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
-import 'package:pixel_retro_app/app/shared/services/dialog_service.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/app/shared/widgets/confirm_dialog.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/inline_banner_ad.dart';
-import 'package:pixel_retro_app/app/shared/widgets/rewarded_ad_offer_dialog.dart';
 
 class GameBoard extends ConsumerStatefulWidget {
   const GameBoard({super.key});
@@ -26,36 +24,38 @@ class GameBoardState extends ConsumerState<GameBoard> {
   void _offerDoublePoints() {
     final score = ref.read(snakeGameProvider).score;
 
-    DialogService.show(
-      RewardedAdOfferDialog(
-        title: '¿Duplicar tus puntos?',
-        message:
-            'Mira un anuncio completo y duplica los $score puntos de tu partida.',
-        onAccept: () async {
-          final shown = await AdsService.instance.showRewardedInterstitial(
-            // El servidor duplica la exp de la sesión (idempotente); el monto
-            // de AdMob se ignora.
-            onReward: (_) async {
-              if (!mounted) return;
-              final bonus = await ref
-                  .read(snakeGameProvider.notifier)
-                  .doubleReward();
-              if (bonus > 0) {
-                SnackbarService.show(
-                  '¡Ganaste $bonus puntos extra!',
-                  type: SnackbarType.success,
-                );
-              }
-            },
+    ConfirmDialog.show(
+      title: '¿DUPLICAR PUNTOS?',
+      message:
+          'Mira un anuncio completo y duplica los $score puntos de tu partida.',
+      icon: Icons.play_arrow_rounded,
+      accentColor: AppColors.emerald,
+      confirmText: 'VER ANUNCIO',
+      cancelText: 'AHORA NO',
+      onConfirm: () async {
+        final shown = await AdsService.instance.showRewardedInterstitial(
+          // El servidor duplica la exp de la sesión (idempotente); el monto
+          // de AdMob se ignora.
+          onReward: (_) async {
+            if (!mounted) return;
+            final bonus = await ref
+                .read(snakeGameProvider.notifier)
+                .doubleReward();
+            if (bonus > 0) {
+              SnackbarService.show(
+                '¡Ganaste $bonus puntos extra!',
+                type: SnackbarType.success,
+              );
+            }
+          },
+        );
+        if (!shown) {
+          SnackbarService.show(
+            'No hay anuncios disponibles por ahora',
+            type: SnackbarType.error,
           );
-          if (!shown) {
-            SnackbarService.show(
-              'No hay anuncios disponibles por ahora',
-              type: SnackbarType.error,
-            );
-          }
-        },
-      ),
+        }
+      },
     );
   }
 

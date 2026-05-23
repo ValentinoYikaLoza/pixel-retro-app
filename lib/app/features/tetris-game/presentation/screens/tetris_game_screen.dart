@@ -8,12 +8,10 @@ import 'package:pixel_retro_app/app/features/tetris-game/presentation/widgets/te
 import 'package:pixel_retro_app/app/features/tetris-game/presentation/widgets/tetris_starting_loader.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
-import 'package:pixel_retro_app/app/shared/services/dialog_service.dart';
 import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/app/shared/widgets/confirm_dialog.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
-import 'package:pixel_retro_app/app/shared/widgets/rewarded_ad_offer_dialog.dart';
 
 class TetrisGameScreen extends ConsumerStatefulWidget {
   final int level;
@@ -214,33 +212,34 @@ class _GameOver extends ConsumerWidget {
   const _GameOver({required this.state, required this.onExit});
 
   void _offerDouble(BuildContext context, WidgetRef ref) {
-    DialogService.show(
-      RewardedAdOfferDialog(
-        title: '¿Duplicar tus puntos?',
-        message:
-            'Mira un anuncio completo y duplica los ${state.score} puntos.',
-        onAccept: () async {
-          final shown = await AdsService.instance.showRewardedInterstitial(
-            onReward: (_) async {
-              final bonus = await ref
-                  .read(tetrisGameProvider.notifier)
-                  .doubleReward();
-              if (bonus > 0) {
-                SnackbarService.show(
-                  '¡Ganaste $bonus puntos extra!',
-                  type: SnackbarType.success,
-                );
-              }
-            },
+    ConfirmDialog.show(
+      title: '¿DUPLICAR PUNTOS?',
+      message: 'Mira un anuncio completo y duplica los ${state.score} puntos.',
+      icon: Icons.play_arrow_rounded,
+      accentColor: AppColors.emerald,
+      confirmText: 'VER ANUNCIO',
+      cancelText: 'AHORA NO',
+      onConfirm: () async {
+        final shown = await AdsService.instance.showRewardedInterstitial(
+          onReward: (_) async {
+            final bonus = await ref
+                .read(tetrisGameProvider.notifier)
+                .doubleReward();
+            if (bonus > 0) {
+              SnackbarService.show(
+                '¡Ganaste $bonus puntos extra!',
+                type: SnackbarType.success,
+              );
+            }
+          },
+        );
+        if (!shown) {
+          SnackbarService.show(
+            'No hay anuncios disponibles por ahora',
+            type: SnackbarType.error,
           );
-          if (!shown) {
-            SnackbarService.show(
-              'No hay anuncios disponibles por ahora',
-              type: SnackbarType.error,
-            );
-          }
-        },
-      ),
+        }
+      },
     );
   }
 
