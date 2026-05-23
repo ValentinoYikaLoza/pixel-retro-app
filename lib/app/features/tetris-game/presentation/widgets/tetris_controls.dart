@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/features/tetris-game/presentation/providers/tetris_game_provider.dart';
 
-/// Controles táctiles del Tetris: mover, rotar, soft/hard drop, hold y pausa.
+/// Controles táctiles del Tetris (barra inferior, dos filas): mover, rotar,
+/// soft/hard drop, hold y pausa.
 class TetrisControls extends ConsumerWidget {
   const TetrisControls({super.key});
 
@@ -13,46 +14,35 @@ class TetrisControls extends ConsumerWidget {
     final isPaused = ref.watch(tetrisGameProvider.select((s) => s.isPaused));
 
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _Btn(
               icon: Icons.rotate_left,
               onTap: () => notifier.rotate(clockwise: false),
             ),
-            const SizedBox(width: 10),
             _Btn(icon: Icons.rotate_right, onTap: () => notifier.rotate()),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _Btn(icon: Icons.chevron_left, onTap: notifier.moveLeft),
-            const SizedBox(width: 10),
-            _Btn(icon: Icons.keyboard_arrow_down, onTap: notifier.softDrop),
-            const SizedBox(width: 10),
-            _Btn(icon: Icons.chevron_right, onTap: notifier.moveRight),
-          ],
-        ),
-        const SizedBox(height: 10),
-        _Btn(
-          icon: Icons.vertical_align_bottom,
-          onTap: notifier.hardDrop,
-          wide: true,
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
             _Btn(icon: Icons.swap_vert, onTap: notifier.hold),
-            const SizedBox(width: 10),
             _Btn(
               icon: isPaused ? Icons.play_arrow : Icons.pause,
               onTap: notifier.togglePause,
             ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _Btn(icon: Icons.chevron_left, onTap: notifier.moveLeft),
+            _Btn(icon: Icons.keyboard_arrow_down, onTap: notifier.softDrop),
+            _Btn(
+              icon: Icons.vertical_align_bottom,
+              onTap: notifier.hardDrop,
+              accent: true,
+            ),
+            _Btn(icon: Icons.chevron_right, onTap: notifier.moveRight),
           ],
         ),
       ],
@@ -63,20 +53,22 @@ class TetrisControls extends ConsumerWidget {
 class _Btn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  final bool wide;
+  final bool accent;
 
-  const _Btn({required this.icon, required this.onTap, this.wide = false});
+  const _Btn({required this.icon, required this.onTap, this.accent = false});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: wide ? 132 : 46,
-        height: 46,
+        width: 64,
+        height: 52,
         decoration: BoxDecoration(
-          color: AppColors.purple,
-          borderRadius: BorderRadius.circular(10),
+          color: accent
+              ? AppColors.neonPurple.withValues(alpha: 0.25)
+              : AppColors.purple,
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.neonPurple, width: 2),
           boxShadow: [
             BoxShadow(
@@ -86,7 +78,7 @@ class _Btn extends StatelessWidget {
             ),
           ],
         ),
-        child: Icon(icon, color: AppColors.white, size: 26),
+        child: Icon(icon, color: AppColors.white, size: 28),
       ),
     );
   }

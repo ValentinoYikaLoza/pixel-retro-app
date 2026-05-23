@@ -15,6 +15,9 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
+  /// Juegos que se juegan en vertical (el resto va en horizontal).
+  static const _portraitGames = {'tetris'};
+
   String title = '';
   String imagePath = '';
 
@@ -26,7 +29,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     title = 'Bienvenido a $gameMode Game';
     imagePath = 'assets/images/$gameMode.png';
 
-    _enterGameOrientation();
+    _enterGameOrientation(gameMode);
 
     // Intro de marca; luego pasa al selector de nivel del juego.
     Future.delayed(const Duration(milliseconds: 1500), () {
@@ -35,9 +38,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     });
   }
 
-  /// Cambia a landscape esperando a que el sistema aplique la orientación.
-  Future<void> _enterGameOrientation() async {
-    await OrientationService.setLandscape();
+  /// Aplica la orientación del juego (vertical u horizontal) esperando a que el
+  /// sistema la confirme; el fade de la ruta enmascara la rotación.
+  Future<void> _enterGameOrientation(String gameMode) async {
+    if (_portraitGames.contains(gameMode)) {
+      await OrientationService.setPortrait();
+    } else {
+      await OrientationService.setLandscape();
+    }
     await OrientationService.setImmersiveMode();
     OrientationService.setOverlayColor(AppColors.neonPurple);
   }

@@ -36,7 +36,7 @@ class _TetrisGameScreenState extends ConsumerState<TetrisGameScreen> {
 
   void setScreenConfig() {
     OrientationService.setOverlayColor(AppColors.neonPurple);
-    OrientationService.setLandscape();
+    OrientationService.setPortrait();
     OrientationService.setImmersiveMode();
   }
 
@@ -80,15 +80,16 @@ class _TetrisGameScreenState extends ConsumerState<TetrisGameScreen> {
                   )
                 else
                   Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                    child: Column(
                       children: [
-                        Expanded(flex: 3, child: _StatsPanel(state: state)),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: TetrisBoard(state: state),
+                        _TopBar(state: state),
+                        const SizedBox(height: 8),
+                        Expanded(
+                          child: Center(child: TetrisBoard(state: state)),
                         ),
-                        const Expanded(flex: 3, child: TetrisControls()),
+                        const SizedBox(height: 10),
+                        const TetrisControls(),
                       ],
                     ),
                   ),
@@ -113,76 +114,68 @@ class _TetrisGameScreenState extends ConsumerState<TetrisGameScreen> {
   }
 }
 
-/// Panel izquierdo: nivel, hold, siguientes piezas y estadísticas.
-class _StatsPanel extends StatelessWidget {
+/// Barra superior (vertical/portrait): hold, siguientes piezas y stats.
+class _TopBar extends StatelessWidget {
   final TetrisGameState state;
 
-  const _StatsPanel({required this.state});
+  const _TopBar({required this.state});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _StrokedText('NIVEL ${state.level}', fontSize: 20),
-        const SizedBox(height: 10),
-        Row(
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
+            const _Label('HOLD'),
+            const SizedBox(height: 4),
+            PiecePreview(type: state.holdType, size: 40),
+          ],
+        ),
+        const SizedBox(width: 14),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _Label('NEXT'),
+            const SizedBox(height: 4),
+            Row(
               children: [
-                const _Label('HOLD'),
-                const SizedBox(height: 4),
-                PiecePreview(type: state.holdType, size: 44),
-              ],
-            ),
-            const SizedBox(width: 16),
-            Column(
-              children: [
-                const _Label('NEXT'),
-                const SizedBox(height: 4),
-                for (final t in state.nextQueue.take(3)) ...[
-                  PiecePreview(type: t, size: 40),
-                  const SizedBox(height: 4),
-                ],
+                for (final t in state.nextQueue.take(3))
+                  Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: PiecePreview(type: t, size: 34),
+                  ),
               ],
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        _Stat('Puntos', '${state.score}'),
-        _Stat('Líneas', '${state.lines}'),
-        _Stat('Meta', '${state.targetScore}'),
-      ],
-    );
-  }
-}
-
-class _Stat extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _Stat(this.label, this.value);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        children: [
-          _Label(label),
-          const SizedBox(width: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              color: AppColors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+        const Spacer(),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            _StrokedText('NIVEL ${state.level}', fontSize: 18),
+            const SizedBox(height: 2),
+            Text(
+              '${state.score} pts',
+              style: const TextStyle(
+                color: AppColors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-        ],
-      ),
+            Text(
+              '${state.lines} líneas · meta ${state.targetScore}',
+              style: TextStyle(
+                color: AppColors.white.withValues(alpha: 0.7),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Inter',
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

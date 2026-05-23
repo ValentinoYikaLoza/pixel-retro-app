@@ -21,7 +21,7 @@ class LevelTetrisGameScreen extends ConsumerStatefulWidget {
 }
 
 class _LevelTetrisGameScreenState extends ConsumerState<LevelTetrisGameScreen> {
-  final _controller = PageController(viewportFraction: 0.5);
+  final _controller = PageController(viewportFraction: 0.72);
   int _current = 0;
 
   @override
@@ -38,7 +38,7 @@ class _LevelTetrisGameScreenState extends ConsumerState<LevelTetrisGameScreen> {
 
   void setScreenConfig() {
     OrientationService.setOverlayColor(AppColors.neonPurple);
-    OrientationService.setLandscape();
+    OrientationService.setPortrait();
     OrientationService.setImmersiveMode();
   }
 
@@ -46,7 +46,7 @@ class _LevelTetrisGameScreenState extends ConsumerState<LevelTetrisGameScreen> {
   Widget build(BuildContext context) {
     final levels = ref.watch(tetrisLevelsProvider);
     final size = MediaQuery.of(context).size;
-    final cardWidth = (size.width * 0.42).clamp(220.0, 300.0);
+    final cardWidth = (size.width * 0.62).clamp(200.0, 300.0);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,

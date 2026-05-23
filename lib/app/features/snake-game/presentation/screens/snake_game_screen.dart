@@ -4,7 +4,7 @@ import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/providers/snake_game_provider.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/widgets/game_board.dart';
-import 'package:pixel_retro_app/app/features/snake-game/presentation/widgets/game_control.dart';
+import 'package:pixel_retro_app/app/features/snake-game/presentation/widgets/joystick_control.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/widgets/starting_loader.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
@@ -152,24 +152,21 @@ class SnakeGameScreenState extends ConsumerState<SnakeGameScreen> {
                                 ),
                               ),
 
-                              // Control del juego (centro bajo)
-                              Transform.translate(
-                                offset: Offset(0, 0),
-                                child: GameControl(
-                                  onDirectionChanged: (direction) => ref
+                              // Joystick analógico (movimiento fluido).
+                              JoystickControl(
+                                onDirectionChanged: (direction) => ref
+                                    .read(snakeGameProvider.notifier)
+                                    .changeDirection(direction),
+                                onPauseChanged: () {
+                                  ref
                                       .read(snakeGameProvider.notifier)
-                                      .changeDirection(direction),
-                                  onPauseChanged: () {
-                                    ref
-                                        .read(snakeGameProvider.notifier)
-                                        .togglePause();
-                                  },
-                                  onLostChanged: () {
-                                    ref
-                                        .read(snakeGameProvider.notifier)
-                                        .resetGame();
-                                  },
-                                ),
+                                      .togglePause();
+                                },
+                                onLostChanged: () {
+                                  ref
+                                      .read(snakeGameProvider.notifier)
+                                      .resetGame();
+                                },
                               ),
 
                               // Vidas (bottom)
