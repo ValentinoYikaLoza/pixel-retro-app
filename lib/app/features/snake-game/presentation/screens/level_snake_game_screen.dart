@@ -57,16 +57,6 @@ class _LevelSnakeGameScreenState extends ConsumerState<LevelSnakeGameScreen> {
         body: SafeArea(
           child: Stack(
             children: [
-              Positioned(
-                top: 4,
-                left: 8,
-                child: CustomIconButton(
-                  onPressed: () => AppRoutes.go(AppRoutes.home),
-                  width: 48,
-                  height: 48,
-                  imagePath: 'assets/icons/back.svg',
-                ),
-              ),
               levels.when(
                 loading: () => const ScreenLoader(),
                 error: (_, __) => const ScreenError(
@@ -83,6 +73,18 @@ class _LevelSnakeGameScreenState extends ConsumerState<LevelSnakeGameScreen> {
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOut,
                   ),
+                ),
+              ),
+              // El botón va al final del Stack para quedar por encima del
+              // carrusel y poder recibir los toques.
+              Positioned(
+                top: 4,
+                left: 8,
+                child: CustomIconButton(
+                  onPressed: () => AppRoutes.go(AppRoutes.home),
+                  width: 48,
+                  height: 48,
+                  imagePath: 'assets/icons/back.svg',
                 ),
               ),
             ],
