@@ -5,6 +5,7 @@ import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_level_entity.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/providers/snake_levels_provider.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/widgets/level_preview.dart';
+import 'package:pixel_retro_app/app/features/snake-game/presentation/widgets/starting_loader.dart';
 import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_icon_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
@@ -58,7 +59,10 @@ class _LevelSnakeGameScreenState extends ConsumerState<LevelSnakeGameScreen> {
           child: Stack(
             children: [
               levels.when(
-                loading: () => const ScreenLoader(),
+                loading: () => const StartingLoader(
+                  title: 'CARGANDO',
+                  subtitle: 'Cargando niveles',
+                ),
                 error: (_, __) => const ScreenError(
                   message: 'No se pudieron cargar los niveles',
                 ),

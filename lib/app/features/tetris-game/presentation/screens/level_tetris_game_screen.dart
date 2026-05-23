@@ -5,6 +5,7 @@ import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_level_entity.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/widgets/level_preview.dart';
 import 'package:pixel_retro_app/app/features/tetris-game/presentation/providers/tetris_levels_provider.dart';
+import 'package:pixel_retro_app/app/features/tetris-game/presentation/widgets/tetris_starting_loader.dart';
 import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_icon_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
@@ -57,7 +58,10 @@ class _LevelTetrisGameScreenState extends ConsumerState<LevelTetrisGameScreen> {
           child: Stack(
             children: [
               levels.when(
-                loading: () => const ScreenLoader(),
+                loading: () => const TetrisStartingLoader(
+                  title: 'CARGANDO',
+                  subtitle: 'Cargando niveles',
+                ),
                 error: (_, __) => const ScreenError(
                   message: 'No se pudieron cargar los niveles',
                 ),
