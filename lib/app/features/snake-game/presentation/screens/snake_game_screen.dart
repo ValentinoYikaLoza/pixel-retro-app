@@ -6,6 +6,7 @@ import 'package:pixel_retro_app/app/features/snake-game/presentation/providers/s
 import 'package:pixel_retro_app/app/features/snake-game/presentation/widgets/game_board.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/widgets/game_control.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
+import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
 import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 
 class SnakeGameScreen extends ConsumerStatefulWidget {
@@ -22,6 +23,12 @@ class SnakeGameScreenState extends ConsumerState<SnakeGameScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       ref.read(snakeGameProvider.notifier).initGame();
     });
+
+    // Precargamos los anuncios full-screen para que estén listos al terminar:
+    // el interstitial se mostrará al salir y el rewarded interstitial se ofrece
+    // al perder.
+    AdsService.instance.preloadInterstitial();
+    AdsService.instance.preloadRewardedInterstitial();
   }
 
   void setScreenConfig() {

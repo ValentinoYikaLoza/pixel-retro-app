@@ -8,6 +8,7 @@ import 'package:pixel_retro_app/app/features/leaderboard/presentation/widgets/le
 import 'package:pixel_retro_app/app/features/time/presentation/widgets/time_widget.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
+import 'package:pixel_retro_app/app/shared/widgets/native_ad_widget.dart';
 import 'package:pixel_retro_app/app/shared/widgets/screen_status.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
@@ -141,6 +142,9 @@ class LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                   },
                   child: CustomScrollView(
                     slivers: [
+                      // --- ANUNCIO NATIVO (PATROCINADO) ---
+                      const SliverToBoxAdapter(child: NativeAdWidget.small()),
+
                       SliverList.builder(
                         itemBuilder: (context, index) {
                           final user = visibleUsers[index];

@@ -8,7 +8,7 @@ import 'package:pixel_retro_app/app/config/constants/environment.dart';
 import 'package:pixel_retro_app/app/config/constants/storage_keys.dart';
 import 'package:pixel_retro_app/app/config/theme/app_theme.dart';
 import 'package:pixel_retro_app/app/config/routes/app_router.dart';
-import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
+import 'package:pixel_retro_app/app/shared/services/consent_service.dart';
 import 'package:pixel_retro_app/app/shared/services/internet_service.dart';
 import 'package:pixel_retro_app/app/shared/services/storage_service.dart';
 import 'package:pixel_retro_app/di.dart';
@@ -20,7 +20,10 @@ void main() async {
   await StorageService.set<String>(StorageKeys.userId, '1');
   final userId = await StorageService.get<String>(StorageKeys.userId) ?? '';
 
-  await AdsService.instance.initialize();
+  // Pide el consentimiento de privacidad (UMP) y, cuando se resuelve,
+  // inicializa el SDK de anuncios. No se espera (await) para no bloquear el
+  // arranque: el formulario, si aplica, se muestra sobre la primera pantalla.
+  ConsentService.instance.gatherConsentThenInitAds();
 
   // ⬇️ Aquí inicializamos la escucha en tiempo real
   await InternetService.instance.initialize();

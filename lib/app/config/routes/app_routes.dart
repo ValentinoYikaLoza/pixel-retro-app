@@ -20,7 +20,6 @@ class AppRoutes {
   static const String snakeGame = '/snake-game';
 
   // Ads
-  static const String adInterstitial = '/ad-interstitial';
   static const String adRewardedCoins = '/ad-rewardedCoins';
   static const String adRewardedLives = '/ad-rewardedLives';
 

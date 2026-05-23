@@ -7,6 +7,7 @@ import 'package:pixel_retro_app/app/features/mission/presentation/widgets/missio
 import 'package:pixel_retro_app/app/features/time/presentation/providers/time_provider.dart';
 import 'package:pixel_retro_app/app/features/time/presentation/widgets/time_widget.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
+import 'package:pixel_retro_app/app/shared/widgets/inline_banner_ad.dart';
 import 'package:pixel_retro_app/app/shared/widgets/screen_status.dart';
 
 class MissionScreen extends ConsumerStatefulWidget {
@@ -208,6 +209,9 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
                         ),
                       ),
                     ),
+
+                    // --- ANUNCIO INLINE ---
+                    const SliverToBoxAdapter(child: InlineBannerAd()),
 
                     // --- RECOMPENSAS DIARIAS ---
                     SliverPadding(

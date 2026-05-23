@@ -8,6 +8,8 @@ import 'package:pixel_retro_app/app/features/shop/presentation/widgets/section_t
 import 'package:pixel_retro_app/app/features/shop/presentation/widgets/shop_skeleton.dart';
 import 'package:pixel_retro_app/app/features/shop/presentation/widgets/show_item.dart';
 import 'package:pixel_retro_app/app/shared/providers/internet_status_provider.dart';
+import 'package:pixel_retro_app/app/shared/widgets/inline_banner_ad.dart';
+import 'package:pixel_retro_app/app/shared/widgets/native_ad_widget.dart';
 import 'package:pixel_retro_app/app/shared/widgets/screen_status.dart';
 
 class ShopScreen extends ConsumerWidget {
@@ -62,9 +64,7 @@ class ShopScreen extends ConsumerWidget {
                           final ad = shopState.advertisements[index];
                           final isCoin = ad.rewardType == AdRewardType.coin;
                           return AnuncioContainerWidget(
-                            title:
-                                'Mira un anuncio y gana ${ad.reward} '
-                                '${isCoin ? 'monedas' : 'vidas'}',
+                            reward: ad.reward,
                             type: isCoin
                                 ? TypeItemShop.coin
                                 : TypeItemShop.live,
@@ -79,6 +79,9 @@ class ShopScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+
+              // -------------------- ANUNCIO INLINE --------------------
+              const SliverToBoxAdapter(child: InlineBannerAd()),
 
               // -------------------- MONEDAS --------------------
               SliverToBoxAdapter(
@@ -192,6 +195,15 @@ class ShopScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+
+              // -------------------- NATIVO (PATROCINADO) --------------------
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.only(left: 20, right: 20, top: 8),
+                  child: SectionTitle(title: 'Patrocinado'),
+                ),
+              ),
+              const SliverToBoxAdapter(child: NativeAdWidget.medium()),
             ],
           )
         : Center(

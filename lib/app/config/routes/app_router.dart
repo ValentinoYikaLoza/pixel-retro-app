@@ -75,11 +75,6 @@ final GoRouter appRouter = GoRouter(
     ),
     // Ads
     GoRoute(
-      path: AppRoutes.adInterstitial,
-      pageBuilder: (context, state) =>
-          _fade(state, const AdScreen(type: AdType.interstitial)),
-    ),
-    GoRoute(
       path: AppRoutes.adRewardedCoins,
       pageBuilder: (context, state) =>
           _fade(state, const AdScreen(type: AdType.rewardedCoins)),

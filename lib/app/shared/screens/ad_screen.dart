@@ -49,12 +49,20 @@ class AdScreenState extends ConsumerState<AdScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen(adProvider(widget.type), (prev, next) {
+      // Mientras se está cargando no hacemos nada (se muestra el loader).
+      if (next.isLoading) return;
+
       final ad = next.value;
 
-      if (ad == null) return;
-
-      if (ad is InterstitialAd) {
-        ad.show();
+      // Si la carga terminó pero no hay anuncio (sin inventario o error),
+      // avisamos y volvemos a la tienda en lugar de quedarnos colgados.
+      if (ad == null) {
+        SnackbarService.show(
+          'No hay anuncios disponibles por ahora',
+          type: SnackbarType.error,
+        );
+        AppRoutes.go(AppRoutes.shop);
+        return;
       }
 
       if (ad is RewardedAd) {
@@ -110,38 +118,57 @@ class AdScreenState extends ConsumerState<AdScreen> {
 
     return Container(
       decoration: BoxDecoration(color: AppColors.logoBackground),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        spacing: 20,
-        children: [
-          Image.asset('assets/images/logo.png'),
-          Stack(
-            children: [
-              Text(
-                loadingText,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Pixel',
-                  foreground: Paint()
-                    ..style = PaintingStyle.stroke
-                    ..strokeWidth = 4
-                    ..color = AppColors.orange,
+      child: SafeArea(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          spacing: 24,
+          children: [
+            Image.asset('assets/images/logo.png'),
+            Stack(
+              children: [
+                Text(
+                  loadingText,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Pixel',
+                    foreground: Paint()
+                      ..style = PaintingStyle.stroke
+                      ..strokeWidth = 4
+                      ..color = AppColors.orange,
+                  ),
                 ),
-              ),
-              Text(
-                loadingText,
-                style: TextStyle(
-                  color: AppColors.purple,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Pixel',
+                Text(
+                  loadingText,
+                  style: TextStyle(
+                    color: AppColors.purple,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Pixel',
+                  ),
                 ),
+              ],
+            ),
+            Text(
+              'Esto solo tomará un momento',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Inter',
+                color: AppColors.white.withValues(alpha: 0.7),
               ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(
+              width: 30,
+              height: 30,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation(AppColors.orange),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

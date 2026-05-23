@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/providers/snake_game_provider.dart';
-import 'package:pixel_retro_app/app/shared/providers/ad_provider.dart';
+import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
+import 'package:pixel_retro_app/app/shared/layouts/presentation/providers/user_provider.dart';
+import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
+import 'package:pixel_retro_app/app/shared/services/dialog_service.dart';
+import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_icon_button.dart';
+import 'package:pixel_retro_app/app/shared/widgets/inline_banner_ad.dart';
+import 'package:pixel_retro_app/app/shared/widgets/rewarded_ad_offer_dialog.dart';
 
 class GameBoard extends ConsumerStatefulWidget {
   const GameBoard({super.key});
@@ -16,10 +21,38 @@ class GameBoard extends ConsumerStatefulWidget {
 }
 
 class GameBoardState extends ConsumerState<GameBoard> {
+  /// Ofrece vidas extra a cambio de ver un rewarded interstitial.
+  /// Muestra primero una pantalla de intro (requisito de AdMob).
+  void _offerExtraLives() {
+    DialogService.show(
+      RewardedAdOfferDialog(
+        title: '¿Vidas extra?',
+        message: 'Mira un anuncio completo y suma vidas a tu cuenta.',
+        onAccept: () async {
+          final shown = await AdsService.instance.showRewardedInterstitial(
+            onReward: (amount) async {
+              if (!mounted) return;
+              await ref.read(userProvider.notifier).updateLives(amount.toInt());
+              SnackbarService.show(
+                '¡Ganaste ${amount.toInt()} vidas!',
+                type: SnackbarType.success,
+              );
+            },
+          );
+          if (!shown) {
+            SnackbarService.show(
+              'No hay anuncios disponibles por ahora',
+              type: SnackbarType.error,
+            );
+          }
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final gameState = ref.watch(snakeGameProvider);
-    final adBannerAsync = ref.watch(adBannerProvider);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -211,25 +244,67 @@ class GameBoardState extends ConsumerState<GameBoard> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+
+                          // Oferta de vidas extra (solo al perder y si hay un
+                          // anuncio recompensado listo para mostrar).
+                          if (gameState.hasLost &&
+                              AdsService
+                                  .instance
+                                  .isRewardedInterstitialReady) ...[
+                            const SizedBox(height: 24),
+                            GestureDetector(
+                              onTap: _offerExtraLives,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.emerald,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.emerald.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.play_arrow_rounded,
+                                      color: AppColors.white,
+                                      size: 22,
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'GANA VIDAS EXTRA',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.white,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
 
-                    // Ad banner – solo si cargó correctamente
-                    Positioned(
+                    // Banner inferior – se colapsa solo si no carga.
+                    const Positioned(
                       bottom: 0,
-                      child: adBannerAsync.when(
-                        data: (ad) {
-                          if (ad == null) return const SizedBox();
-                          return SizedBox(
-                            width: ad.size.width.toDouble(),
-                            height: ad.size.height.toDouble(),
-                            child: AdWidget(ad: ad),
-                          );
-                        },
-                        loading: () => const SizedBox(),
-                        error: (error, stackTrace) => const SizedBox(),
-                      ),
+                      left: 0,
+                      right: 0,
+                      child: SafeArea(top: false, child: InlineBannerAd()),
                     ),
                   ],
                 ),

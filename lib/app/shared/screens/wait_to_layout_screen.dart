@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
+import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
 import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 
 class WaitToLayoutScreen extends StatefulWidget {
@@ -35,7 +36,11 @@ class _WaitToLayoutScreenState extends State<WaitToLayoutScreen> {
 
     Future.delayed(const Duration(seconds: 2), () {
       _timer?.cancel();
-      AppRoutes.go(AppRoutes.home);
+      // Intenta mostrar un interstitial en esta transición (respeta el límite
+      // de frecuencia). Se vaya o no a mostrar, continúa hacia el menú.
+      AdsService.instance.maybeShowInterstitial(
+        onDismissed: () => AppRoutes.go(AppRoutes.home),
+      );
     });
   }
 
