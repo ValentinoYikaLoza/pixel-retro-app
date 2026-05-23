@@ -110,7 +110,7 @@ class SnakeGameScreenState extends ConsumerState<SnakeGameScreen> {
                             children: [
                               // Puntos (top)
                               Padding(
-                                padding: const EdgeInsets.only(top: 20),
+                                padding: const EdgeInsets.only(top: 10),
                                 child: Column(
                                   children: [
                                     Stack(
@@ -171,7 +171,7 @@ class SnakeGameScreenState extends ConsumerState<SnakeGameScreen> {
 
                               // Vidas (bottom)
                               Padding(
-                                padding: const EdgeInsets.only(bottom: 20),
+                                padding: const EdgeInsets.only(bottom: 10),
                                 child: Column(
                                   children: [
                                     Stack(

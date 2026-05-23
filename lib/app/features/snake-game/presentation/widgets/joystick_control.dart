@@ -24,8 +24,8 @@ class JoystickControl extends ConsumerStatefulWidget {
 }
 
 class _JoystickControlState extends ConsumerState<JoystickControl> {
-  static const double _base = 132;
-  static const double _knob = 56;
+  static const double _base = 120;
+  static const double _knob = 52;
   static const double _maxRadius = (_base - _knob) / 2;
   static const double _deadZone = 10;
 
