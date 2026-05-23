@@ -38,9 +38,10 @@ class MissionDataSourceImpl implements MissionDataSource {
   Future<void> updateProgress(UpdateProgressRequestModel request) async {
     try {
       final formData = {
-        'user_id': request.userId,
-        'reward_id': request.rewardId,
-        'current_points': '${request.currentPoints}',
+        'user_id': _session.userId,
+        'mission_type': request.missionType.name,
+        'mission_id': '${request.missionId}',
+        'progress': '${request.progress}',
       };
       await _api.post(ApiEndpoints.updateProgress, data: formData);
     } catch (e) {
