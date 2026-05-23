@@ -8,7 +8,10 @@ import 'package:pixel_retro_app/app/features/tetris-game/presentation/providers/
 class TetrisBoard extends StatelessWidget {
   final TetrisGameState state;
 
-  const TetrisBoard({super.key, required this.state});
+  /// Overlay opcional (game over / pausa) dibujado dentro del tablero.
+  final Widget? overlay;
+
+  const TetrisBoard({super.key, required this.state, this.overlay});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +24,12 @@ class TetrisBoard extends StatelessWidget {
           borderRadius: BorderRadius.circular(6),
           border: Border.all(color: AppColors.neonPurple, width: 3),
         ),
-        child: CustomPaint(painter: _BoardPainter(state)),
+        child: Stack(
+          children: [
+            Positioned.fill(child: CustomPaint(painter: _BoardPainter(state))),
+            if (overlay != null) Positioned.fill(child: overlay!),
+          ],
+        ),
       ),
     );
   }

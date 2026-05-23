@@ -5,6 +5,7 @@ import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/tetris-game/presentation/providers/tetris_game_provider.dart';
 import 'package:pixel_retro_app/app/features/tetris-game/presentation/widgets/tetris_board.dart';
 import 'package:pixel_retro_app/app/features/tetris-game/presentation/widgets/tetris_controls.dart';
+import 'package:pixel_retro_app/app/features/tetris-game/presentation/widgets/tetris_starting_loader.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
 import 'package:pixel_retro_app/app/shared/services/dialog_service.dart';
@@ -44,6 +45,18 @@ class _TetrisGameScreenState extends ConsumerState<TetrisGameScreen> {
     AppRoutes.go(AppRoutes.levelTetrisGame);
   }
 
+  /// Overlay que se dibuja dentro del tablero: game over o pausa.
+  Widget? _boardOverlay(TetrisGameState state) {
+    if (state.hasLost) return _GameOver(state: state, onExit: _exit);
+    if (state.isPaused) {
+      return _PauseOverlay(
+        onResume: () => ref.read(tetrisGameProvider.notifier).togglePause(),
+        onExit: _exit,
+      );
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(tetrisGameProvider);
@@ -69,43 +82,27 @@ class _TetrisGameScreenState extends ConsumerState<TetrisGameScreen> {
           behavior: HitTestBehavior.opaque,
           onTap: setScreenConfig,
           child: SafeArea(
-            child: Stack(
-              children: [
-                if (state.isStarting)
-                  const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.neonPurple,
-                    ),
-                  )
-                else
-                  Padding(
+            child: state.isStarting
+                ? const TetrisStartingLoader()
+                : Padding(
                     padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                     child: Column(
                       children: [
                         _TopBar(state: state),
                         const SizedBox(height: 8),
                         Expanded(
-                          child: Center(child: TetrisBoard(state: state)),
+                          child: Center(
+                            child: TetrisBoard(
+                              state: state,
+                              overlay: _boardOverlay(state),
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 10),
                         const TetrisControls(),
                       ],
                     ),
                   ),
-                // Botón de salir (vuelve al selector), bajo el overlay de fin.
-                // Positioned(
-                //   top: 4,
-                //   left: 4,
-                //   child: CustomIconButton(
-                //     onPressed: _exit,
-                //     width: 44,
-                //     height: 44,
-                //     imagePath: 'assets/icons/back.svg',
-                //   ),
-                // ),
-                if (state.hasLost) _GameOver(state: state, onExit: _exit),
-              ],
-            ),
           ),
         ),
       ),
@@ -241,96 +238,129 @@ class _GameOver extends ConsumerWidget {
     final result = state.result;
 
     return Container(
-      color: AppColors.backgroundDark.withValues(alpha: 0.88),
+      color: AppColors.backgroundDark.withValues(alpha: 0.9),
       alignment: Alignment.center,
+      padding: const EdgeInsets.all(14),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             _StrokedText(
-              result?.levelCleared == true ? '¡NIVEL SUPERADO!' : 'GAME OVER',
-              fontSize: 30,
+              result?.levelCleared == true ? '¡SUPERADO!' : 'GAME OVER',
+              fontSize: 20,
             ),
             const SizedBox(height: 6),
             Text(
               '${state.score} pts · ${state.lines} líneas',
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppColors.white,
-                fontSize: 18,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             if (state.isSubmitting || result == null)
               const SizedBox(
-                width: 22,
-                height: 22,
+                width: 20,
+                height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   valueColor: AlwaysStoppedAnimation(AppColors.neonPurple),
                 ),
               )
             else ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _Chip('+${result.expGained} EXP', AppColors.purple),
-                  const SizedBox(width: 10),
-                  _Chip('+${result.coinsGained} 🪙', AppColors.orange),
-                ],
-              ),
+              _Chip('+${result.expGained} EXP', AppColors.purple),
+              const SizedBox(height: 6),
+              _Chip('+${result.coinsGained} 🪙', AppColors.orange),
               if (result.unlockedNext)
                 const Padding(
                   padding: EdgeInsets.only(top: 8),
                   child: Text(
                     'Nivel +1 desbloqueado',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: AppColors.emerald,
-                      fontSize: 13,
+                      fontSize: 11,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Pixel',
                     ),
                   ),
                 ),
             ],
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CustomTextButton(
-                  width: 130,
-                  height: 44,
-                  radius: 12,
-                  label: 'SALIR',
-                  baseColor: AppColors.backgroundDark,
-                  onPressed: onExit,
-                ),
-                const SizedBox(width: 14),
-                CustomTextButton(
-                  width: 130,
-                  height: 44,
-                  radius: 12,
-                  label: 'REINTENTAR',
-                  onPressed: () =>
-                      ref.read(tetrisGameProvider.notifier).resetGame(),
-                ),
-              ],
+            const SizedBox(height: 14),
+            CustomTextButton(
+              width: 160,
+              height: 42,
+              radius: 12,
+              label: 'REINTENTAR',
+              onPressed: () =>
+                  ref.read(tetrisGameProvider.notifier).resetGame(),
+            ),
+            const SizedBox(height: 8),
+            CustomTextButton(
+              width: 160,
+              height: 40,
+              radius: 12,
+              label: 'SALIR',
+              baseColor: AppColors.backgroundDark,
+              onPressed: onExit,
             ),
             if (state.score > 0 &&
                 result != null &&
                 AdsService.instance.isRewardedInterstitialReady) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               CustomTextButton(
-                width: 220,
-                height: 42,
+                width: 160,
+                height: 40,
                 radius: 12,
-                label: 'DUPLICAR PUNTOS',
+                label: 'x2 PUNTOS',
                 flashColor: AppColors.orange,
                 onPressed: () => _offerDouble(context, ref),
               ),
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Overlay de pausa dentro del tablero (estilo Snake): reanudar o salir.
+class _PauseOverlay extends StatelessWidget {
+  final VoidCallback onResume;
+  final VoidCallback onExit;
+
+  const _PauseOverlay({required this.onResume, required this.onExit});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.backgroundDark.withValues(alpha: 0.9),
+      alignment: Alignment.center,
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const _StrokedText('PAUSA', fontSize: 24),
+          const SizedBox(height: 16),
+          CustomTextButton(
+            width: 160,
+            height: 42,
+            radius: 12,
+            label: 'CONTINUAR',
+            onPressed: onResume,
+          ),
+          const SizedBox(height: 8),
+          CustomTextButton(
+            width: 160,
+            height: 40,
+            radius: 12,
+            label: 'SALIR',
+            baseColor: AppColors.backgroundDark,
+            onPressed: onExit,
+          ),
+        ],
       ),
     );
   }
