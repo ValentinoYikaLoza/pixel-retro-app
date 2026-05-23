@@ -257,6 +257,18 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
     }
   }
 
+  /// Sale de la partida: muestra el loader de salida, cierra la sesión en el
+  /// servidor y resuelve cuando la pantalla puede navegar fuera. El mínimo de
+  /// tiempo evita que el loader parpadee cuando la red responde al instante.
+  Future<void> exitGame() async {
+    if (state.isExiting) return;
+    if (mounted) state = state.copyWith(isExiting: true);
+    await Future.wait([
+      abandon(),
+      Future<void>.delayed(const Duration(milliseconds: 650)),
+    ]);
+  }
+
   /// Marca la partida como abandonada si se sale sin perder. La pantalla lo
   /// llama al hacer pop. Fire-and-forget: usa singletons, no el estado.
   Future<void> abandon() async {
@@ -361,6 +373,9 @@ class SnakeGameState extends Equatable {
   /// `startGame` en curso (mostrar loader).
   final bool isStarting;
 
+  /// Saliendo de la partida (mostrar loader de salida hasta navegar).
+  final bool isExiting;
+
   /// `startGame` falló (sin vidas / nivel bloqueado): la pantalla vuelve.
   final bool startFailed;
   final String? startError;
@@ -389,6 +404,7 @@ class SnakeGameState extends Equatable {
     this.targetScore = 0,
     this.sessionId,
     this.isStarting = false,
+    this.isExiting = false,
     this.startFailed = false,
     this.startError,
     this.isSubmitting = false,
@@ -413,6 +429,7 @@ class SnakeGameState extends Equatable {
     int? targetScore,
     int? sessionId,
     bool? isStarting,
+    bool? isExiting,
     bool? startFailed,
     ValueGetter<String?>? startError,
     bool? isSubmitting,
@@ -436,6 +453,7 @@ class SnakeGameState extends Equatable {
       targetScore: targetScore ?? this.targetScore,
       sessionId: sessionId ?? this.sessionId,
       isStarting: isStarting ?? this.isStarting,
+      isExiting: isExiting ?? this.isExiting,
       startFailed: startFailed ?? this.startFailed,
       startError: startError != null ? startError() : this.startError,
       isSubmitting: isSubmitting ?? this.isSubmitting,
@@ -462,6 +480,7 @@ class SnakeGameState extends Equatable {
     targetScore,
     sessionId,
     isStarting,
+    isExiting,
     startFailed,
     startError,
     isSubmitting,

@@ -4,10 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/features/tetris-game/presentation/logic/tetromino.dart';
 
-/// Loader mientras el servidor abre la partida de Tetris. Mantiene la estética
-/// de la app: título pixel con contorno y una pieza que cae en una mini grilla.
+/// Loader mientras el servidor abre la partida de Tetris (o se cierra al salir).
+/// Mantiene la estética de la app: título pixel con contorno y una pieza que cae
+/// en una mini grilla.
 class TetrisStartingLoader extends StatefulWidget {
-  const TetrisStartingLoader({super.key});
+  const TetrisStartingLoader({
+    super.key,
+    this.title = 'INICIANDO',
+    this.subtitle = 'Preparando el tablero',
+  });
+
+  /// Título pixel (sin los puntos animados, que se agregan solos).
+  final String title;
+
+  /// Texto secundario bajo la animación.
+  final String subtitle;
 
   @override
   State<TetrisStartingLoader> createState() => _TetrisStartingLoaderState();
@@ -49,7 +60,7 @@ class _TetrisStartingLoaderState extends State<TetrisStartingLoader> {
           Stack(
             children: [
               Text(
-                'INICIANDO$dots',
+                '${widget.title}$dots',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -60,9 +71,9 @@ class _TetrisStartingLoaderState extends State<TetrisStartingLoader> {
                     ..color = AppColors.neonPurple,
                 ),
               ),
-              const Text(
-                'INICIANDO',
-                style: TextStyle(
+              Text(
+                widget.title,
+                style: const TextStyle(
                   color: AppColors.purple,
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -85,7 +96,7 @@ class _TetrisStartingLoaderState extends State<TetrisStartingLoader> {
           ),
           const SizedBox(height: 20),
           Text(
-            'Preparando el tablero',
+            widget.subtitle,
             style: TextStyle(
               color: AppColors.white.withValues(alpha: 0.7),
               fontSize: 13,

@@ -47,8 +47,9 @@ class _TetrisGameScreenState extends ConsumerState<TetrisGameScreen> {
       isLost: st.hasLost,
       isPaused: st.isPaused,
       togglePause: notifier.togglePause,
-      onLeave: () {
-        notifier.abandon();
+      onLeave: () async {
+        // Muestra el loader de salida mientras se cierra la sesión, luego sale.
+        await notifier.exitGame();
         AppRoutes.go(AppRoutes.levelTetrisGame);
       },
     );
@@ -91,7 +92,12 @@ class _TetrisGameScreenState extends ConsumerState<TetrisGameScreen> {
           behavior: HitTestBehavior.opaque,
           onTap: setScreenConfig,
           child: SafeArea(
-            child: state.isStarting
+            child: state.isExiting
+                ? const TetrisStartingLoader(
+                    title: 'SALIENDO',
+                    subtitle: 'Cerrando la partida',
+                  )
+                : state.isStarting
                 ? const TetrisStartingLoader()
                 : Padding(
                     padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
@@ -325,7 +331,7 @@ class _GameOver extends ConsumerWidget {
                 height: 40,
                 radius: 12,
                 label: 'x2 PUNTOS',
-                flashColor: AppColors.orange,
+                flashColor: AppColors.emerald,
                 onPressed: () => _offerDouble(context, ref),
               ),
             ],

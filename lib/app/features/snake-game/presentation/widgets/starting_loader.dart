@@ -3,11 +3,21 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 
-/// Loader que se muestra mientras el servidor abre la partida (`startGame`).
-/// Mantiene la estética de la app: tipografía pixel con contorno y una
-/// "serpiente" de celdas que avanza sobre la grilla neón, igual que el juego.
+/// Loader que se muestra mientras el servidor abre la partida (`startGame`) o
+/// mientras se cierra al salir. Mantiene la estética de la app: tipografía pixel
+/// con contorno y una "serpiente" de celdas que avanza sobre la grilla neón.
 class StartingLoader extends StatefulWidget {
-  const StartingLoader({super.key});
+  const StartingLoader({
+    super.key,
+    this.title = 'INICIANDO',
+    this.subtitle = 'Preparando el tablero',
+  });
+
+  /// Título pixel (sin los puntos animados, que se agregan solos).
+  final String title;
+
+  /// Texto secundario bajo la animación.
+  final String subtitle;
 
   @override
   State<StartingLoader> createState() => _StartingLoaderState();
@@ -54,7 +64,7 @@ class _StartingLoaderState extends State<StartingLoader> {
           Stack(
             children: [
               Text(
-                'INICIANDO$dots',
+                '${widget.title}$dots',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -65,9 +75,9 @@ class _StartingLoaderState extends State<StartingLoader> {
                     ..color = AppColors.neonPurple,
                 ),
               ),
-              const Text(
-                'INICIANDO',
-                style: TextStyle(
+              Text(
+                widget.title,
+                style: const TextStyle(
                   color: AppColors.purple,
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -90,7 +100,7 @@ class _StartingLoaderState extends State<StartingLoader> {
           ),
           const SizedBox(height: 20),
           Text(
-            'Preparando el tablero',
+            widget.subtitle,
             style: TextStyle(
               color: AppColors.white.withValues(alpha: 0.7),
               fontSize: 13,

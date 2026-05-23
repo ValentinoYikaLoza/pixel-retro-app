@@ -526,6 +526,18 @@ class TetrisGameNotifier extends StateNotifier<TetrisGameState> {
     }
   }
 
+  /// Sale de la partida: muestra el loader de salida, cierra la sesión en el
+  /// servidor y resuelve cuando la pantalla puede navegar fuera. El mínimo de
+  /// tiempo evita que el loader parpadee cuando la red responde al instante.
+  Future<void> exitGame() async {
+    if (state.isExiting) return;
+    if (mounted) state = state.copyWith(isExiting: true);
+    await Future.wait([
+      abandon(),
+      Future<void>.delayed(const Duration(milliseconds: 650)),
+    ]);
+  }
+
   Future<void> abandon() async {
     final sessionId = _sessionId;
     if (_closed || sessionId == null) return;
@@ -577,6 +589,7 @@ class TetrisGameState extends Equatable {
 
   final int? sessionId;
   final bool isStarting;
+  final bool isExiting;
   final bool startFailed;
   final String? startError;
   final bool isSubmitting;
@@ -605,6 +618,7 @@ class TetrisGameState extends Equatable {
     this.isPaused = false,
     this.sessionId,
     this.isStarting = false,
+    this.isExiting = false,
     this.startFailed = false,
     this.startError,
     this.isSubmitting = false,
@@ -634,6 +648,7 @@ class TetrisGameState extends Equatable {
     bool? isPaused,
     int? sessionId,
     bool? isStarting,
+    bool? isExiting,
     bool? startFailed,
     ValueGetter<String?>? startError,
     bool? isSubmitting,
@@ -662,6 +677,7 @@ class TetrisGameState extends Equatable {
       isPaused: isPaused ?? this.isPaused,
       sessionId: sessionId ?? this.sessionId,
       isStarting: isStarting ?? this.isStarting,
+      isExiting: isExiting ?? this.isExiting,
       startFailed: startFailed ?? this.startFailed,
       startError: startError != null ? startError() : this.startError,
       isSubmitting: isSubmitting ?? this.isSubmitting,
@@ -693,6 +709,7 @@ class TetrisGameState extends Equatable {
     isPaused,
     sessionId,
     isStarting,
+    isExiting,
     startFailed,
     startError,
     isSubmitting,

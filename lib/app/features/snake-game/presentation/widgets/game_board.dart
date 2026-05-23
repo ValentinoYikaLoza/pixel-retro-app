@@ -334,8 +334,11 @@ class GameBoardState extends ConsumerState<GameBoard> {
                               togglePause: ref
                                   .read(snakeGameProvider.notifier)
                                   .togglePause,
-                              onLeave: () {
-                                ref.read(snakeGameProvider.notifier).abandon();
+                              onLeave: () async {
+                                // Loader de salida mientras se cierra la sesión.
+                                await ref
+                                    .read(snakeGameProvider.notifier)
+                                    .exitGame();
                                 AppRoutes.go(AppRoutes.levelSnakeGame);
                               },
                             ),
