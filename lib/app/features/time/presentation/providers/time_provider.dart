@@ -49,7 +49,11 @@ class TimeNotifier extends StateNotifier<TimeState> {
       if (now == null) return;
 
       final name = _monthMap[DateFormat('MMMM').format(now)] ?? '';
-      state = state.copyWith(currentMonth: name);
+      // Clave de día (UTC): cambia al cruzar cualquier frontera (las de semana
+      // y mes también ocurren en un cambio de día). La UI la observa para
+      // refrescar las misiones cuando expira el período.
+      final key = '${now.year}-${now.month}-${now.day}';
+      state = state.copyWith(currentMonth: name, periodKey: key);
     });
   }
 
@@ -122,6 +126,10 @@ class TimeState extends Equatable {
   final DateTime? serverDate;
   final DateTime? receivedAt;
   final String currentMonth;
+
+  /// Clave de día (UTC). Cambia al cruzar la frontera de período; la UI la
+  /// observa para refrescar las misiones.
+  final String periodKey;
   final TimeEntity timeUntilNextDay;
   final TimeEntity timeUntilNextSeason;
   final TimeEntity timeUntilNextWeek;
@@ -131,6 +139,7 @@ class TimeState extends Equatable {
     this.serverDate,
     this.receivedAt,
     this.currentMonth = '',
+    this.periodKey = '',
     this.timeUntilNextDay = const TimeEntity(),
     this.timeUntilNextSeason = const TimeEntity(),
     this.timeUntilNextWeek = const TimeEntity(),
@@ -149,6 +158,7 @@ class TimeState extends Equatable {
     DateTime? serverDate,
     DateTime? receivedAt,
     String? currentMonth,
+    String? periodKey,
     TimeEntity? timeUntilNextDay,
     TimeEntity? timeUntilNextSeason,
     TimeEntity? timeUntilNextWeek,
@@ -158,6 +168,7 @@ class TimeState extends Equatable {
       serverDate: serverDate ?? this.serverDate,
       receivedAt: receivedAt ?? this.receivedAt,
       currentMonth: currentMonth ?? this.currentMonth,
+      periodKey: periodKey ?? this.periodKey,
       timeUntilNextDay: timeUntilNextDay ?? this.timeUntilNextDay,
       timeUntilNextSeason: timeUntilNextSeason ?? this.timeUntilNextSeason,
       timeUntilNextWeek: timeUntilNextWeek ?? this.timeUntilNextWeek,
@@ -170,6 +181,7 @@ class TimeState extends Equatable {
     serverDate,
     receivedAt,
     currentMonth,
+    periodKey,
     timeUntilNextDay,
     timeUntilNextSeason,
     timeUntilNextWeek,

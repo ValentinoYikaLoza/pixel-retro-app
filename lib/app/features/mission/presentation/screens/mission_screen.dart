@@ -25,6 +25,14 @@ class MissionScreenState extends ConsumerState<MissionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Al cruzar la frontera de día (UTC) el período venció: re-sincroniza las
+    // misiones para que aparezcan las del nuevo período (rollover del backend).
+    ref.listen(timeProvider.select((s) => s.periodKey), (prev, next) {
+      if (prev != null && prev.isNotEmpty && prev != next) {
+        ref.invalidate(missionInitProvider);
+      }
+    });
+
     final init = ref.watch(missionInitProvider);
     return init.when(
       loading: () => const MissionSkeleton(),
