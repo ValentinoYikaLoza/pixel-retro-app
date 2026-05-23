@@ -12,11 +12,15 @@ class LevelPreview extends StatelessWidget {
   final double width;
   final double height;
 
+  /// Muestra el punto de comida central (solo aplica al Snake).
+  final bool showFood;
+
   const LevelPreview({
     super.key,
     required this.level,
     this.width = 180,
     this.height = 120,
+    this.showFood = true,
   });
 
   @override
@@ -24,15 +28,16 @@ class LevelPreview extends StatelessWidget {
     return SizedBox(
       width: width,
       height: height,
-      child: CustomPaint(painter: _LevelPainter(level)),
+      child: CustomPaint(painter: _LevelPainter(level, showFood)),
     );
   }
 }
 
 class _LevelPainter extends CustomPainter {
   final GameLevelEntity level;
+  final bool showFood;
 
-  _LevelPainter(this.level);
+  _LevelPainter(this.level, this.showFood);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -67,14 +72,16 @@ class _LevelPainter extends CustomPainter {
       canvas.drawRect(cell.deflate(0.25), wallEdge);
     }
 
-    // Comida de referencia (un punto) en el centro, como en la partida.
-    final cx = ox + (gw ~/ 2 + 0.5) * scale;
-    final cy = oy + (gh ~/ 2 + 0.5) * scale;
-    canvas.drawCircle(
-      Offset(cx, cy),
-      scale * 0.6,
-      Paint()..color = AppColors.orange,
-    );
+    // Comida de referencia (un punto) en el centro, como en la partida (Snake).
+    if (showFood) {
+      final cx = ox + (gw ~/ 2 + 0.5) * scale;
+      final cy = oy + (gh ~/ 2 + 0.5) * scale;
+      canvas.drawCircle(
+        Offset(cx, cy),
+        scale * 0.6,
+        Paint()..color = AppColors.orange,
+      );
+    }
 
     // Marco: sólido (neón) si el borde mata; tenue si hay wrap-around.
     canvas.drawRect(
@@ -89,5 +96,6 @@ class _LevelPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_LevelPainter oldDelegate) => oldDelegate.level != level;
+  bool shouldRepaint(_LevelPainter oldDelegate) =>
+      oldDelegate.level != level || oldDelegate.showFood != showFood;
 }

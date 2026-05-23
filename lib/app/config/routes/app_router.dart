@@ -7,6 +7,8 @@ import 'package:pixel_retro_app/app/features/mission/presentation/screens/missio
 import 'package:pixel_retro_app/app/features/shop/presentation/screens/shop_screen.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/level_snake_game_screen.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/snake_game_screen.dart';
+import 'package:pixel_retro_app/app/features/tetris-game/presentation/screens/level_tetris_game_screen.dart';
+import 'package:pixel_retro_app/app/features/tetris-game/presentation/screens/tetris_game_screen.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/screens/layout_view.dart';
 import 'package:pixel_retro_app/app/shared/screens/ad_screen.dart';
 import 'package:pixel_retro_app/app/shared/screens/root_screen.dart';
@@ -64,6 +66,19 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) {
         final level = (_argsOf(state)['level'] as int?) ?? 1;
         return _slideUp(state, SnakeGameScreen(level: level));
+      },
+    ),
+    // Tetris game
+    GoRoute(
+      path: AppRoutes.levelTetrisGame,
+      pageBuilder: (context, state) =>
+          _scale(state, const LevelTetrisGameScreen()),
+    ),
+    GoRoute(
+      path: AppRoutes.tetrisGame,
+      pageBuilder: (context, state) {
+        final level = (_argsOf(state)['level'] as int?) ?? 1;
+        return _slideUp(state, TetrisGameScreen(level: level));
       },
     ),
     // Ads

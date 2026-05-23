@@ -92,7 +92,7 @@ class ShopNotifier extends StateNotifier<ShopState> {
         return 'assets/icons/chest-shop-second.svg';
       case 3:
         return 'assets/icons/chest-shop-third.svg';
-      case 4:
+      case > 4:
         return 'assets/icons/chest-shop-third.svg';
       default:
         return 'assets/icons/chest-shop-first.svg';
@@ -108,6 +108,14 @@ class ShopNotifier extends StateNotifier<ShopState> {
       case 3:
         return 'assets/icons/group-hearts-third.svg';
       case 4:
+        return 'assets/icons/group-hearts-third.svg';
+      case 5:
+        return 'assets/icons/heart.svg';
+      case 6:
+        return 'assets/icons/group-hearts-second.svg';
+      case 7:
+        return 'assets/icons/group-hearts-third.svg';
+      case 8:
         return 'assets/icons/group-hearts-third.svg';
       default:
         return 'assets/icons/heart.svg';

@@ -17,6 +17,10 @@ class AppRoutes {
   static const String levelSnakeGame = '/level-snake-game';
   static const String snakeGame = '/snake-game';
 
+  // Tetris Game
+  static const String levelTetrisGame = '/level-tetris-game';
+  static const String tetrisGame = '/tetris-game';
+
   // Ads
   static const String adRewardedCoins = '/ad-rewardedCoins';
   static const String adRewardedLives = '/ad-rewardedLives';
