@@ -28,8 +28,9 @@ class TimeData {
   TimeData({required this.time});
 
   factory TimeData.fromJson(Map<String, dynamic> json) {
-    return TimeData(
-      time: DateTime.tryParse(json['time']?.toString() ?? '') ?? DateTime.now(),
-    );
+    // El backend envía UTC (ISO 8601 Zulu). Normalizamos a UTC: es el instante
+    // de referencia; el cliente lo adapta a la zona del usuario al mostrar.
+    final parsed = DateTime.tryParse(json['time']?.toString() ?? '');
+    return TimeData(time: (parsed ?? DateTime.now()).toUtc());
   }
 }

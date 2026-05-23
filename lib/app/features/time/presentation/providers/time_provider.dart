@@ -67,10 +67,12 @@ class TimeNotifier extends StateNotifier<TimeState> {
   }
 
   void _startTimeUntilStreams() {
+    // Las fronteras se calculan en UTC (DateTime.utc) sobre el instante del
+    // servidor: el reset es global y coincide con las ventanas del backend.
     _nextDayTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       final now = state.currentDateSynced;
       if (now == null) return;
-      final target = DateTime(now.year, now.month, now.day + 1);
+      final target = DateTime.utc(now.year, now.month, now.day + 1);
       state = state.copyWith(timeUntilNextDay: _computeDifference(now, target));
     });
 
@@ -78,7 +80,7 @@ class TimeNotifier extends StateNotifier<TimeState> {
       final now = state.currentDateSynced;
       if (now == null) return;
       final next = now.add(Duration(days: 7 - now.weekday));
-      final target = DateTime(next.year, next.month, next.day, 20, 0);
+      final target = DateTime.utc(next.year, next.month, next.day, 20, 0);
       state = state.copyWith(
         timeUntilNextSeason: _computeDifference(now, target),
       );
@@ -88,7 +90,7 @@ class TimeNotifier extends StateNotifier<TimeState> {
       final now = state.currentDateSynced;
       if (now == null) return;
       final nextSunday = now.add(Duration(days: 7 - now.weekday));
-      final target = DateTime(
+      final target = DateTime.utc(
         nextSunday.year,
         nextSunday.month,
         nextSunday.day + 1,
@@ -101,8 +103,8 @@ class TimeNotifier extends StateNotifier<TimeState> {
     _nextMonthTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       final now = state.currentDateSynced;
       if (now == null) return;
-      final lastDay = DateTime(now.year, now.month + 1, 0);
-      final target = DateTime(lastDay.year, lastDay.month, lastDay.day + 1);
+      final lastDay = DateTime.utc(now.year, now.month + 1, 0);
+      final target = DateTime.utc(lastDay.year, lastDay.month, lastDay.day + 1);
       state = state.copyWith(
         timeUntilNextMonth: _computeDifference(now, target),
       );
@@ -135,9 +137,12 @@ class TimeState extends Equatable {
     this.timeUntilNextMonth = const TimeEntity(),
   });
 
+  /// Instante actual del servidor en UTC (referencia global). Los countdowns y
+  /// el "mes" de misiones se calculan sobre esto, igual que el backend; para
+  /// mostrar una fecha absoluta se haría un `.toLocal()` puntual donde aplique.
   DateTime? get currentDateSynced {
     if (serverDate == null || receivedAt == null) return null;
-    return serverDate!.add(DateTime.now().difference(receivedAt!)).toLocal();
+    return serverDate!.add(DateTime.now().difference(receivedAt!)).toUtc();
   }
 
   TimeState copyWith({

@@ -10,7 +10,6 @@ import 'package:pixel_retro_app/app/shared/services/ads_service.dart';
 import 'package:pixel_retro_app/app/shared/services/dialog_service.dart';
 import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
-import 'package:pixel_retro_app/app/shared/widgets/custom_icon_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/rewarded_ad_offer_dialog.dart';
 
@@ -94,16 +93,16 @@ class _TetrisGameScreenState extends ConsumerState<TetrisGameScreen> {
                     ),
                   ),
                 // Botón de salir (vuelve al selector), bajo el overlay de fin.
-                Positioned(
-                  top: 4,
-                  left: 4,
-                  child: CustomIconButton(
-                    onPressed: _exit,
-                    width: 44,
-                    height: 44,
-                    imagePath: 'assets/icons/back.svg',
-                  ),
-                ),
+                // Positioned(
+                //   top: 4,
+                //   left: 4,
+                //   child: CustomIconButton(
+                //     onPressed: _exit,
+                //     width: 44,
+                //     height: 44,
+                //     imagePath: 'assets/icons/back.svg',
+                //   ),
+                // ),
                 if (state.hasLost) _GameOver(state: state, onExit: _exit),
               ],
             ),
