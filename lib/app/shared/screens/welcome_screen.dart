@@ -63,6 +63,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             border: Border.all(color: AppColors.neonPurple, width: 5),
           ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             spacing: 20,
             children: [
               Stack(
