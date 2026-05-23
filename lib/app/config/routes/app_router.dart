@@ -61,7 +61,10 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.snakeGame,
-      pageBuilder: (context, state) => _slideUp(state, const SnakeGameScreen()),
+      pageBuilder: (context, state) {
+        final level = (_argsOf(state)['level'] as int?) ?? 1;
+        return _slideUp(state, SnakeGameScreen(level: level));
+      },
     ),
     // Ads
     GoRoute(

@@ -13,7 +13,9 @@ import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 import 'package:pixel_retro_app/app/shared/services/snackbar_service.dart';
 
 class SnakeGameScreen extends ConsumerStatefulWidget {
-  const SnakeGameScreen({super.key});
+  final int level;
+
+  const SnakeGameScreen({super.key, this.level = 1});
 
   @override
   SnakeGameScreenState createState() => SnakeGameScreenState();
@@ -25,8 +27,8 @@ class SnakeGameScreenState extends ConsumerState<SnakeGameScreen> {
     super.initState();
     setScreenConfig();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // Abre la partida en el servidor (consume vida) y arranca el juego.
-      ref.read(snakeGameProvider.notifier).startGame();
+      // Abre la partida del nivel en el servidor (consume vida) y arranca.
+      ref.read(snakeGameProvider.notifier).startGame(level: widget.level);
     });
 
     // Precargamos los anuncios full-screen para que estén listos al terminar:
@@ -43,9 +45,9 @@ class SnakeGameScreenState extends ConsumerState<SnakeGameScreen> {
   }
 
   void _exit() {
-    // Abandona la partida en el servidor (reembolsa si fue inmediato) y vuelve.
+    // Abandona la partida y vuelve al selector de niveles.
     ref.read(snakeGameProvider.notifier).abandon();
-    AppRoutes.go(AppRoutes.home);
+    AppRoutes.go(AppRoutes.levelSnakeGame);
   }
 
   @override
@@ -72,15 +74,21 @@ class SnakeGameScreenState extends ConsumerState<SnakeGameScreen> {
         }
       },
       child: Scaffold(
+        backgroundColor: AppColors.backgroundDark,
         body: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () {
             setScreenConfig();
           },
           child: Container(
             width: double.infinity,
+            // Margen para que el board flote y no toque los bordes de pantalla.
+            margin: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: AppColors.backgroundDark,
-              border: Border.all(color: AppColors.neonPurple, width: 5),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.neonPurple, width: 4),
             ),
             child: gameState.isStarting
                 ? const StartingLoader()

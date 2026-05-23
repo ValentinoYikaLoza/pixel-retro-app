@@ -1,5 +1,6 @@
 import 'package:pixel_retro_app/app/features/snake-game/domain/datasources/snake_game_datasource.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_leaderboard_entity.dart';
+import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_level_entity.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_result_entity.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_session_entity.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/repositories/snake_game_repository.dart';
@@ -10,8 +11,13 @@ class SnakeGameRepositoryImpl implements SnakeGameRepository {
   SnakeGameRepositoryImpl(this.dataSource);
 
   @override
-  Future<GameSessionEntity> startGame(String gameCode) {
-    return dataSource.startGame(gameCode);
+  Future<List<GameLevelEntity>> listLevels(String gameCode) {
+    return dataSource.listLevels(gameCode);
+  }
+
+  @override
+  Future<GameSessionEntity> startGame(String gameCode, int level) {
+    return dataSource.startGame(gameCode, level);
   }
 
   @override

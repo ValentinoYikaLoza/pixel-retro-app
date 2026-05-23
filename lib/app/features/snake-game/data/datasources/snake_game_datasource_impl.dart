@@ -3,12 +3,15 @@ import 'package:pixel_retro_app/app/config/constants/api_endpoints.dart';
 import 'package:pixel_retro_app/app/features/snake-game/data/dtos/double_game_reward_response_dto.dart';
 import 'package:pixel_retro_app/app/features/snake-game/data/dtos/finish_game_response_dto.dart';
 import 'package:pixel_retro_app/app/features/snake-game/data/dtos/game_leaderboard_response_dto.dart';
+import 'package:pixel_retro_app/app/features/snake-game/data/dtos/game_levels_response_dto.dart';
 import 'package:pixel_retro_app/app/features/snake-game/data/dtos/start_game_response_dto.dart';
 import 'package:pixel_retro_app/app/features/snake-game/data/mappers/game_leaderboard_mapper.dart';
+import 'package:pixel_retro_app/app/features/snake-game/data/mappers/game_levels_mapper.dart';
 import 'package:pixel_retro_app/app/features/snake-game/data/mappers/game_result_mapper.dart';
 import 'package:pixel_retro_app/app/features/snake-game/data/mappers/game_session_mapper.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/datasources/snake_game_datasource.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_leaderboard_entity.dart';
+import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_level_entity.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_result_entity.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_session_entity.dart';
 import 'package:pixel_retro_app/app/shared/services/error_service.dart';
@@ -21,9 +24,33 @@ class SnakeGameDataSourceImpl implements SnakeGameDataSource {
   final SessionService _session;
 
   @override
-  Future<GameSessionEntity> startGame(String gameCode) async {
+  Future<List<GameLevelEntity>> listLevels(String gameCode) async {
     try {
       final formData = {'user_id': _session.userId, 'game_code': gameCode};
+      final response = await _api.post(
+        ApiEndpoints.listGameLevels,
+        data: formData,
+      );
+      final dto = GameLevelsResponseDto.fromJson(
+        response.data as Map<String, dynamic>? ?? const {},
+      );
+      return GameLevelsMapper.fromDto(dto);
+    } catch (e) {
+      throw ErrorService.toServiceException(
+        e,
+        fallback: 'Error al obtener los niveles',
+      );
+    }
+  }
+
+  @override
+  Future<GameSessionEntity> startGame(String gameCode, int level) async {
+    try {
+      final formData = {
+        'user_id': _session.userId,
+        'game_code': gameCode,
+        'level': '$level',
+      };
       final response = await _api.post(ApiEndpoints.startGame, data: formData);
       final dto = StartGameResponseDto.fromJson(
         response.data as Map<String, dynamic>? ?? const {},

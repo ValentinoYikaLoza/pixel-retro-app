@@ -28,12 +28,16 @@ class FinishGameDataDto {
   final int highScore;
   final int expGained;
   final int coinsGained;
+  final bool levelCleared;
+  final bool unlockedNext;
 
   FinishGameDataDto({
     required this.isHighScore,
     required this.highScore,
     required this.expGained,
     required this.coinsGained,
+    required this.levelCleared,
+    required this.unlockedNext,
   });
 
   factory FinishGameDataDto.fromJson(Map<String, dynamic> json) {
@@ -42,6 +46,8 @@ class FinishGameDataDto {
       highScore: (json['high_score'] as num?)?.toInt() ?? 0,
       expGained: (json['exp_gained'] as num?)?.toInt() ?? 0,
       coinsGained: (json['coins_gained'] as num?)?.toInt() ?? 0,
+      levelCleared: json['level_cleared'] as bool? ?? false,
+      unlockedNext: json['unlocked_next'] as bool? ?? false,
     );
   }
 }

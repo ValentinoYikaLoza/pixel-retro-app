@@ -97,6 +97,26 @@ class GameBoardState extends ConsumerState<GameBoard> {
               ),
             ),
 
+            // Paredes del nivel: bloques sólidos que matan al chocar.
+            ...gameState.walls.map((wall) {
+              return Positioned(
+                left: wall.dx * cellWidth,
+                top: wall.dy * cellHeight,
+                width: cellWidth,
+                height: cellHeight,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.selector,
+                    borderRadius: BorderRadius.circular(cellWidth * 0.15),
+                    border: Border.all(
+                      color: AppColors.neonPurple.withValues(alpha: 0.7),
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+              );
+            }),
+
             // Food - more vibrant and with shadow
             Positioned(
               left: gameState.food.dx * cellWidth,
@@ -204,9 +224,9 @@ class GameBoardState extends ConsumerState<GameBoard> {
                         padding: const EdgeInsets.only(top: 20, left: 20),
                         child: CustomIconButton(
                           onPressed: () {
-                            // Libera la sesión en el servidor antes de salir.
+                            // Libera la sesión y vuelve al selector de niveles.
                             ref.read(snakeGameProvider.notifier).abandon();
-                            AppRoutes.go(AppRoutes.home);
+                            AppRoutes.go(AppRoutes.levelSnakeGame);
                           },
                           width: 48,
                           height: 48,
@@ -380,6 +400,22 @@ class _GameResult extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (result.levelCleared)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                result.unlockedNext
+                    ? '¡NIVEL SUPERADO! +1 DESBLOQUEADO'
+                    : '¡NIVEL SUPERADO!',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.emerald,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Pixel',
+                ),
+              ),
+            ),
           if (result.isHighScore)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),

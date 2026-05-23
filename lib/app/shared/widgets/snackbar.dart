@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 
 class Snackbar extends StatelessWidget {
@@ -16,89 +17,92 @@ class Snackbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Theme colors based on type
-    late Color backgroundColor;
-    late Color textColor;
-    late Color borderColor;
+    // Acento por tipo, dentro de la paleta de la app.
+    late Color accent;
     late String iconPath;
 
     switch (type) {
       case SnackbarType.error:
-        backgroundColor = const Color(0xFFF8D7DA);
-        textColor = const Color(0xFF721C24);
-        borderColor = const Color(0xFFF5C6CB);
+        accent = AppColors.red;
         iconPath = 'assets/icons/error.svg';
         break;
       case SnackbarType.success:
-        backgroundColor = const Color(0xFFD4EDDA);
-        textColor = const Color(0xFF155724);
-        borderColor = const Color(0xFFC3E6CB);
+        accent = AppColors.emerald;
         iconPath = 'assets/icons/check.svg';
         break;
       case SnackbarType.info:
-        backgroundColor = const Color(0xFFD1ECF1);
-        textColor = const Color(0xFF0C5460);
-        borderColor = const Color(0xFFBEE5EB);
+        accent = AppColors.neonPurple;
         iconPath = 'assets/icons/info.svg';
         break;
     }
 
     return Container(
       constraints: BoxConstraints(
-        minWidth: 320,
+        minWidth: 280,
         maxWidth: MediaQuery.of(context).size.width - 32,
       ),
       decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderColor, width: 2),
+        // Panel oscuro con leve tinte púrpura, como los marcos del juego.
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.purple, AppColors.backgroundDark],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent, width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: accent.withValues(alpha: 0.35),
+            blurRadius: 14,
+            spreadRadius: 1,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Icon with puzzle piece style
+            // Ícono con marco acentuado.
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: borderColor, width: 1.5),
+                color: accent.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: accent, width: 1.5),
               ),
               child: SvgPicture.asset(
                 iconPath,
-                height: 24,
-                width: 24,
-                colorFilter: ColorFilter.mode(textColor, BlendMode.srcIn),
+                height: 22,
+                width: 22,
+                colorFilter: ColorFilter.mode(accent, BlendMode.srcIn),
               ),
             ),
             const SizedBox(width: 12),
 
-            // Message
-            Expanded(
+            // Mensaje.
+            Flexible(
               child: Text(
                 message,
-                style: TextStyle(
-                  fontSize: 16,
+                style: const TextStyle(
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: textColor,
+                  fontFamily: 'Inter',
+                  color: AppColors.white,
                   height: 1.25,
                 ),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
 
-            // Close button with puzzle piece style
+            // Botón de cierre.
             MouseRegion(
               cursor: SystemMouseCursors.click,
               child: GestureDetector(
@@ -106,15 +110,21 @@ class Snackbar extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: AppColors.white.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: borderColor, width: 1.5),
+                    border: Border.all(
+                      color: AppColors.white.withValues(alpha: 0.25),
+                      width: 1.5,
+                    ),
                   ),
                   child: SvgPicture.asset(
                     'assets/icons/close.svg',
-                    height: 20,
-                    width: 20,
-                    colorFilter: ColorFilter.mode(textColor, BlendMode.srcIn),
+                    height: 18,
+                    width: 18,
+                    colorFilter: ColorFilter.mode(
+                      AppColors.white.withValues(alpha: 0.8),
+                      BlendMode.srcIn,
+                    ),
                   ),
                 ),
               ),

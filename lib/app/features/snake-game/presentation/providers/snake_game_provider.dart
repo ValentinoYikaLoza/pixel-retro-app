@@ -28,16 +28,20 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
 
   /// RNG sembrado por el servidor: hace la comida reproducible (anti-trampa).
   Random _rng = Random();
+
+  /// Paredes del nivel (set para colisión/spawn en O(1)).
+  Set<Offset> _walls = {};
+
   int? _sessionId;
   DateTime? _startedAt;
 
   /// Evita cerrar la partida dos veces (finish + abandon compiten al salir).
   bool _closed = false;
 
-  /// Abre una partida en el servidor (consume vida) y arranca el bucle con la
-  /// semilla y la config recibidas. Lo llama la pantalla al entrar y en cada
-  /// reintento.
-  Future<void> startGame() async {
+  /// Abre una partida del nivel indicado en el servidor (consume vida) y arranca
+  /// el bucle con la semilla, paredes y config recibidas. Lo llama la pantalla
+  /// al entrar y en cada reintento.
+  Future<void> startGame({int level = 1}) async {
     _timer?.cancel();
     state = state.copyWith(
       isStarting: true,
@@ -47,18 +51,26 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
     );
 
     try {
-      final session = await _repository.startGame(_snakeGameCode);
+      final session = await _repository.startGame(_snakeGameCode, level);
 
       _sessionId = session.sessionId;
       _rng = Random(session.seed);
+      _walls = session.walls.toSet();
       _startedAt = DateTime.now();
       _closed = false;
       _nextDirection = null;
 
-      const start = [Offset(10, 10)];
+      // La serpiente aparece en el centro (la zona segura del nivel).
+      final start = [
+        Offset(
+          (session.gridWidth ~/ 2).toDouble(),
+          (session.gridHeight ~/ 2).toDouble(),
+        ),
+      ];
+
       state = SnakeGameState(
         snake: start,
-        food: _generateFood(start),
+        food: _generateFood(start, session.gridWidth, session.gridHeight),
         extraFood: null,
         direction: Direction.right,
         score: 0,
@@ -68,6 +80,10 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
         gridWidth: session.gridWidth,
         gridHeight: session.gridHeight,
         tickMs: session.tickMs,
+        wrapAround: session.wrapAround,
+        walls: session.walls,
+        level: session.level,
+        targetScore: session.targetScore,
         sessionId: session.sessionId,
         isStarting: false,
       );
@@ -77,7 +93,7 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
         (_) => _move(),
       );
     } on ServiceException catch (e) {
-      // Sin vidas o error de red: la pantalla reacciona y vuelve a la tienda.
+      // Sin vidas, nivel bloqueado o error: la pantalla reacciona y vuelve.
       state = state.copyWith(
         isStarting: false,
         startFailed: true,
@@ -91,51 +107,62 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
 
     final newSnake = List<Offset>.from(state.snake);
     final head = newSnake.first;
-
     final direction = _nextDirection ?? state.direction;
 
-    Offset newHead;
+    var nx = head.dx.toInt();
+    var ny = head.dy.toInt();
     switch (direction) {
       case Direction.up:
-        newHead = Offset(head.dx, (head.dy - 1) % state.gridHeight);
+        ny -= 1;
         break;
       case Direction.down:
-        newHead = Offset(head.dx, (head.dy + 1) % state.gridHeight);
+        ny += 1;
         break;
       case Direction.left:
-        newHead = Offset((head.dx - 1) % state.gridWidth, head.dy);
+        nx -= 1;
         break;
       case Direction.right:
-        newHead = Offset((head.dx + 1) % state.gridWidth, head.dy);
+        nx += 1;
         break;
     }
 
-    // Aseguramos que las coordenadas sean positivas
-    newHead = Offset(
-      newHead.dx < 0 ? newHead.dx + state.gridWidth : newHead.dx,
-      newHead.dy < 0 ? newHead.dy + state.gridHeight : newHead.dy,
-    );
-
-    // Colisión con el propio cuerpo: fin de la partida.
-    if (_checkCollision(newHead, newSnake)) {
-      _timer?.cancel();
-      state = state.copyWith(hasLost: true);
-      _finish();
+    if (state.wrapAround) {
+      nx = (nx + state.gridWidth) % state.gridWidth;
+      ny = (ny + state.gridHeight) % state.gridHeight;
+    } else if (nx < 0 ||
+        nx >= state.gridWidth ||
+        ny < 0 ||
+        ny >= state.gridHeight) {
+      // Borde sólido: salir del tablero es perder.
+      _lose();
       return;
     }
 
-    // Move snake
+    final newHead = Offset(nx.toDouble(), ny.toDouble());
+
+    // Colisión con una pared del nivel o con el propio cuerpo: fin de partida.
+    if (_walls.contains(newHead) || _checkCollision(newHead, newSnake)) {
+      _lose();
+      return;
+    }
+
     newSnake.insert(0, newHead);
     _nextDirection = null;
 
     if (newHead == state.food) {
-      final newFood = _generateFood(newSnake);
+      final newFood = _generateFood(
+        newSnake,
+        state.gridWidth,
+        state.gridHeight,
+      );
 
       Offset? newExtraFood;
       if ((state.score + 1) % 5 == 0 && state.score + 1 != 0) {
-        newExtraFood = _generateExtraFood(newSnake);
-      } else {
-        newExtraFood = null;
+        newExtraFood = _generateFood(
+          newSnake,
+          state.gridWidth,
+          state.gridHeight,
+        );
       }
 
       state = state.copyWith(
@@ -147,7 +174,11 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
         foodEaten: state.foodEaten + 1,
       );
     } else if (newHead == state.extraFood) {
-      final newFood = _generateFood(newSnake);
+      final newFood = _generateFood(
+        newSnake,
+        state.gridWidth,
+        state.gridHeight,
+      );
 
       state = state.copyWith(
         snake: newSnake,
@@ -161,6 +192,12 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
       newSnake.removeLast();
       state = state.copyWith(snake: newSnake, direction: direction);
     }
+  }
+
+  void _lose() {
+    _timer?.cancel();
+    state = state.copyWith(hasLost: true);
+    _finish();
   }
 
   /// Cierra la partida en el servidor y guarda las recompensas para el panel
@@ -207,6 +244,8 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
             highScore: current.highScore,
             expGained: current.expGained + bonus,
             coinsGained: current.coinsGained,
+            levelCleared: current.levelCleared,
+            unlockedNext: current.unlockedNext,
           ),
         );
       }
@@ -239,26 +278,20 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
     return false;
   }
 
-  Offset _generateFood(List<Offset> snake) {
-    Offset newFood;
-    do {
-      newFood = Offset(
-        _rng.nextInt(state.gridWidth).toDouble(),
-        _rng.nextInt(state.gridHeight).toDouble(),
-      );
-    } while (snake.contains(newFood));
-    return newFood;
-  }
-
-  Offset _generateExtraFood(List<Offset> snake) {
-    Offset newExtraFood;
-    do {
-      newExtraFood = Offset(
-        _rng.nextInt(state.gridWidth).toDouble(),
-        _rng.nextInt(state.gridHeight).toDouble(),
-      );
-    } while (snake.contains(newExtraFood));
-    return newExtraFood;
+  /// Celda libre aleatoria (excluye serpiente y paredes). Con barrido de
+  /// respaldo para no quedar en bucle si el tablero está casi lleno.
+  Offset _generateFood(List<Offset> snake, int w, int h) {
+    for (int i = 0; i < 200; i++) {
+      final c = Offset(_rng.nextInt(w).toDouble(), _rng.nextInt(h).toDouble());
+      if (!snake.contains(c) && !_walls.contains(c)) return c;
+    }
+    for (int y = 0; y < h; y++) {
+      for (int x = 0; x < w; x++) {
+        final c = Offset(x.toDouble(), y.toDouble());
+        if (!snake.contains(c) && !_walls.contains(c)) return c;
+      }
+    }
+    return const Offset(0, 0);
   }
 
   void changeDirection(Direction newDirection) {
@@ -288,10 +321,10 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
     state = state.copyWith(isPaused: !state.isPaused);
   }
 
-  /// Reintento tras perder: abre una nueva partida (consume otra vida).
+  /// Reintento tras perder: abre una nueva partida del mismo nivel (otra vida).
   void resetGame() {
     _timer?.cancel();
-    startGame();
+    startGame(level: state.level);
   }
 
   @override
@@ -313,6 +346,10 @@ class SnakeGameState extends Equatable {
   final int gridWidth;
   final int gridHeight;
   final int tickMs;
+  final bool wrapAround;
+  final List<Offset> walls;
+  final int level;
+  final int targetScore;
 
   /// Id de la sesión abierta en el servidor (null hasta `startGame`).
   final int? sessionId;
@@ -320,7 +357,7 @@ class SnakeGameState extends Equatable {
   /// `startGame` en curso (mostrar loader).
   final bool isStarting;
 
-  /// `startGame` falló (p. ej. sin vidas): la pantalla vuelve a la tienda.
+  /// `startGame` falló (sin vidas / nivel bloqueado): la pantalla vuelve.
   final bool startFailed;
   final String? startError;
 
@@ -342,6 +379,10 @@ class SnakeGameState extends Equatable {
     this.gridWidth = 30,
     this.gridHeight = 20,
     this.tickMs = 200,
+    this.wrapAround = true,
+    this.walls = const [],
+    this.level = 1,
+    this.targetScore = 0,
     this.sessionId,
     this.isStarting = false,
     this.startFailed = false,
@@ -362,6 +403,10 @@ class SnakeGameState extends Equatable {
     int? gridWidth,
     int? gridHeight,
     int? tickMs,
+    bool? wrapAround,
+    List<Offset>? walls,
+    int? level,
+    int? targetScore,
     int? sessionId,
     bool? isStarting,
     bool? startFailed,
@@ -381,6 +426,10 @@ class SnakeGameState extends Equatable {
       gridWidth: gridWidth ?? this.gridWidth,
       gridHeight: gridHeight ?? this.gridHeight,
       tickMs: tickMs ?? this.tickMs,
+      wrapAround: wrapAround ?? this.wrapAround,
+      walls: walls ?? this.walls,
+      level: level ?? this.level,
+      targetScore: targetScore ?? this.targetScore,
       sessionId: sessionId ?? this.sessionId,
       isStarting: isStarting ?? this.isStarting,
       startFailed: startFailed ?? this.startFailed,
@@ -403,6 +452,10 @@ class SnakeGameState extends Equatable {
     gridWidth,
     gridHeight,
     tickMs,
+    wrapAround,
+    walls,
+    level,
+    targetScore,
     sessionId,
     isStarting,
     startFailed,

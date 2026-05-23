@@ -1,26 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
+import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_level_entity.dart';
+import 'package:pixel_retro_app/app/features/snake-game/presentation/providers/snake_levels_provider.dart';
+import 'package:pixel_retro_app/app/features/snake-game/presentation/widgets/level_preview.dart';
 import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_icon_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
+import 'package:pixel_retro_app/app/shared/widgets/screen_status.dart';
 
-class LevelSnakeGameScreen extends StatefulWidget {
+/// Selector de niveles del Snake en carrusel 3D (estilo coverflow): la carta
+/// central se ve grande y resaltada, y las laterales se inclinan en perspectiva.
+/// Cada carta muestra una miniatura que refleja la complejidad del nivel.
+class LevelSnakeGameScreen extends ConsumerStatefulWidget {
   const LevelSnakeGameScreen({super.key});
 
   @override
-  State<LevelSnakeGameScreen> createState() => _LevelSnakeGameScreenState();
+  ConsumerState<LevelSnakeGameScreen> createState() =>
+      _LevelSnakeGameScreenState();
 }
 
-class _LevelSnakeGameScreenState extends State<LevelSnakeGameScreen> {
-  List<Color> borderColors = [AppColors.neonPurple];
-  Color borderColor = AppColors.neonPurple;
+class _LevelSnakeGameScreenState extends ConsumerState<LevelSnakeGameScreen> {
+  final _controller = PageController(viewportFraction: 0.5);
+  int _current = 0;
 
   @override
   void initState() {
     super.initState();
     setScreenConfig();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   void setScreenConfig() {
@@ -31,163 +45,353 @@ class _LevelSnakeGameScreenState extends State<LevelSnakeGameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final levels = ref.watch(snakeLevelsProvider);
+    final size = MediaQuery.of(context).size;
+    final cardWidth = (size.width * 0.42).clamp(220.0, 300.0);
+
     return GestureDetector(
-      onTap: () {
-        setScreenConfig();
-      },
-      child: PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) {
-          if (!didPop) {
-            AppRoutes.go(AppRoutes.home);
-          }
-        },
-        child: Scaffold(
-          body: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.backgroundDark,
-              border: Border.all(color: borderColor, width: 5),
-            ),
-            child: Stack(
-              children: [
-                // Ícono de retroceso en la esquina superior izquierda
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  child: CustomIconButton(
-                    onPressed: () {
-                      AppRoutes.go(AppRoutes.home);
-                    },
-                    width: 48,
-                    height: 48,
-                    imagePath: 'assets/icons/back.svg',
+      behavior: HitTestBehavior.opaque,
+      onTap: setScreenConfig,
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundDark,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Positioned(
+                top: 4,
+                left: 8,
+                child: CustomIconButton(
+                  onPressed: () => AppRoutes.go(AppRoutes.home),
+                  width: 48,
+                  height: 48,
+                  imagePath: 'assets/icons/back.svg',
+                ),
+              ),
+              levels.when(
+                loading: () => const ScreenLoader(),
+                error: (_, __) => const ScreenError(
+                  message: 'No se pudieron cargar los niveles',
+                ),
+                data: (list) => _Carousel(
+                  controller: _controller,
+                  levels: list,
+                  current: _current,
+                  cardWidth: cardWidth,
+                  onPageChanged: (i) => setState(() => _current = i),
+                  onSelect: (i) => _controller.animateToPage(
+                    i,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
                   ),
                 ),
-                // Texto centrado en la parte superior
-                Align(
-                  alignment: Alignment.topCenter,
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 5),
-                    child: Stack(
-                      children: [
-                        // Texto con borde
-                        Text(
-                          'LEVEL 1',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            foreground: Paint()
-                              ..style = PaintingStyle.stroke
-                              ..strokeWidth = 4
-                              ..color = borderColor,
-                          ),
-                        ),
-                        // Texto de relleno
-                        Text(
-                          'LEVEL 1',
-                          style: TextStyle(
-                            color: AppColors.purple,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // map
-                Align(
-                  alignment: Alignment.center,
-                  child: Transform.translate(
-                    offset: const Offset(0, 0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      spacing: 20,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            // change the color
-                            setState(() {
-                              borderColor = borderColor == borderColors[0]
-                                  ? borderColors[1]
-                                  : borderColors[0];
-                            });
-                          },
-                          child: SvgPicture.asset(
-                            'assets/icons/arrow-left.svg',
-                            width: 48,
-                          ),
-                        ),
-                        Container(
-                          width: 190,
-                          height: 190,
-                          decoration: BoxDecoration(
-                            color: AppColors.purple,
-                            border: Border.all(color: borderColor, width: 0.5),
-                          ),
-                          child: Column(
-                            children: List.generate(10, (rowIndex) {
-                              return Expanded(
-                                child: Row(
-                                  children: List.generate(10, (colIndex) {
-                                    return Expanded(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: borderColor,
-                                            width: 0.5,
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }),
-                                ),
-                              );
-                            }),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            // change the color
-                            setState(() {
-                              borderColor = borderColor == borderColors[0]
-                                  ? borderColors[1]
-                                  : borderColors[0];
-                            });
-                          },
-                          child: SvgPicture.asset(
-                            'assets/icons/arrow-right.svg',
-                            width: 48,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 5),
-                    child: CustomTextButton(
-                      width: 150,
-                      height: 48,
-                      radius: 15,
-                      onPressed: () {
-                        AppRoutes.go(AppRoutes.snakeGame);
-                      },
-                      label: 'JUGAR',
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _Carousel extends StatelessWidget {
+  final PageController controller;
+  final List<GameLevelEntity> levels;
+  final int current;
+  final double cardWidth;
+  final ValueChanged<int> onPageChanged;
+  final ValueChanged<int> onSelect;
+
+  const _Carousel({
+    required this.controller,
+    required this.levels,
+    required this.current,
+    required this.cardWidth,
+    required this.onPageChanged,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PageView.builder(
+      controller: controller,
+      itemCount: levels.length,
+      onPageChanged: onPageChanged,
+      itemBuilder: (context, i) {
+        return AnimatedBuilder(
+          animation: controller,
+          builder: (context, child) {
+            // Distancia (continua) de esta carta al centro del carrusel.
+            var delta = (i - current).toDouble();
+            if (controller.hasClients &&
+                controller.position.hasContentDimensions) {
+              delta = i - (controller.page ?? current.toDouble());
+            }
+
+            final rotationY = delta.clamp(-1.0, 1.0) * -0.55;
+            final scale = (1 - delta.abs() * 0.22).clamp(0.78, 1.0);
+            final opacity = (1 - delta.abs() * 0.45).clamp(0.45, 1.0);
+
+            final matrix = Matrix4.identity()
+              ..setEntry(3, 2, 0.0012) // perspectiva
+              ..rotateY(rotationY)
+              ..scale(scale);
+
+            return Opacity(
+              opacity: opacity,
+              child: Transform(
+                alignment: Alignment.center,
+                transform: matrix,
+                child: child,
+              ),
+            );
+          },
+          child: Center(
+            child: _LevelCard(
+              level: levels[i],
+              focused: i == current,
+              width: cardWidth,
+              onPlay: () => AppRoutes.go(
+                AppRoutes.snakeGame,
+                arguments: {'level': levels[i].level},
+              ),
+              onTapCard: () {
+                if (i != current) onSelect(i);
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LevelCard extends StatelessWidget {
+  final GameLevelEntity level;
+  final bool focused;
+  final double width;
+  final VoidCallback onPlay;
+  final VoidCallback onTapCard;
+
+  const _LevelCard({
+    required this.level,
+    required this.focused,
+    required this.width,
+    required this.onPlay,
+    required this.onTapCard,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final locked = !level.unlocked;
+    final previewWidth = width - 28;
+
+    return GestureDetector(
+      onTap: onTapCard,
+      child: Container(
+        width: width,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.purple, AppColors.backgroundDark],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: focused
+                ? AppColors.neonPurple
+                : AppColors.neonPurple.withValues(alpha: 0.35),
+            width: focused ? 4 : 2,
+          ),
+          boxShadow: focused
+              ? [
+                  BoxShadow(
+                    color: AppColors.neonPurple.withValues(alpha: 0.5),
+                    blurRadius: 22,
+                    spreadRadius: 1,
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Barra de título.
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.backgroundDark.withValues(alpha: 0.5),
+                border: const Border(
+                  bottom: BorderSide(color: AppColors.neonPurple, width: 1),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _Title('NIVEL ${level.level}', fontSize: focused ? 22 : 18),
+                  if (level.cleared)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 6),
+                      child: Icon(
+                        Icons.check_circle,
+                        color: AppColors.emerald,
+                        size: 20,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Miniatura del tablero (refleja la complejidad) + candado.
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: AppColors.neonPurple.withValues(alpha: 0.5),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        Opacity(
+                          opacity: locked ? 0.4 : 1,
+                          child: LevelPreview(
+                            level: level,
+                            width: previewWidth,
+                            height: previewWidth * 0.55,
+                          ),
+                        ),
+                        if (locked)
+                          Positioned.fill(
+                            child: Center(
+                              child: Icon(
+                                Icons.lock,
+                                color: AppColors.white.withValues(alpha: 0.9),
+                                size: 38,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _Chip(
+                        label: 'Meta ${level.targetScore}',
+                        color: AppColors.purple,
+                      ),
+                      const SizedBox(width: 8),
+                      _Chip(
+                        label: 'Mejor ${level.bestScore}',
+                        color: level.bestScore > 0
+                            ? AppColors.orange
+                            : AppColors.gray,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // El botón solo aparece en la carta central.
+                  SizedBox(
+                    height: 44,
+                    child: focused
+                        ? (locked
+                              ? Center(
+                                  child: Text(
+                                    'BLOQUEADO',
+                                    style: TextStyle(
+                                      color: AppColors.white.withValues(
+                                        alpha: 0.6,
+                                      ),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Pixel',
+                                    ),
+                                  ),
+                                )
+                              : CustomTextButton(
+                                  width: 140,
+                                  height: 44,
+                                  radius: 12,
+                                  label: 'JUGAR',
+                                  onPressed: onPlay,
+                                ))
+                        : null,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _Chip({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color, width: 1.2),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+}
+
+class _Title extends StatelessWidget {
+  final String text;
+  final double fontSize;
+
+  const _Title(this.text, {this.fontSize = 22});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Pixel',
+            foreground: Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 4
+              ..color = AppColors.neonPurple,
+          ),
+        ),
+        Text(
+          text,
+          style: TextStyle(
+            color: AppColors.purple,
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Pixel',
+          ),
+        ),
+      ],
     );
   }
 }

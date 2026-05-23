@@ -14,6 +14,7 @@ class ApiEndpoints {
   static const String listGames = '/listGames';
 
   // Game session (partidas con autoridad del servidor)
+  static const String listGameLevels = '/listGameLevels';
   static const String startGame = '/startGame';
   static const String finishGame = '/finishGame';
   static const String doubleGameReward = '/doubleGameReward';

@@ -8,6 +8,8 @@ class GameResultMapper {
       highScore: dto.data.highScore,
       expGained: dto.data.expGained,
       coinsGained: dto.data.coinsGained,
+      levelCleared: dto.data.levelCleared,
+      unlockedNext: dto.data.unlockedNext,
     );
   }
 }

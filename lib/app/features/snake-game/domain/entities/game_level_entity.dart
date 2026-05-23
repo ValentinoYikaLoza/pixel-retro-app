@@ -2,46 +2,44 @@ import 'dart:ui' show Offset;
 
 import 'package:equatable/equatable.dart';
 
-/// Sesión de partida abierta por el servidor (`startGame`). El cliente la usa
-/// para jugar de forma reproducible: `seed` siembra el RNG de la comida y la
-/// config del nivel (tick/grid/paredes/wrap) reemplaza los valores antes
-/// hardcodeados.
-class GameSessionEntity extends Equatable {
-  final int sessionId;
+/// Un nivel del juego con su config (velocidad, grid, borde, paredes, objetivo)
+/// y el progreso del usuario (mejor puntaje, superado, desbloqueado).
+class GameLevelEntity extends Equatable {
   final int level;
-  final int seed;
   final int tickMs;
   final int gridWidth;
   final int gridHeight;
   final bool wrapAround;
   final List<Offset> walls;
   final int targetScore;
-  final int livesLeft;
+  final int bestScore;
+  final bool cleared;
+  final bool unlocked;
 
-  const GameSessionEntity({
-    required this.sessionId,
+  const GameLevelEntity({
     required this.level,
-    required this.seed,
     required this.tickMs,
     required this.gridWidth,
     required this.gridHeight,
     required this.wrapAround,
     required this.walls,
     required this.targetScore,
-    required this.livesLeft,
+    required this.bestScore,
+    required this.cleared,
+    required this.unlocked,
   });
 
   @override
   List<Object?> get props => [
-    sessionId,
     level,
-    seed,
     tickMs,
     gridWidth,
     gridHeight,
     wrapAround,
     walls,
     targetScore,
-    livesLeft,
+    bestScore,
+    cleared,
+    unlocked,
   ];
 }
