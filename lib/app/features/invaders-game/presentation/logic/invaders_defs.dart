@@ -14,6 +14,7 @@ const double kPlayerBulletSpeed = 430; // u/seg hacia arriba
 const double kEnemyBulletSpeed = 190; // u/seg hacia abajo
 const int kFireCooldownMs = 430; // disparo automático base
 const int kRapidFireCooldownMs = 150;
+const double kCritChance = 0.22; // prob. de disparo crítico (doble daño)
 const int kPowerUpMs = 7000; // duración de mejoras temporizadas
 const int kComboWindowMs = 1500; // ventana para encadenar bajas
 const int kStartShipLives = 3;
@@ -90,11 +91,21 @@ class Invader {
 }
 
 class Bullet {
-  Bullet({required this.x, required this.y, required this.vy, this.vx = 0});
+  Bullet({
+    required this.x,
+    required this.y,
+    required this.vy,
+    this.vx = 0,
+    this.critical = false,
+  });
   double x;
   double y;
   double vy;
   double vx;
+
+  /// Solo balas del jugador: un disparo crítico hace doble daño y usa el sprite
+  /// crítico.
+  final bool critical;
 }
 
 /// Celda de búnker con vida: cambia de sprite al recibir impactos (full → mid →

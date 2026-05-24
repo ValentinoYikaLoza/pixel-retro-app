@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_level_entity.dart';
@@ -271,6 +272,16 @@ class _LevelCard extends StatelessWidget {
                             height: previewWidth * 0.55,
                           ),
                         ),
+                        // Serpiente decorativa sobre la miniatura.
+                        Positioned.fill(
+                          child: Opacity(
+                            opacity: locked ? 0.4 : 1,
+                            child: Align(
+                              alignment: const Alignment(0, 0.5),
+                              child: _PreviewSnake(seg: previewWidth * 0.12),
+                            ),
+                          ),
+                        ),
                         if (locked)
                           Positioned.fill(
                             child: Center(
@@ -397,6 +408,39 @@ class _Title extends StatelessWidget {
             fontFamily: 'Pixel',
           ),
         ),
+      ],
+    );
+  }
+}
+
+/// Serpiente decorativa (cola → cuerpo → cabeza) para la miniatura del selector,
+/// usando los mismos sprites del juego. Mira hacia la derecha.
+class _PreviewSnake extends StatelessWidget {
+  final double seg;
+
+  const _PreviewSnake({required this.seg});
+
+  Widget _part(String asset, {int quarterTurns = 0}) {
+    return SizedBox(
+      width: seg,
+      height: seg,
+      child: RotatedBox(
+        quarterTurns: quarterTurns,
+        child: SvgPicture.asset(asset, fit: BoxFit.fill),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Cola a la izquierda, apuntando hacia afuera (giro 180°).
+        _part('assets/icons/games/snake/snake_tail.svg', quarterTurns: 2),
+        _part('assets/icons/games/snake/snake_body.svg'),
+        _part('assets/icons/games/snake/snake_body.svg'),
+        _part('assets/icons/games/snake/snake_head_right.svg'),
       ],
     );
   }

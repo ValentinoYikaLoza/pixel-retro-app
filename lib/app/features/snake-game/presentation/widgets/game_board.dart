@@ -46,6 +46,14 @@ int _quarterTurns(Direction d) => switch (d) {
   Direction.up => 3,
 };
 
+/// Sprite de cabeza según la dirección (hay uno por cada lado).
+String _headAsset(Direction d) => switch (d) {
+  Direction.up => 'assets/icons/games/snake/snake_head_up.svg',
+  Direction.down => 'assets/icons/games/snake/snake_head_down.svg',
+  Direction.left => 'assets/icons/games/snake/snake_head_left.svg',
+  Direction.right => 'assets/icons/games/snake/snake_head_right.svg',
+};
+
 class GameBoard extends ConsumerStatefulWidget {
   const GameBoard({super.key});
 
@@ -206,20 +214,32 @@ class GameBoardState extends ConsumerState<GameBoard> {
               final snake = gameState.snake;
               final last = snake.length - 1;
 
-              final String asset;
-              final Direction dir;
+              final Widget child;
               if (index == 0) {
-                asset = 'assets/icons/games/snake/snake_head.svg';
-                dir = snake.length > 1
+                // La cabeza usa un sprite por dirección (sin rotar).
+                final dir = snake.length > 1
                     ? _segDir(snake[1], snake[0])
                     : gameState.direction;
+                child = SvgPicture.asset(_headAsset(dir), fit: BoxFit.fill);
               } else if (index == last) {
-                asset = 'assets/icons/games/snake/snake_tail.svg';
                 // La cola apunta hacia afuera (del cuerpo hacia la punta).
-                dir = _segDir(snake[last - 1], snake[last]);
+                final dir = _segDir(snake[last - 1], snake[last]);
+                child = RotatedBox(
+                  quarterTurns: _quarterTurns(dir),
+                  child: SvgPicture.asset(
+                    'assets/icons/games/snake/snake_tail.svg',
+                    fit: BoxFit.fill,
+                  ),
+                );
               } else {
-                asset = 'assets/icons/games/snake/snake_body.svg';
-                dir = _segDir(snake[index + 1], snake[index]);
+                final dir = _segDir(snake[index + 1], snake[index]);
+                child = RotatedBox(
+                  quarterTurns: _quarterTurns(dir),
+                  child: SvgPicture.asset(
+                    'assets/icons/games/snake/snake_body.svg',
+                    fit: BoxFit.fill,
+                  ),
+                );
               }
 
               return Positioned(
@@ -227,10 +247,7 @@ class GameBoardState extends ConsumerState<GameBoard> {
                 top: segment.dy * cellHeight,
                 width: cellWidth,
                 height: cellHeight,
-                child: RotatedBox(
-                  quarterTurns: _quarterTurns(dir),
-                  child: SvgPicture.asset(asset, fit: BoxFit.fill),
-                ),
+                child: child,
               );
             }),
 

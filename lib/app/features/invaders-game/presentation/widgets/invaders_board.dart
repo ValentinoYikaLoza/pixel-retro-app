@@ -104,6 +104,25 @@ class _InvadersPainter extends CustomPainter {
       );
     }
 
+    // Igual que [img] pero rotando [angle] rad alrededor del centro (para que
+    // el proyectil mire en la dirección de su trayectoria).
+    void imgRot(ui.Image? im, double cx, double cy, double boxW, double boxH, double angle) {
+      if (im == null) return;
+      final iw = im.width.toDouble();
+      final ih = im.height.toDouble();
+      final sc = min(boxW / iw, boxH / ih);
+      canvas.save();
+      canvas.translate(cx * s, cy * s);
+      canvas.rotate(angle);
+      canvas.drawImageRect(
+        im,
+        Rect.fromLTWH(0, 0, iw, ih),
+        Rect.fromCenter(center: Offset.zero, width: iw * sc * s, height: ih * sc * s),
+        _imgPaint,
+      );
+      canvas.restore();
+    }
+
     // Búnkeres (sprite según vida: full → mid → broken).
     for (final c in state.bunkers) {
       final wall = c.hp >= 3
@@ -172,19 +191,19 @@ class _InvadersPainter extends CustomPainter {
       _text(canvas, powerUpGlyph(p.type), Offset(p.x * s, p.y * s), 10 * s, AppColors.backgroundDark);
     }
 
-    // Balas (jugador: normal/crítica si hay mejora activa; enemigo: soldado o
-    // comandante para las del jefe).
-    final powered = state.rapidActive || state.tripleActive;
-    final pBullet = powered ? sprites['pBulletCrit'] : sprites['pBullet'];
+    // Balas. El sprite se rota a la dirección real de la trayectoria (+pi/2
+    // porque el sprite apunta "hacia arriba" por defecto). Jugador: crítica o
+    // normal según la bala; enemigo: soldado, apuntada o del jefe.
     for (final b in state.playerBullets) {
-      img(pBullet, b.x, b.y, 9, 16);
+      final im = b.critical ? sprites['pBulletCrit'] : sprites['pBullet'];
+      imgRot(im, b.x, b.y, 13, 16, atan2(b.vy, b.vx) + pi / 2);
     }
     final eStraight = sprites['eBullet1'];
     final eAimed = sprites['eBullet2'];
     final eBossBullet = sprites['cBullet'];
     for (final b in state.enemyBullets) {
       final im = boss != null ? eBossBullet : (b.vx != 0 ? eAimed : eStraight);
-      img(im, b.x, b.y, 10, 16);
+      imgRot(im, b.x, b.y, 12, 16, atan2(b.vy, b.vx) + pi / 2);
     }
 
     // Escudo de la nave.

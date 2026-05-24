@@ -372,13 +372,14 @@ class InvadersGameNotifier extends StateNotifier<InvadersGameState> {
     if (_shootAccum < cooldown) return;
     _shootAccum = 0;
     final topY = kShipY - kShipH;
+    final crit = _rng.nextDouble() < kCritChance; // disparo crítico (doble daño)
     if (_triple) {
       _pBullets
-        ..add(Bullet(x: _shipX, y: topY, vy: -kPlayerBulletSpeed))
-        ..add(Bullet(x: _shipX, y: topY, vy: -kPlayerBulletSpeed, vx: -120))
-        ..add(Bullet(x: _shipX, y: topY, vy: -kPlayerBulletSpeed, vx: 120));
+        ..add(Bullet(x: _shipX, y: topY, vy: -kPlayerBulletSpeed, critical: crit))
+        ..add(Bullet(x: _shipX, y: topY, vy: -kPlayerBulletSpeed, vx: -120, critical: crit))
+        ..add(Bullet(x: _shipX, y: topY, vy: -kPlayerBulletSpeed, vx: 120, critical: crit));
     } else {
-      _pBullets.add(Bullet(x: _shipX, y: topY, vy: -kPlayerBulletSpeed));
+      _pBullets.add(Bullet(x: _shipX, y: topY, vy: -kPlayerBulletSpeed, critical: crit));
     }
   }
 
@@ -431,10 +432,11 @@ class InvadersGameNotifier extends StateNotifier<InvadersGameState> {
         _ufo = null;
         return true;
       }
+      final dmg = b.critical ? 2 : 1; // los críticos hacen doble daño
       // Jefe.
       final boss = _boss;
       if (boss != null && _hit(b.x, b.y, 3, 12, boss.x, boss.y, 60, 34)) {
-        boss.hp -= 1;
+        boss.hp -= dmg;
         if (boss.hp <= 0) {
           _score += 500 + state.level * 50;
           _kills += 1;
@@ -445,7 +447,7 @@ class InvadersGameNotifier extends StateNotifier<InvadersGameState> {
       // Invasores.
       for (final inv in _invaders) {
         if (_hit(b.x, b.y, 3, 12, inv.x, inv.y, kInvW, kInvH)) {
-          inv.hp -= 1;
+          inv.hp -= dmg;
           if (inv.hp <= 0) _killInvader(inv);
           return true;
         }
