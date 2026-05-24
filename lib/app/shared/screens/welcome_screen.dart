@@ -16,7 +16,7 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
   /// Juegos que se juegan en vertical (el resto va en horizontal).
-  static const _portraitGames = {'tetris'};
+  static const _portraitGames = {'tetris', 'invaders'};
 
   String title = '';
   String imagePath = '';

@@ -7,6 +7,8 @@ import 'package:pixel_retro_app/app/features/mission/presentation/screens/missio
 import 'package:pixel_retro_app/app/features/shop/presentation/screens/shop_screen.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/level_snake_game_screen.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/snake_game_screen.dart';
+import 'package:pixel_retro_app/app/features/invaders-game/presentation/screens/invaders_game_screen.dart';
+import 'package:pixel_retro_app/app/features/invaders-game/presentation/screens/level_invaders_game_screen.dart';
 import 'package:pixel_retro_app/app/features/streak/presentation/screens/streak_screen.dart';
 import 'package:pixel_retro_app/app/features/tetris-game/presentation/screens/level_tetris_game_screen.dart';
 import 'package:pixel_retro_app/app/features/tetris-game/presentation/screens/tetris_game_screen.dart';
@@ -85,6 +87,19 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) {
         final level = (_argsOf(state)['level'] as int?) ?? 1;
         return _slideUp(state, TetrisGameScreen(level: level));
+      },
+    ),
+    // Pixel Invaders
+    GoRoute(
+      path: AppRoutes.levelInvadersGame,
+      pageBuilder: (context, state) =>
+          _scale(state, const LevelInvadersGameScreen()),
+    ),
+    GoRoute(
+      path: AppRoutes.invadersGame,
+      pageBuilder: (context, state) {
+        final level = (_argsOf(state)['level'] as int?) ?? 1;
+        return _slideUp(state, InvadersGameScreen(level: level));
       },
     ),
     // Ads

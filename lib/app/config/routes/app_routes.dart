@@ -24,6 +24,10 @@ class AppRoutes {
   static const String levelTetrisGame = '/level-tetris-game';
   static const String tetrisGame = '/tetris-game';
 
+  // Pixel Invaders Game
+  static const String levelInvadersGame = '/level-invaders-game';
+  static const String invadersGame = '/invaders-game';
+
   // Ads
   static const String adRewardedCoins = '/ad-rewardedCoins';
   static const String adRewardedLives = '/ad-rewardedLives';
