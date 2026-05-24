@@ -457,9 +457,11 @@ class _PreviewSnake extends StatelessWidget {
     }
 
     Widget svg(String name, {bool flipX = false}) {
+      // Mismos sprites del juego (lienzo 32×32, banda alineada) con BoxFit.fill
+      // para que cola, cuerpo y cabeza empalmen igual que en el tablero.
       final w = Image.asset(
         'assets/icons/games/snake/$name.png',
-        fit: BoxFit.contain,
+        fit: BoxFit.fill,
         filterQuality: FilterQuality.none,
       );
       return flipX ? Transform.flip(flipX: true, child: w) : w;

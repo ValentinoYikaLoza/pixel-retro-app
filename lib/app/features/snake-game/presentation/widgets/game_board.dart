@@ -59,12 +59,16 @@ int _cornerQuarterTurns(Direction a, Direction b) {
 
 /// Carga un sprite (PNG pixel-art) de la serpiente con volteos/rotación
 /// opcionales. `FilterQuality.none` = nearest-neighbor → píxeles nítidos.
+///
+/// Todos los sprites viven en un lienzo de 32×32 con la banda del cuerpo en la
+/// misma posición, así que se dibujan con `BoxFit.fill` (mapeo 1:1 a la celda):
+/// así cabeza, cuello, cuerpo, esquina y cola empalman sin desfases.
 Widget _snakeSprite(
   String name, {
   bool flipX = false,
   bool flipY = false,
   int quarterTurns = 0,
-  BoxFit fit = BoxFit.contain,
+  BoxFit fit = BoxFit.fill,
 }) {
   Widget w = Image.asset(
     '$_snakeDir/$name.png',
@@ -137,7 +141,6 @@ Widget _snakeSegment(List<Offset> snake, int index, Direction headFacing) {
   return _snakeSprite(
     'snake_body_corner',
     quarterTurns: _cornerQuarterTurns(headDir, tailDir),
-    fit: BoxFit.fill,
   );
 }
 
