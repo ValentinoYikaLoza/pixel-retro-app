@@ -327,7 +327,7 @@ class _GameOver extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _StrokedText(
-              result?.levelCleared == true ? '¡SUPERADO!' : 'Game Over',
+              result?.levelCleared == true ? '¡SUPERADO!' : 'Perdiste',
               fontSize: 22,
             ),
             const SizedBox(height: 6),

@@ -281,7 +281,7 @@ class GameBoardState extends ConsumerState<GameBoard> {
                             children: [
                               // Texto con borde
                               Text(
-                                gameState.isPaused ? 'Pausa' : 'Perdió',
+                                gameState.isPaused ? 'Pausa' : 'Perdiste',
                                 style: TextStyle(
                                   fontSize: 48,
                                   fontWeight: FontWeight.bold,
