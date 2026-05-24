@@ -95,7 +95,12 @@ class _InvadersGameScreenState extends ConsumerState<InvadersGameScreen> {
                     padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
                     child: Column(
                       children: [
-                        _TopBar(state: state),
+                        _TopBar(
+                          state: state,
+                          onPause: () => ref
+                              .read(invadersGameProvider.notifier)
+                              .togglePause(),
+                        ),
                         const SizedBox(height: 8),
                         Expanded(
                           child: Center(
@@ -130,8 +135,9 @@ class _InvadersGameScreenState extends ConsumerState<InvadersGameScreen> {
 /// Barra superior: nivel/oleada, vidas de la nave, puntaje/meta, combo y mejoras.
 class _TopBar extends StatelessWidget {
   final InvadersGameState state;
+  final VoidCallback onPause;
 
-  const _TopBar({required this.state});
+  const _TopBar({required this.state, required this.onPause});
 
   @override
   Widget build(BuildContext context) {
@@ -172,6 +178,28 @@ class _TopBar extends StatelessWidget {
                 ),
               ),
             ),
+            // Botón de pausa (oculto al pausar/perder; el overlay toma el control).
+            if (!state.isPaused && !state.hasLost)
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: GestureDetector(
+                  onTap: onPause,
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: AppColors.purple.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.neonPurple, width: 1.5),
+                    ),
+                    child: const Icon(
+                      Icons.pause_rounded,
+                      color: AppColors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
         const SizedBox(height: 4),
