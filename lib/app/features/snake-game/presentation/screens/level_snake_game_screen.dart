@@ -472,7 +472,8 @@ class _PreviewSnake extends StatelessWidget {
         children: [
           // Cola a la izquierda (la punta del sprite ya apunta a la izquierda).
           at(cx - 1, 'assets/icons/games/snake/snake_tail.svg', thin: true),
-          at(cx, 'assets/icons/games/snake/snake_body.svg', thin: true),
+          // El cuerpo es cuadrado (llena la celda).
+          at(cx, 'assets/icons/games/snake/snake_body.svg'),
           at(cx + 1, 'assets/icons/games/snake/snake_head_right.svg'),
         ],
       ),

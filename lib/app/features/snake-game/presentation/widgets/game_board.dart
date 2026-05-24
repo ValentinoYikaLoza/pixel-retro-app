@@ -249,10 +249,14 @@ class GameBoardState extends ConsumerState<GameBoard> {
                   _tailQuarterTurns(dir),
                 );
               } else {
+                // El cuerpo llena la celda (cuadrado), no se adelgaza.
                 final dir = _segDir(snake[index + 1], snake[index]);
-                child = _thinSegment(
-                  'assets/icons/games/snake/snake_body.svg',
-                  _quarterTurns(dir),
+                child = RotatedBox(
+                  quarterTurns: _quarterTurns(dir),
+                  child: SvgPicture.asset(
+                    'assets/icons/games/snake/snake_body.svg',
+                    fit: BoxFit.fill,
+                  ),
                 );
               }
 
