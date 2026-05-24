@@ -58,6 +58,22 @@ String _headAsset(Direction d) => switch (d) {
 /// con el cuerpo a la derecha), al revés que el resto: por eso va +2 cuartos.
 int _tailQuarterTurns(Direction d) => (_quarterTurns(d) + 2) % 4;
 
+/// Grosor (alto relativo a la celda) del cuerpo y la cola: más finos que la
+/// cabeza para que la serpiente no se vea tan "gorda".
+const double _snakeSegThickness = 0.7;
+
+/// Sprite de un segmento (cuerpo/cola) rotado y adelgazado en su grosor.
+Widget _thinSegment(String asset, int quarterTurns) {
+  return RotatedBox(
+    quarterTurns: quarterTurns,
+    child: FractionallySizedBox(
+      widthFactor: 1,
+      heightFactor: _snakeSegThickness,
+      child: SvgPicture.asset(asset, fit: BoxFit.fill),
+    ),
+  );
+}
+
 class GameBoard extends ConsumerStatefulWidget {
   const GameBoard({super.key});
 
@@ -228,21 +244,15 @@ class GameBoardState extends ConsumerState<GameBoard> {
               } else if (index == last) {
                 // La cola apunta hacia afuera (del cuerpo hacia la punta).
                 final dir = _segDir(snake[last - 1], snake[last]);
-                child = RotatedBox(
-                  quarterTurns: _tailQuarterTurns(dir),
-                  child: SvgPicture.asset(
-                    'assets/icons/games/snake/snake_tail.svg',
-                    fit: BoxFit.fill,
-                  ),
+                child = _thinSegment(
+                  'assets/icons/games/snake/snake_tail.svg',
+                  _tailQuarterTurns(dir),
                 );
               } else {
                 final dir = _segDir(snake[index + 1], snake[index]);
-                child = RotatedBox(
-                  quarterTurns: _quarterTurns(dir),
-                  child: SvgPicture.asset(
-                    'assets/icons/games/snake/snake_body.svg',
-                    fit: BoxFit.fill,
-                  ),
+                child = _thinSegment(
+                  'assets/icons/games/snake/snake_body.svg',
+                  _quarterTurns(dir),
                 );
               }
 
