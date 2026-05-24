@@ -46,14 +46,15 @@ bool _horizontal(Direction d) =>
 bool _opposite(Direction a, Direction b) =>
     _horizontal(a) == _horizontal(b) && a != b;
 
-/// Cuartos de giro de la esquina. El sprite base une los bordes IZQUIERDO y
-/// SUPERIOR (`{left, up}`); rotándolo se cubren los 4 giros.
+/// Cuartos de giro de la esquina. El sprite base une los bordes DERECHO e
+/// INFERIOR (`{right, down}`); rotándolo en sentido horario se cubren los 4
+/// giros: 0={right,down}, 1={down,left}, 2={left,up}, 3={up,right}.
 int _cornerQuarterTurns(Direction a, Direction b) {
   final s = {a, b};
-  if (s.containsAll({Direction.up, Direction.right})) return 1;
-  if (s.containsAll({Direction.right, Direction.down})) return 2;
-  if (s.containsAll({Direction.down, Direction.left})) return 3;
-  return 0; // {left, up}
+  if (s.containsAll({Direction.down, Direction.left})) return 1;
+  if (s.containsAll({Direction.left, Direction.up})) return 2;
+  if (s.containsAll({Direction.up, Direction.right})) return 3;
+  return 0; // {right, down}
 }
 
 /// Carga un sprite (PNG pixel-art) de la serpiente con volteos/rotación
