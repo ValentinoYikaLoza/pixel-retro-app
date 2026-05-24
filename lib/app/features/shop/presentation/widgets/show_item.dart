@@ -14,7 +14,7 @@ class ShopItem extends StatefulWidget {
     required this.price,
     required this.unit,
     required this.color,
-    this.onTap,
+    this.onConfirm,
   });
 
   final String imagePath;
@@ -22,7 +22,10 @@ class ShopItem extends StatefulWidget {
   final double price;
   final ShopItemUnit unit;
   final Color color;
-  final VoidCallback? onTap;
+
+  /// Acción al confirmar la compra en el diálogo. Si es null, se muestra un
+  /// aviso de "Próximamente" (p. ej. la compra con dinero real aún sin pasarela).
+  final VoidCallback? onConfirm;
 
   @override
   State<ShopItem> createState() => _ShopItemState();
@@ -46,7 +49,15 @@ class _ShopItemState extends State<ShopItem> {
             buttonAcceptText: 'Comprar',
             buttonCancelText: 'Cancelar',
             onAcceptPressed: () {
-              SnackbarService.show('Proximamente...', type: SnackbarType.info);
+              final confirm = widget.onConfirm;
+              if (confirm != null) {
+                confirm();
+              } else {
+                SnackbarService.show(
+                  'Próximamente...',
+                  type: SnackbarType.info,
+                );
+              }
             },
           ),
         );

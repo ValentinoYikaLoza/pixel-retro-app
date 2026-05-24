@@ -35,9 +35,7 @@ class ShopScreen extends ConsumerWidget {
 
     final hasAdvertisements = shopState.advertisements.isNotEmpty;
     final hasCoinShopItems = shopState.coinShopItems.isNotEmpty;
-    final hasLiveShopItems =
-        shopState.liveShopItemsUnitUsd.isNotEmpty ||
-        shopState.liveShopItemsUnitCoin.isNotEmpty;
+    final hasLiveShopItems = shopState.liveShopItems.isNotEmpty;
 
     return hasIntenetConnection &&
             hasAdvertisements &&
@@ -138,7 +136,7 @@ class ShopScreen extends ConsumerWidget {
                     children: [
                       const SectionTitle(title: 'Vidas'),
 
-                      // live items USD
+                      // Vidas: solo se compran con monedas.
                       GridView.builder(
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
@@ -149,36 +147,9 @@ class ShopScreen extends ConsumerWidget {
                             ),
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: shopState.liveShopItemsUnitUsd.length,
+                        itemCount: shopState.liveShopItems.length,
                         itemBuilder: (context, index) {
-                          final item = shopState.liveShopItemsUnitUsd[index];
-
-                          return ShopItem(
-                            imagePath: ref
-                                .read(shopProvider.notifier)
-                                .getItemImagePath(item.id, TypeItemShop.live),
-                            quantity: item.quantity,
-                            price: item.price,
-                            unit: ShopItemUnit.usd,
-                            color: AppColors.red,
-                          );
-                        },
-                      ),
-
-                      // live items coins
-                      GridView.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.9,
-                              crossAxisSpacing: 20,
-                              mainAxisSpacing: 20,
-                            ),
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: shopState.liveShopItemsUnitCoin.length,
-                        itemBuilder: (context, index) {
-                          final item = shopState.liveShopItemsUnitCoin[index];
+                          final item = shopState.liveShopItems[index];
 
                           return ShopItem(
                             imagePath: ref
@@ -188,6 +159,9 @@ class ShopScreen extends ConsumerWidget {
                             price: item.price,
                             unit: ShopItemUnit.coin,
                             color: AppColors.yellow,
+                            onConfirm: () => ref
+                                .read(shopProvider.notifier)
+                                .buyLives(item.id),
                           );
                         },
                       ),
