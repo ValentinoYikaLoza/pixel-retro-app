@@ -54,6 +54,10 @@ String _headAsset(Direction d) => switch (d) {
   Direction.right => 'assets/icons/games/snake/snake_head_right.svg',
 };
 
+/// La cola apunta a la IZQUIERDA por defecto (la punta a la izquierda, la unión
+/// con el cuerpo a la derecha), al revés que el resto: por eso va +2 cuartos.
+int _tailQuarterTurns(Direction d) => (_quarterTurns(d) + 2) % 4;
+
 class GameBoard extends ConsumerStatefulWidget {
   const GameBoard({super.key});
 
@@ -225,7 +229,7 @@ class GameBoardState extends ConsumerState<GameBoard> {
                 // La cola apunta hacia afuera (del cuerpo hacia la punta).
                 final dir = _segDir(snake[last - 1], snake[last]);
                 child = RotatedBox(
-                  quarterTurns: _quarterTurns(dir),
+                  quarterTurns: _tailQuarterTurns(dir),
                   child: SvgPicture.asset(
                     'assets/icons/games/snake/snake_tail.svg',
                     fit: BoxFit.fill,

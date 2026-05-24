@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
@@ -266,20 +268,22 @@ class _LevelCard extends StatelessWidget {
                       children: [
                         Opacity(
                           opacity: locked ? 0.4 : 1,
+                          // Sin el punto de comida: en su lugar va la serpiente.
                           child: LevelPreview(
                             level: level,
                             width: previewWidth,
                             height: previewWidth * 0.55,
+                            showFood: false,
                           ),
                         ),
-                        // Serpiente decorativa sobre la miniatura.
-                        Positioned.fill(
-                          child: Opacity(
-                            opacity: locked ? 0.4 : 1,
-                            child: Align(
-                              alignment: const Alignment(0, 0.5),
-                              child: _PreviewSnake(seg: previewWidth * 0.12),
-                            ),
+                        // Serpiente (cabeza+cuerpo+cola) a escala de la grilla,
+                        // en el centro, donde empieza la partida.
+                        Opacity(
+                          opacity: locked ? 0.4 : 1,
+                          child: _PreviewSnake(
+                            level: level,
+                            width: previewWidth,
+                            height: previewWidth * 0.55,
                           ),
                         ),
                         if (locked)
@@ -413,35 +417,60 @@ class _Title extends StatelessWidget {
   }
 }
 
-/// Serpiente decorativa (cola → cuerpo → cabeza) para la miniatura del selector,
-/// usando los mismos sprites del juego. Mira hacia la derecha.
+/// Serpiente (cola → cuerpo → cabeza) dibujada a escala de la grilla en el
+/// centro del tablero (donde empieza la partida), usando los mismos sprites del
+/// juego y mirando a la derecha. Reemplaza al punto de comida del preview.
 class _PreviewSnake extends StatelessWidget {
-  final double seg;
+  final GameLevelEntity level;
+  final double width;
+  final double height;
 
-  const _PreviewSnake({required this.seg});
-
-  Widget _part(String asset, {int quarterTurns = 0}) {
-    return SizedBox(
-      width: seg,
-      height: seg,
-      child: RotatedBox(
-        quarterTurns: quarterTurns,
-        child: SvgPicture.asset(asset, fit: BoxFit.fill),
-      ),
-    );
-  }
+  const _PreviewSnake({
+    required this.level,
+    required this.width,
+    required this.height,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Cola a la izquierda, apuntando hacia afuera (giro 180°).
-        _part('assets/icons/games/snake/snake_tail.svg', quarterTurns: 2),
-        _part('assets/icons/games/snake/snake_body.svg'),
-        _part('assets/icons/games/snake/snake_body.svg'),
-        _part('assets/icons/games/snake/snake_head_right.svg'),
-      ],
+    final gw = level.gridWidth;
+    final gh = level.gridHeight;
+    if (gw <= 0 || gh <= 0) return const SizedBox.shrink();
+
+    // Misma escala/encaje que LevelPreview para alinear con la grilla.
+    final scale = min(width / gw, height / gh);
+    final ox = (width - scale * gw) / 2;
+    final oy = (height - scale * gh) / 2;
+    final cy = gh ~/ 2;
+    final cx = gw ~/ 2;
+    final seg = scale * 1.6; // algo mayor que la celda para que conecten
+
+    Widget at(int gx, String asset, {int quarterTurns = 0}) {
+      final centerX = ox + (gx + 0.5) * scale;
+      final centerY = oy + (cy + 0.5) * scale;
+      return Positioned(
+        left: centerX - seg / 2,
+        top: centerY - seg / 2,
+        width: seg,
+        height: seg,
+        child: RotatedBox(
+          quarterTurns: quarterTurns,
+          child: SvgPicture.asset(asset, fit: BoxFit.fill),
+        ),
+      );
+    }
+
+    return SizedBox(
+      width: width,
+      height: height,
+      child: Stack(
+        children: [
+          // Cola a la izquierda (la punta del sprite ya apunta a la izquierda).
+          at(cx - 1, 'assets/icons/games/snake/snake_tail.svg'),
+          at(cx, 'assets/icons/games/snake/snake_body.svg'),
+          at(cx + 1, 'assets/icons/games/snake/snake_head_right.svg'),
+        ],
+      ),
     );
   }
 }

@@ -64,12 +64,14 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
       _closed = false;
       _nextDirection = null;
 
-      // La serpiente aparece en el centro (la zona segura del nivel).
+      // La serpiente aparece en el centro (la zona segura del nivel) ya con
+      // cabeza, cuerpo y cola para que siempre se vea como serpiente.
+      final cx = session.gridWidth ~/ 2;
+      final cy = session.gridHeight ~/ 2;
       final start = [
-        Offset(
-          (session.gridWidth ~/ 2).toDouble(),
-          (session.gridHeight ~/ 2).toDouble(),
-        ),
+        Offset(cx.toDouble(), cy.toDouble()), // cabeza
+        Offset((cx - 1).toDouble(), cy.toDouble()), // cuerpo
+        Offset((cx - 2).toDouble(), cy.toDouble()), // cola
       ];
 
       state = SnakeGameState(
