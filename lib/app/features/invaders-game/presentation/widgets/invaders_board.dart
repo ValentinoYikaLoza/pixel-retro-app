@@ -191,9 +191,9 @@ class _InvadersPainter extends CustomPainter {
       _text(canvas, powerUpGlyph(p.type), Offset(p.x * s, p.y * s), 10 * s, AppColors.backgroundDark);
     }
 
-    // Balas. El sprite se rota a la dirección real de la trayectoria (+pi/2
-    // porque el sprite apunta "hacia arriba" por defecto). Jugador: crítica o
-    // normal según la bala; enemigo: soldado, apuntada o del jefe.
+    // Balas, rotadas a la dirección real de la trayectoria. Los sprites del
+    // jugador apuntan "arriba" por defecto (+pi/2) y los del enemigo "abajo"
+    // (-pi/2), así que cada uno usa su propio ajuste.
     for (final b in state.playerBullets) {
       final im = b.critical ? sprites['pBulletCrit'] : sprites['pBullet'];
       imgRot(im, b.x, b.y, 13, 16, atan2(b.vy, b.vx) + pi / 2);
@@ -203,7 +203,7 @@ class _InvadersPainter extends CustomPainter {
     final eBossBullet = sprites['cBullet'];
     for (final b in state.enemyBullets) {
       final im = boss != null ? eBossBullet : (b.vx != 0 ? eAimed : eStraight);
-      imgRot(im, b.x, b.y, 12, 16, atan2(b.vy, b.vx) + pi / 2);
+      imgRot(im, b.x, b.y, 12, 16, atan2(b.vy, b.vx) - pi / 2);
     }
 
     // Escudo de la nave.
