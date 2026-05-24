@@ -56,15 +56,20 @@ int _cornerQuarterTurns(Direction a, Direction b) {
   return 0; // {left, up}
 }
 
-/// Carga un sprite de la serpiente con volteos/rotación opcionales.
-Widget _snakeSvg(
+/// Carga un sprite (PNG pixel-art) de la serpiente con volteos/rotación
+/// opcionales. `FilterQuality.none` = nearest-neighbor → píxeles nítidos.
+Widget _snakeSprite(
   String name, {
   bool flipX = false,
   bool flipY = false,
   int quarterTurns = 0,
   BoxFit fit = BoxFit.contain,
 }) {
-  Widget w = SvgPicture.asset('$_snakeDir/$name.svg', fit: fit);
+  Widget w = Image.asset(
+    '$_snakeDir/$name.png',
+    fit: fit,
+    filterQuality: FilterQuality.none,
+  );
   if (quarterTurns != 0) {
     w = RotatedBox(quarterTurns: quarterTurns, child: w);
   }
@@ -84,10 +89,10 @@ Widget _snakeSegment(List<Offset> snake, int index, Direction headFacing) {
   if (index == 0) {
     final dir = snake.length > 1 ? _segDir(snake[1], snake[0]) : headFacing;
     return switch (dir) {
-      Direction.left => _snakeSvg('snake_head_horizontal'),
-      Direction.right => _snakeSvg('snake_head_horizontal', flipX: true),
-      Direction.up => _snakeSvg('snake_head_vertical'),
-      Direction.down => _snakeSvg('snake_head_vertical', flipY: true),
+      Direction.left => _snakeSprite('snake_head_horizontal'),
+      Direction.right => _snakeSprite('snake_head_horizontal', flipX: true),
+      Direction.up => _snakeSprite('snake_head_vertical'),
+      Direction.down => _snakeSprite('snake_head_vertical', flipY: true),
     };
   }
 
@@ -96,10 +101,10 @@ Widget _snakeSegment(List<Offset> snake, int index, Direction headFacing) {
   if (index == last) {
     final out = _segDir(snake[last - 1], snake[last]);
     return switch (out) {
-      Direction.left => _snakeSvg('snake_tail_horizontal'),
-      Direction.right => _snakeSvg('snake_tail_horizontal', flipX: true),
-      Direction.down => _snakeSvg('snake_tail_vertical'),
-      Direction.up => _snakeSvg('snake_tail_vertical', flipY: true),
+      Direction.left => _snakeSprite('snake_tail_horizontal'),
+      Direction.right => _snakeSprite('snake_tail_horizontal', flipX: true),
+      Direction.down => _snakeSprite('snake_tail_vertical'),
+      Direction.up => _snakeSprite('snake_tail_vertical', flipY: true),
     };
   }
 
@@ -113,22 +118,22 @@ Widget _snakeSegment(List<Offset> snake, int index, Direction headFacing) {
     // del lado de la cabeza.
     if (index == 1) {
       return horiz
-          ? _snakeSvg(
+          ? _snakeSprite(
               'snake_body_start_horizontal',
               flipX: headDir == Direction.right,
             )
-          : _snakeSvg(
+          : _snakeSprite(
               'snake_body_start_vertical',
               flipY: headDir == Direction.down,
             );
     }
-    return _snakeSvg(
+    return _snakeSprite(
       horiz ? 'snake_body_middle_horizontal' : 'snake_body_middle_vertical',
     );
   }
 
   // Esquina (giro): se rota para unir las dos direcciones de los vecinos.
-  return _snakeSvg(
+  return _snakeSprite(
     'snake_body_corner',
     quarterTurns: _cornerQuarterTurns(headDir, tailDir),
     fit: BoxFit.fill,

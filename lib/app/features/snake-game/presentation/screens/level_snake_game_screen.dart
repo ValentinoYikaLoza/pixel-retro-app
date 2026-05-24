@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_level_entity.dart';
@@ -458,9 +457,10 @@ class _PreviewSnake extends StatelessWidget {
     }
 
     Widget svg(String name, {bool flipX = false}) {
-      final w = SvgPicture.asset(
-        'assets/icons/games/snake/$name.svg',
+      final w = Image.asset(
+        'assets/icons/games/snake/$name.png',
         fit: BoxFit.contain,
+        filterQuality: FilterQuality.none,
       );
       return flipX ? Transform.flip(flipX: true, child: w) : w;
     }
