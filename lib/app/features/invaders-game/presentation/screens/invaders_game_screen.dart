@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
 import 'package:pixel_retro_app/app/features/invaders-game/presentation/logic/invaders_defs.dart';
+import 'package:pixel_retro_app/app/features/invaders-game/presentation/logic/invaders_sprites.dart';
 import 'package:pixel_retro_app/app/features/invaders-game/presentation/providers/invaders_game_provider.dart';
 import 'package:pixel_retro_app/app/features/invaders-game/presentation/widgets/invaders_board.dart';
 import 'package:pixel_retro_app/app/features/invaders-game/presentation/widgets/invaders_starting_loader.dart';
@@ -23,10 +24,16 @@ class InvadersGameScreen extends ConsumerStatefulWidget {
 }
 
 class _InvadersGameScreenState extends ConsumerState<InvadersGameScreen> {
+  InvadersSprites? _sprites;
+
   @override
   void initState() {
     super.initState();
     setScreenConfig();
+    // Rasteriza los sprites (SVG → imágenes) en paralelo al arranque del juego.
+    InvadersSprites.load().then((s) {
+      if (mounted) setState(() => _sprites = s);
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(invadersGameProvider.notifier).startGame(level: widget.level);
     });
@@ -89,7 +96,7 @@ class _InvadersGameScreenState extends ConsumerState<InvadersGameScreen> {
           behavior: HitTestBehavior.deferToChild,
           onTap: setScreenConfig,
           child: SafeArea(
-            child: state.isStarting
+            child: (state.isStarting || _sprites == null)
                 ? const InvadersStartingLoader()
                 : Padding(
                     padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
@@ -106,6 +113,7 @@ class _InvadersGameScreenState extends ConsumerState<InvadersGameScreen> {
                           child: Center(
                             child: InvadersBoard(
                               state: state,
+                              sprites: _sprites!,
                               onMove: (f) => ref
                                   .read(invadersGameProvider.notifier)
                                   .moveShipTo(f),

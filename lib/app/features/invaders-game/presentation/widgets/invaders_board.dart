@@ -1,19 +1,26 @@
+import 'dart:math';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/features/invaders-game/presentation/logic/invaders_defs.dart';
+import 'package:pixel_retro_app/app/features/invaders-game/presentation/logic/invaders_sprites.dart';
 import 'package:pixel_retro_app/app/features/invaders-game/presentation/providers/invaders_game_provider.dart';
 
-/// Tablero de Pixel Invaders: dibuja el campo con CustomPaint y captura el
-/// arrastre para mover la nave. [onMove] recibe la fracción horizontal (0..1).
+/// Tablero de Pixel Invaders: dibuja el campo con CustomPaint (sprites
+/// rasterizados) y captura el arrastre para mover la nave. [onMove] recibe la
+/// fracción horizontal (0..1).
 class InvadersBoard extends StatelessWidget {
   const InvadersBoard({
     super.key,
     required this.state,
+    required this.sprites,
     required this.onMove,
     this.overlay,
   });
 
   final InvadersGameState state;
+  final InvadersSprites sprites;
   final ValueChanged<double> onMove;
   final Widget? overlay;
 
@@ -41,7 +48,9 @@ class InvadersBoard extends StatelessWidget {
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: CustomPaint(painter: _InvadersPainter(state)),
+                      child: CustomPaint(
+                        painter: _InvadersPainter(state, sprites),
+                      ),
                     ),
                     if (overlay != null) Positioned.fill(child: overlay!),
                   ],
@@ -56,95 +65,141 @@ class InvadersBoard extends StatelessWidget {
 }
 
 class _InvadersPainter extends CustomPainter {
-  _InvadersPainter(this.state);
+  _InvadersPainter(this.state, this.sprites);
 
   final InvadersGameState state;
+  final InvadersSprites sprites;
+
+  final Paint _imgPaint = Paint()..filterQuality = FilterQuality.medium;
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width / kFieldW; // escala uniforme
-    final paint = Paint();
 
-    void fillRect(double cx, double cy, double w, double h, Color color, {double r = 1.5}) {
-      paint.color = color;
-      final rect = Rect.fromCenter(
-        center: Offset(cx * s, cy * s),
-        width: w * s,
-        height: h * s,
+    void img(
+      ui.Image? im,
+      double cx,
+      double cy,
+      double boxW,
+      double boxH, {
+      bool fill = false,
+    }) {
+      if (im == null) return;
+      final iw = im.width.toDouble();
+      final ih = im.height.toDouble();
+      double dw, dh;
+      if (fill) {
+        dw = boxW;
+        dh = boxH;
+      } else {
+        final sc = min(boxW / iw, boxH / ih);
+        dw = iw * sc;
+        dh = ih * sc;
+      }
+      canvas.drawImageRect(
+        im,
+        Rect.fromLTWH(0, 0, iw, ih),
+        Rect.fromCenter(center: Offset(cx * s, cy * s), width: dw * s, height: dh * s),
+        _imgPaint,
       );
-      canvas.drawRRect(RRect.fromRectAndRadius(rect, Radius.circular(r)), paint);
     }
 
-    // Búnkeres.
+    // Búnkeres (sprite según vida: full → mid → broken).
     for (final c in state.bunkers) {
-      fillRect(c.dx, c.dy, state.bunkerCell, state.bunkerCell, AppColors.emerald.withValues(alpha: 0.85), r: 0.5);
+      final wall = c.hp >= 3
+          ? sprites['wallFull']
+          : c.hp == 2
+          ? sprites['wallMid']
+          : sprites['wallBroken'];
+      img(wall, c.x, c.y, state.bunkerCell, state.bunkerCell, fill: true);
     }
 
-    // Invasores.
+    // Invasores (comandante = tanque; el resto anima entre soldado 1/2).
+    final soldier = state.animFrame ? sprites['soldier2'] : sprites['soldier1'];
+    final commander = sprites['commander'];
     for (final inv in state.invaders) {
-      final color = inv.diving ? AppColors.orange : enemyColor(inv.type);
-      fillRect(inv.x, inv.y, kInvW, kInvH, color, r: 2);
-      // "ojos" pixel.
-      paint.color = AppColors.backgroundDark;
-      canvas.drawRect(
-        Rect.fromCenter(center: Offset((inv.x - 4) * s, (inv.y - 1) * s), width: 3 * s, height: 3 * s),
-        paint,
-      );
-      canvas.drawRect(
-        Rect.fromCenter(center: Offset((inv.x + 4) * s, (inv.y - 1) * s), width: 3 * s, height: 3 * s),
-        paint,
-      );
+      final im = inv.type == EnemyType.tank ? commander : soldier;
+      img(im, inv.x, inv.y, kInvW + 8, kInvH + 10);
     }
 
-    // Jefe.
+    // Jefe (comandante grande) + barra de vida.
     final boss = state.boss;
     if (boss != null) {
-      fillRect(boss.x, boss.y, 60, 34, AppColors.red, r: 4);
-      fillRect(boss.x, boss.y - 2, 40, 10, AppColors.backgroundDark, r: 2);
-      // Barra de vida.
+      img(commander, boss.x, boss.y, 70, 46);
       final frac = (boss.hp / boss.maxHp).clamp(0.0, 1.0);
-      fillRect(kFieldW / 2, 14, 120, 6, AppColors.backgroundDark, r: 2);
-      paint.color = AppColors.emerald;
-      final barRect = Rect.fromCenter(
-        center: Offset((kFieldW / 2 - 60 * (1 - frac)) * s, 14 * s),
-        width: 120 * frac * s,
-        height: 6 * s,
+      final bg = Paint()..color = AppColors.backgroundDark;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: Offset(kFieldW / 2 * s, 14 * s), width: 120 * s, height: 6 * s),
+          Radius.circular(2 * s),
+        ),
+        bg,
       );
-      canvas.drawRRect(RRect.fromRectAndRadius(barRect, Radius.circular(2 * s)), paint);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset((kFieldW / 2 - 60 * (1 - frac)) * s, 14 * s),
+            width: 120 * frac * s,
+            height: 6 * s,
+          ),
+          Radius.circular(2 * s),
+        ),
+        Paint()..color = AppColors.emerald,
+      );
     }
 
-    // OVNI.
+    // OVNI (sin sprite propio: bloque amarillo).
     final ufo = state.ufo;
     if (ufo != null) {
-      fillRect(ufo.x, 24, 28, 12, AppColors.yellow, r: 6);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: Offset(ufo.x * s, 24 * s), width: 28 * s, height: 12 * s),
+          Radius.circular(6 * s),
+        ),
+        Paint()..color = AppColors.yellow,
+      );
     }
 
-    // Power-ups (cápsulas con letra).
+    // Power-ups (cápsula con letra).
     for (final p in state.powerups) {
-      fillRect(p.x, p.y, 16, 16, powerUpColor(p.type), r: 4);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: Offset(p.x * s, p.y * s), width: 16 * s, height: 16 * s),
+          Radius.circular(4 * s),
+        ),
+        Paint()..color = powerUpColor(p.type),
+      );
       _text(canvas, powerUpGlyph(p.type), Offset(p.x * s, p.y * s), 10 * s, AppColors.backgroundDark);
     }
 
-    // Balas.
+    // Balas (jugador: normal/crítica si hay mejora activa; enemigo: soldado o
+    // comandante para las del jefe).
+    final powered = state.rapidActive || state.tripleActive;
+    final pBullet = powered ? sprites['pBulletCrit'] : sprites['pBullet'];
     for (final b in state.playerBullets) {
-      fillRect(b.x, b.y, 3, 12, AppColors.white, r: 1);
+      img(pBullet, b.x, b.y, 9, 16);
     }
+    final eStraight = sprites['eBullet1'];
+    final eAimed = sprites['eBullet2'];
+    final eBossBullet = sprites['cBullet'];
     for (final b in state.enemyBullets) {
-      fillRect(b.x, b.y, 4, 12, AppColors.red, r: 1);
+      final im = boss != null ? eBossBullet : (b.vx != 0 ? eAimed : eStraight);
+      img(im, b.x, b.y, 10, 16);
     }
 
-    // Nave + escudo.
+    // Escudo de la nave.
     if (state.shieldActive) {
-      paint
-        ..color = const Color(0xFF4FC3F7).withValues(alpha: 0.8)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2 * s;
-      canvas.drawCircle(Offset(state.shipX * s, kShipY * s), 24 * s, paint);
-      paint.style = PaintingStyle.fill;
+      canvas.drawCircle(
+        Offset(state.shipX * s, kShipY * s),
+        24 * s,
+        Paint()
+          ..color = const Color(0xFF4FC3F7).withValues(alpha: 0.8)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2 * s,
+      );
     }
-    // Cuerpo de la nave (cañón + base).
-    fillRect(state.shipX, kShipY + 2, kShipW, 8, AppColors.neonPurple, r: 2);
-    fillRect(state.shipX, kShipY - 5, 8, 8, AppColors.purple, r: 2);
+    // Nave.
+    img(sprites['player'], state.shipX, kShipY - 4, kShipW + 10, 34);
   }
 
   void _text(Canvas canvas, String t, Offset center, double size, Color color) {

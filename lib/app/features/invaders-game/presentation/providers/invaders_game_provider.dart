@@ -38,9 +38,10 @@ class InvadersGameNotifier extends StateNotifier<InvadersGameState> {
   final List<Bullet> _pBullets = [];
   final List<Bullet> _eBullets = [];
   final List<PowerUp> _powerups = [];
-  final List<Offset> _bunkers = [];
+  final List<BunkerCell> _bunkers = [];
   Ufo? _ufo;
   Boss? _boss;
+  bool _anim = false; // alterna el frame de animación de los invasores
 
   double _bunkerCell = 0;
   double _shipX = kFieldW / 2;
@@ -160,7 +161,10 @@ class InvadersGameNotifier extends StateNotifier<InvadersGameState> {
     _bunkerCell = kFieldW / _gridW;
     for (final c in walls) {
       _bunkers.add(
-        Offset((c.dx + 0.5) / _gridW * kFieldW, (c.dy + 0.5) / _gridH * kFieldH),
+        BunkerCell(
+          (c.dx + 0.5) / _gridW * kFieldW,
+          (c.dy + 0.5) / _gridH * kFieldH,
+        ),
       );
     }
   }
@@ -233,6 +237,7 @@ class InvadersGameNotifier extends StateNotifier<InvadersGameState> {
       rapidActive: _rapid,
       tripleActive: _triple,
       shieldActive: _shield,
+      animFrame: _anim,
       boss: () => _boss,
       ufo: () => _ufo,
     );
@@ -317,6 +322,7 @@ class InvadersGameNotifier extends StateNotifier<InvadersGameState> {
     _hopAccum += dtMs;
     if (_hopAccum < interval) return;
     _hopAccum = 0;
+    _anim = !_anim; // alterna el frame de "caminado" de los invasores
 
     var minX = kFieldW, maxX = 0.0;
     for (final i in alive) {
@@ -409,11 +415,12 @@ class InvadersGameNotifier extends StateNotifier<InvadersGameState> {
   void _collisions() {
     // Balas del jugador.
     _pBullets.removeWhere((b) {
-      // Búnker.
+      // Búnker (se erosiona: pierde vida y cambia de sprite).
       for (var k = 0; k < _bunkers.length; k++) {
         final c = _bunkers[k];
-        if (_hit(b.x, b.y, 3, 12, c.dx, c.dy, _bunkerCell, _bunkerCell)) {
-          _bunkers.removeAt(k);
+        if (_hit(b.x, b.y, 3, 12, c.x, c.y, _bunkerCell, _bunkerCell)) {
+          c.hp -= 1;
+          if (c.hp <= 0) _bunkers.removeAt(k);
           return true;
         }
       }
@@ -451,8 +458,9 @@ class InvadersGameNotifier extends StateNotifier<InvadersGameState> {
     _eBullets.removeWhere((b) {
       for (var k = 0; k < _bunkers.length; k++) {
         final c = _bunkers[k];
-        if (_hit(b.x, b.y, 4, 12, c.dx, c.dy, _bunkerCell, _bunkerCell)) {
-          _bunkers.removeAt(k);
+        if (_hit(b.x, b.y, 4, 12, c.x, c.y, _bunkerCell, _bunkerCell)) {
+          c.hp -= 1;
+          if (c.hp <= 0) _bunkers.removeAt(k);
           return true;
         }
       }
@@ -651,11 +659,14 @@ class InvadersGameState extends Equatable {
   final bool tripleActive;
   final bool shieldActive;
 
+  /// Frame de animación de los invasores (alterna entre soldier_1 y soldier_2).
+  final bool animFrame;
+
   final List<Invader> invaders;
   final List<Bullet> playerBullets;
   final List<Bullet> enemyBullets;
   final List<PowerUp> powerups;
-  final List<Offset> bunkers;
+  final List<BunkerCell> bunkers;
   final double bunkerCell;
   final Ufo? ufo;
   final Boss? boss;
@@ -682,6 +693,7 @@ class InvadersGameState extends Equatable {
     this.rapidActive = false,
     this.tripleActive = false,
     this.shieldActive = false,
+    this.animFrame = false,
     this.invaders = const [],
     this.playerBullets = const [],
     this.enemyBullets = const [],
@@ -713,11 +725,12 @@ class InvadersGameState extends Equatable {
     bool? rapidActive,
     bool? tripleActive,
     bool? shieldActive,
+    bool? animFrame,
     List<Invader>? invaders,
     List<Bullet>? playerBullets,
     List<Bullet>? enemyBullets,
     List<PowerUp>? powerups,
-    List<Offset>? bunkers,
+    List<BunkerCell>? bunkers,
     double? bunkerCell,
     ValueGetter<Ufo?>? ufo,
     ValueGetter<Boss?>? boss,
@@ -743,6 +756,7 @@ class InvadersGameState extends Equatable {
       rapidActive: rapidActive ?? this.rapidActive,
       tripleActive: tripleActive ?? this.tripleActive,
       shieldActive: shieldActive ?? this.shieldActive,
+      animFrame: animFrame ?? this.animFrame,
       invaders: invaders ?? this.invaders,
       playerBullets: playerBullets ?? this.playerBullets,
       enemyBullets: enemyBullets ?? this.enemyBullets,

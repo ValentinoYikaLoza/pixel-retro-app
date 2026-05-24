@@ -11,6 +11,41 @@ import 'package:pixel_retro_app/app/shared/widgets/confirm_dialog.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/inline_banner_ad.dart';
 
+/// Dirección de un segmento, de [from] a [to], tolerando el wrap del tablero
+/// (cuando un segmento aparece en el borde opuesto).
+Direction _segDir(Offset from, Offset to) {
+  var dx = to.dx - from.dx;
+  var dy = to.dy - from.dy;
+  if (dx > 1) {
+    dx = -1;
+  } else if (dx < -1) {
+    dx = 1;
+  }
+  if (dy > 1) {
+    dy = -1;
+  } else if (dy < -1) {
+    dy = 1;
+  }
+  if (dx > 0) {
+    return Direction.right;
+  }
+  if (dx < 0) {
+    return Direction.left;
+  }
+  if (dy > 0) {
+    return Direction.down;
+  }
+  return Direction.up;
+}
+
+/// Cuartos de giro asumiendo que el sprite apunta a la derecha por defecto.
+int _quarterTurns(Direction d) => switch (d) {
+  Direction.right => 0,
+  Direction.down => 1,
+  Direction.left => 2,
+  Direction.up => 3,
+};
+
 class GameBoard extends ConsumerStatefulWidget {
   const GameBoard({super.key});
 
@@ -164,49 +199,37 @@ class GameBoardState extends ConsumerState<GameBoard> {
                 ),
               ),
 
-            // Snake - with gradient and better head differentiation
+            // Snake - sprites de cabeza/cuerpo/cola, rotados según su dirección.
             ...gameState.snake.asMap().entries.map((entry) {
               final index = entry.key;
               final segment = entry.value;
-              final isHead = index == 0;
+              final snake = gameState.snake;
+              final last = snake.length - 1;
+
+              final String asset;
+              final Direction dir;
+              if (index == 0) {
+                asset = 'assets/icons/games/snake/snake_head.svg';
+                dir = snake.length > 1
+                    ? _segDir(snake[1], snake[0])
+                    : gameState.direction;
+              } else if (index == last) {
+                asset = 'assets/icons/games/snake/snake_tail.svg';
+                // La cola apunta hacia afuera (del cuerpo hacia la punta).
+                dir = _segDir(snake[last - 1], snake[last]);
+              } else {
+                asset = 'assets/icons/games/snake/snake_body.svg';
+                dir = _segDir(snake[index + 1], snake[index]);
+              }
+
               return Positioned(
                 left: segment.dx * cellWidth,
                 top: segment.dy * cellHeight,
                 width: cellWidth,
                 height: cellHeight,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isHead ? Colors.blue.shade900 : Colors.blue.shade700,
-                    borderRadius: isHead
-                        ? BorderRadius.circular(cellWidth / 3)
-                        : BorderRadius.circular(cellWidth / 6),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 2,
-                        offset: const Offset(1, 1),
-                      ),
-                    ],
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: isHead
-                          ? [AppColors.orange, AppColors.red]
-                          : [AppColors.orange, AppColors.red],
-                    ),
-                  ),
-                  child: isHead
-                      ? Center(
-                          child: Container(
-                            width: cellWidth * 0.4,
-                            height: cellHeight * 0.4,
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        )
-                      : null,
+                child: RotatedBox(
+                  quarterTurns: _quarterTurns(dir),
+                  child: SvgPicture.asset(asset, fit: BoxFit.fill),
                 ),
               );
             }),

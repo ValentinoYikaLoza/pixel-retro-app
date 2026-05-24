@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
+import 'dart:ui' as ui;
+
 import 'package:pixel_retro_app/app/features/invaders-game/presentation/logic/invaders_defs.dart';
+import 'package:pixel_retro_app/app/features/invaders-game/presentation/logic/invaders_sprites.dart';
 import 'package:pixel_retro_app/app/features/invaders-game/presentation/providers/invaders_levels_provider.dart';
 import 'package:pixel_retro_app/app/features/invaders-game/presentation/widgets/invaders_starting_loader.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_level_entity.dart';
@@ -25,11 +28,15 @@ class _LevelInvadersGameScreenState
     extends ConsumerState<LevelInvadersGameScreen> {
   final _controller = PageController(viewportFraction: 0.72);
   int _current = 0;
+  InvadersSprites? _sprites;
 
   @override
   void initState() {
     super.initState();
     setScreenConfig();
+    InvadersSprites.load().then((s) {
+      if (mounted) setState(() => _sprites = s);
+    });
   }
 
   @override
@@ -100,6 +107,7 @@ class _LevelInvadersGameScreenState
                           level: list[i],
                           focused: i == _current,
                           width: cardWidth,
+                          sprites: _sprites,
                           onPlay: () => AppRoutes.go(
                             AppRoutes.invadersGame,
                             arguments: {'level': list[i].level},
@@ -141,6 +149,7 @@ class _LevelCard extends StatelessWidget {
   final GameLevelEntity level;
   final bool focused;
   final double width;
+  final InvadersSprites? sprites;
   final VoidCallback onPlay;
   final VoidCallback onTapCard;
 
@@ -148,6 +157,7 @@ class _LevelCard extends StatelessWidget {
     required this.level,
     required this.focused,
     required this.width,
+    required this.sprites,
     required this.onPlay,
     required this.onTapCard,
   });
@@ -233,7 +243,7 @@ class _LevelCard extends StatelessWidget {
                             width: previewWidth,
                             height: previewWidth * 0.9,
                             child: CustomPaint(
-                              painter: _InvadersPreviewPainter(level),
+                              painter: _InvadersPreviewPainter(level, sprites),
                             ),
                           ),
                         ),
@@ -310,9 +320,29 @@ class _LevelCard extends StatelessWidget {
 /// Miniatura: formación de invasores (filas/columnas según el nivel) y búnkeres
 /// del nivel, para reflejar la dificultad.
 class _InvadersPreviewPainter extends CustomPainter {
-  _InvadersPreviewPainter(this.level);
+  _InvadersPreviewPainter(this.level, this.sprites);
 
   final GameLevelEntity level;
+  final InvadersSprites? sprites;
+
+  void _img(Canvas canvas, ui.Image? im, Rect dst, {bool fill = false}) {
+    if (im == null) return;
+    final iw = im.width.toDouble();
+    final ih = im.height.toDouble();
+    Rect out = dst;
+    if (!fill) {
+      final sc = (dst.width / iw) < (dst.height / ih)
+          ? dst.width / iw
+          : dst.height / ih;
+      out = Rect.fromCenter(center: dst.center, width: iw * sc, height: ih * sc);
+    }
+    canvas.drawImageRect(
+      im,
+      Rect.fromLTWH(0, 0, iw, ih),
+      out,
+      Paint()..filterQuality = FilterQuality.medium,
+    );
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -321,55 +351,69 @@ class _InvadersPreviewPainter extends CustomPainter {
 
     final plan = LevelPlan.forLevel(level.level);
     final cellW = size.width / (plan.cols + 1);
-    final invSize = cellW * 0.55;
+    final invSize = cellW * 0.7;
     final startX = cellW;
     final startY = size.height * 0.12;
+    final soldier = sprites?['soldier1'];
+    final commander = sprites?['commander'];
 
     for (var r = 0; r < plan.rows; r++) {
-      paint.color = enemyColor(plan.typeForRow(r, level.level));
+      final isTank = plan.typeForRow(r, level.level) == EnemyType.tank;
       for (var c = 0; c < plan.cols; c++) {
         final cx = startX + c * cellW;
         final cy = startY + r * (invSize + 4);
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromCenter(center: Offset(cx, cy), width: invSize, height: invSize * 0.8),
-            const Radius.circular(2),
-          ),
-          paint,
-        );
+        final dst = Rect.fromCenter(center: Offset(cx, cy), width: invSize, height: invSize);
+        if (sprites != null) {
+          _img(canvas, isTank ? commander : soldier, dst);
+        } else {
+          paint.color = enemyColor(plan.typeForRow(r, level.level));
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromCenter(center: Offset(cx, cy), width: invSize, height: invSize * 0.8),
+              const Radius.circular(2),
+            ),
+            paint,
+          );
+        }
       }
     }
 
     // Búnkeres.
-    paint.color = AppColors.emerald.withValues(alpha: 0.8);
     final gw = level.gridWidth == 0 ? 24 : level.gridWidth;
     final gh = level.gridHeight == 0 ? 24 : level.gridHeight;
     final bw = size.width / gw;
+    final wall = sprites?['wallFull'];
     for (final c in level.walls) {
-      canvas.drawRect(
-        Rect.fromLTWH(c.dx / gw * size.width, c.dy / gh * size.height, bw, bw),
-        paint,
-      );
+      final rect = Rect.fromLTWH(c.dx / gw * size.width, c.dy / gh * size.height, bw, bw);
+      if (sprites != null) {
+        _img(canvas, wall, rect, fill: true);
+      } else {
+        canvas.drawRect(rect, paint..color = AppColors.emerald.withValues(alpha: 0.8));
+      }
     }
 
     // Nave.
-    paint.color = AppColors.neonPurple;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(size.width / 2, size.height - 10),
-          width: cellW,
-          height: 6,
-        ),
-        const Radius.circular(2),
-      ),
-      paint,
+    final shipRect = Rect.fromCenter(
+      center: Offset(size.width / 2, size.height - 12),
+      width: cellW * 1.2,
+      height: cellW * 1.2,
     );
+    if (sprites != null) {
+      _img(canvas, sprites!['player'], shipRect);
+    } else {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: shipRect.center, width: cellW, height: 6),
+          const Radius.circular(2),
+        ),
+        paint..color = AppColors.neonPurple,
+      );
+    }
   }
 
   @override
   bool shouldRepaint(_InvadersPreviewPainter oldDelegate) =>
-      oldDelegate.level != level;
+      oldDelegate.level != level || oldDelegate.sprites != sprites;
 }
 
 class _Chip extends StatelessWidget {

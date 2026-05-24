@@ -97,6 +97,15 @@ class Bullet {
   double vx;
 }
 
+/// Celda de búnker con vida: cambia de sprite al recibir impactos (full → mid →
+/// broken) y desaparece al llegar a 0.
+class BunkerCell {
+  BunkerCell(this.x, this.y, [this.hp = 3]);
+  final double x;
+  final double y;
+  int hp;
+}
+
 class PowerUp {
   PowerUp({required this.type, required this.x, required this.y});
   final PowerUpType type;
