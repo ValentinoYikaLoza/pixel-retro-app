@@ -445,24 +445,24 @@ class _PreviewSnake extends StatelessWidget {
     final cx = gw ~/ 2;
     final seg = scale * 1.6; // algo mayor que la celda para que conecten
 
-    // Cuerpo y cola más finos que la cabeza (como en la partida).
-    Widget at(int gx, String asset, {bool thin = false}) {
+    Widget at(int gx, Widget child) {
       final centerX = ox + (gx + 0.5) * scale;
       final centerY = oy + (cy + 0.5) * scale;
-      final sprite = SvgPicture.asset(asset, fit: BoxFit.fill);
       return Positioned(
         left: centerX - seg / 2,
         top: centerY - seg / 2,
         width: seg,
         height: seg,
-        child: thin
-            ? FractionallySizedBox(
-                widthFactor: 1,
-                heightFactor: 0.7,
-                child: sprite,
-              )
-            : sprite,
+        child: child,
       );
+    }
+
+    Widget svg(String name, {bool flipX = false}) {
+      final w = SvgPicture.asset(
+        'assets/icons/games/snake/$name.svg',
+        fit: BoxFit.contain,
+      );
+      return flipX ? Transform.flip(flipX: true, child: w) : w;
     }
 
     return SizedBox(
@@ -470,11 +470,11 @@ class _PreviewSnake extends StatelessWidget {
       height: height,
       child: Stack(
         children: [
-          // Cola a la izquierda (la punta del sprite ya apunta a la izquierda).
-          at(cx - 1, 'assets/icons/games/snake/snake_tail.svg', thin: true),
-          // El cuerpo es cuadrado (llena la celda).
-          at(cx, 'assets/icons/games/snake/snake_body.svg'),
-          at(cx + 1, 'assets/icons/games/snake/snake_head_right.svg'),
+          // Cola a la izquierda (su punta ya apunta a la izquierda).
+          at(cx - 1, svg('snake_tail_horizontal')),
+          at(cx, svg('snake_body_middle_horizontal')),
+          // Cabeza a la derecha (la base mira a la izquierda → se voltea).
+          at(cx + 1, svg('snake_head_horizontal', flipX: true)),
         ],
       ),
     );

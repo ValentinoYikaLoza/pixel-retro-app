@@ -38,39 +38,100 @@ Direction _segDir(Offset from, Offset to) {
   return Direction.up;
 }
 
-/// Cuartos de giro asumiendo que el sprite apunta a la derecha por defecto.
-int _quarterTurns(Direction d) => switch (d) {
-  Direction.right => 0,
-  Direction.down => 1,
-  Direction.left => 2,
-  Direction.up => 3,
-};
+const String _snakeDir = 'assets/icons/games/snake';
 
-/// Sprite de cabeza según la dirección (hay uno por cada lado).
-String _headAsset(Direction d) => switch (d) {
-  Direction.up => 'assets/icons/games/snake/snake_head_up.svg',
-  Direction.down => 'assets/icons/games/snake/snake_head_down.svg',
-  Direction.left => 'assets/icons/games/snake/snake_head_left.svg',
-  Direction.right => 'assets/icons/games/snake/snake_head_right.svg',
-};
+bool _horizontal(Direction d) =>
+    d == Direction.left || d == Direction.right;
 
-/// La cola apunta a la IZQUIERDA por defecto (la punta a la izquierda, la unión
-/// con el cuerpo a la derecha), al revés que el resto: por eso va +2 cuartos.
-int _tailQuarterTurns(Direction d) => (_quarterTurns(d) + 2) % 4;
+bool _opposite(Direction a, Direction b) =>
+    _horizontal(a) == _horizontal(b) && a != b;
 
-/// Grosor (alto relativo a la celda) del cuerpo y la cola: más finos que la
-/// cabeza para que la serpiente no se vea tan "gorda".
-const double _snakeSegThickness = 0.7;
+/// Cuartos de giro de la esquina. El sprite base une los bordes IZQUIERDO y
+/// SUPERIOR (`{left, up}`); rotándolo se cubren los 4 giros.
+int _cornerQuarterTurns(Direction a, Direction b) {
+  final s = {a, b};
+  if (s.containsAll({Direction.up, Direction.right})) return 1;
+  if (s.containsAll({Direction.right, Direction.down})) return 2;
+  if (s.containsAll({Direction.down, Direction.left})) return 3;
+  return 0; // {left, up}
+}
 
-/// Sprite de un segmento (cuerpo/cola) rotado y adelgazado en su grosor.
-Widget _thinSegment(String asset, int quarterTurns) {
-  return RotatedBox(
-    quarterTurns: quarterTurns,
-    child: FractionallySizedBox(
-      widthFactor: 1,
-      heightFactor: _snakeSegThickness,
-      child: SvgPicture.asset(asset, fit: BoxFit.fill),
-    ),
+/// Carga un sprite de la serpiente con volteos/rotación opcionales.
+Widget _snakeSvg(
+  String name, {
+  bool flipX = false,
+  bool flipY = false,
+  int quarterTurns = 0,
+  BoxFit fit = BoxFit.contain,
+}) {
+  Widget w = SvgPicture.asset('$_snakeDir/$name.svg', fit: fit);
+  if (quarterTurns != 0) {
+    w = RotatedBox(quarterTurns: quarterTurns, child: w);
+  }
+  if (flipX || flipY) {
+    w = Transform.flip(flipX: flipX, flipY: flipY, child: w);
+  }
+  return w;
+}
+
+/// Sprite del segmento [index] de la serpiente, eligiendo cabeza, cuello
+/// (start), cuerpo recto (middle), esquina o cola, con la orientación correcta.
+Widget _snakeSegment(List<Offset> snake, int index, Direction headFacing) {
+  final last = snake.length - 1;
+
+  // Cabeza: mira hacia donde avanza. Base horizontal mira IZQUIERDA; vertical
+  // mira ARRIBA.
+  if (index == 0) {
+    final dir = snake.length > 1 ? _segDir(snake[1], snake[0]) : headFacing;
+    return switch (dir) {
+      Direction.left => _snakeSvg('snake_head_horizontal'),
+      Direction.right => _snakeSvg('snake_head_horizontal', flipX: true),
+      Direction.up => _snakeSvg('snake_head_vertical'),
+      Direction.down => _snakeSvg('snake_head_vertical', flipY: true),
+    };
+  }
+
+  // Cola: la punta mira hacia afuera. Base horizontal apunta IZQUIERDA; vertical
+  // apunta ABAJO.
+  if (index == last) {
+    final out = _segDir(snake[last - 1], snake[last]);
+    return switch (out) {
+      Direction.left => _snakeSvg('snake_tail_horizontal'),
+      Direction.right => _snakeSvg('snake_tail_horizontal', flipX: true),
+      Direction.down => _snakeSvg('snake_tail_vertical'),
+      Direction.up => _snakeSvg('snake_tail_vertical', flipY: true),
+    };
+  }
+
+  // Cuerpo: recto (middle/cuello) si los vecinos están alineados; esquina si no.
+  final headDir = _segDir(snake[index], snake[index - 1]); // hacia la cabeza
+  final tailDir = _segDir(snake[index], snake[index + 1]); // hacia la cola
+
+  if (_opposite(headDir, tailDir)) {
+    final horiz = _horizontal(headDir);
+    // El primer segmento tras la cabeza es el "cuello" (start), más grueso
+    // del lado de la cabeza.
+    if (index == 1) {
+      return horiz
+          ? _snakeSvg(
+              'snake_body_start_horizontal',
+              flipX: headDir == Direction.right,
+            )
+          : _snakeSvg(
+              'snake_body_start_vertical',
+              flipY: headDir == Direction.down,
+            );
+    }
+    return _snakeSvg(
+      horiz ? 'snake_body_middle_horizontal' : 'snake_body_middle_vertical',
+    );
+  }
+
+  // Esquina (giro): se rota para unir las dos direcciones de los vecinos.
+  return _snakeSvg(
+    'snake_body_corner',
+    quarterTurns: _cornerQuarterTurns(headDir, tailDir),
+    fit: BoxFit.fill,
   );
 }
 
@@ -227,45 +288,17 @@ class GameBoardState extends ConsumerState<GameBoard> {
                 ),
               ),
 
-            // Snake - sprites de cabeza/cuerpo/cola, rotados según su dirección.
+            // Snake - sprites por tipo (cabeza/cuello/cuerpo/esquina/cola) con
+            // variantes horizontal/vertical, volteadas/rotadas según el tramo.
             ...gameState.snake.asMap().entries.map((entry) {
               final index = entry.key;
               final segment = entry.value;
-              final snake = gameState.snake;
-              final last = snake.length - 1;
-
-              final Widget child;
-              if (index == 0) {
-                // La cabeza usa un sprite por dirección (sin rotar).
-                final dir = snake.length > 1
-                    ? _segDir(snake[1], snake[0])
-                    : gameState.direction;
-                child = SvgPicture.asset(_headAsset(dir), fit: BoxFit.fill);
-              } else if (index == last) {
-                // La cola apunta hacia afuera (del cuerpo hacia la punta).
-                final dir = _segDir(snake[last - 1], snake[last]);
-                child = _thinSegment(
-                  'assets/icons/games/snake/snake_tail.svg',
-                  _tailQuarterTurns(dir),
-                );
-              } else {
-                // El cuerpo llena la celda (cuadrado), no se adelgaza.
-                final dir = _segDir(snake[index + 1], snake[index]);
-                child = RotatedBox(
-                  quarterTurns: _quarterTurns(dir),
-                  child: SvgPicture.asset(
-                    'assets/icons/games/snake/snake_body.svg',
-                    fit: BoxFit.fill,
-                  ),
-                );
-              }
-
               return Positioned(
                 left: segment.dx * cellWidth,
                 top: segment.dy * cellHeight,
                 width: cellWidth,
                 height: cellHeight,
-                child: child,
+                child: _snakeSegment(gameState.snake, index, gameState.direction),
               );
             }),
 
