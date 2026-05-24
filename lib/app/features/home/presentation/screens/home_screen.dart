@@ -69,107 +69,122 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       children: [
         Expanded(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              spacing: 20,
-              children: [
-                // TÍTULO
-                Stack(
-                  children: [
-                    Text(
-                      homeState.gameSelected?.title ?? '',
-                      style: TextStyle(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Pixel',
-                        foreground: Paint()
-                          ..style = PaintingStyle.stroke
-                          ..strokeWidth = 4
-                          ..color = AppColors.orange,
+          // Scroll-safe + centrado: al volver de un juego landscape la altura
+          // es breve y el carrusel (fijo) desbordaba; así centra cuando cabe y
+          // permite scroll mientras la orientación vuelve a portrait.
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    spacing: 20,
+                    children: [
+                      // TÍTULO
+                      Stack(
+                        children: [
+                          Text(
+                            homeState.gameSelected?.title ?? '',
+                            style: TextStyle(
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Pixel',
+                              foreground: Paint()
+                                ..style = PaintingStyle.stroke
+                                ..strokeWidth = 4
+                                ..color = AppColors.orange,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          Text(
+                            homeState.gameSelected?.title ?? '',
+                            style: TextStyle(
+                              color: AppColors.purple,
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Pixel',
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    Text(
-                      homeState.gameSelected?.title ?? '',
-                      style: TextStyle(
-                        color: AppColors.purple,
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Pixel',
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
 
-                // CARRUSEL
-                AnimatedScale(
-                  scale: shouldStartAnimation ? 1.3 : 1.0,
-                  duration: Duration(milliseconds: 500),
-                  curve: Curves.easeInOut,
-                  onEnd: () {
-                    if (shouldStartAnimation) {
-                      _startRotation();
-                      setState(() => shouldStartAnimation = false);
-                    }
-                  },
-                  child: AnimatedRotation(
-                    duration: const Duration(milliseconds: 500),
-                    curve: Curves.easeInOut,
-                    turns: shouldRotate ? rotationAngle / (2 * 3.14159) : 0,
-                    onEnd: () => _handleAnimationComplete(
-                      homeState.gameSelected?.code ?? '',
-                    ),
-                    child: CarouselSlider(
-                      options: CarouselOptions(
-                        height: 271,
-                        enableInfiniteScroll: false,
-                        enlargeCenterPage: true,
-                        enlargeFactor: 0.7,
-                        onPageChanged: (index, reason) {
-                          ref
-                              .read(homeProvider.notifier)
-                              .selectGame(homeState.games[index].title);
+                      // CARRUSEL
+                      AnimatedScale(
+                        scale: shouldStartAnimation ? 1.3 : 1.0,
+                        duration: Duration(milliseconds: 500),
+                        curve: Curves.easeInOut,
+                        onEnd: () {
+                          if (shouldStartAnimation) {
+                            _startRotation();
+                            setState(() => shouldStartAnimation = false);
+                          }
                         },
-                      ),
-                      items: homeState.games.map((game) {
-                        return Builder(
-                          builder: (BuildContext context) {
-                            return Container(
-                              width: 271,
+                        child: AnimatedRotation(
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.easeInOut,
+                          turns: shouldRotate
+                              ? rotationAngle / (2 * 3.14159)
+                              : 0,
+                          onEnd: () => _handleAnimationComplete(
+                            homeState.gameSelected?.code ?? '',
+                          ),
+                          child: CarouselSlider(
+                            options: CarouselOptions(
                               height: 271,
-                              decoration: BoxDecoration(
-                                color: AppColors.yellow,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    blurRadius: 10,
-                                    offset: Offset(0, 5),
-                                  ),
-                                ],
-                                border: Border.all(
-                                  color: AppColors.orange,
-                                  width: 4.0,
-                                ),
-                              ),
-                              child: GestureDetector(
-                                onTap: _startAnimation,
-                                child: Image.asset(
-                                  'assets/images/${game.code}.png',
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      }).toList(),
-                    ),
+                              enableInfiniteScroll: false,
+                              enlargeCenterPage: true,
+                              enlargeFactor: 0.7,
+                              onPageChanged: (index, reason) {
+                                ref
+                                    .read(homeProvider.notifier)
+                                    .selectGame(homeState.games[index].title);
+                              },
+                            ),
+                            items: homeState.games.map((game) {
+                              return Builder(
+                                builder: (BuildContext context) {
+                                  return Container(
+                                    width: 271,
+                                    height: 271,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.yellow,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                          blurRadius: 10,
+                                          offset: Offset(0, 5),
+                                        ),
+                                      ],
+                                      border: Border.all(
+                                        color: AppColors.orange,
+                                        width: 4.0,
+                                      ),
+                                    ),
+                                    child: GestureDetector(
+                                      onTap: _startAnimation,
+                                      child: Image.asset(
+                                        'assets/images/${game.code}.png',
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),
