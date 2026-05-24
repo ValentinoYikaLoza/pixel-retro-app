@@ -198,7 +198,10 @@ class _TopBar extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: AppColors.purple.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.neonPurple, width: 1.5),
+                      border: Border.all(
+                        color: AppColors.neonPurple,
+                        width: 1.5,
+                      ),
                     ),
                     child: const Icon(
                       Icons.pause_rounded,
@@ -393,7 +396,7 @@ class _GameOver extends ConsumerWidget {
                 height: 40,
                 radius: 12,
                 label: 'x2 PUNTOS',
-                flashColor: AppColors.orange,
+                flashColor: AppColors.emerald,
                 onPressed: () => _offerDouble(context, ref),
               ),
             ],
