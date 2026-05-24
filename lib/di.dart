@@ -21,6 +21,10 @@ import 'package:pixel_retro_app/app/features/snake-game/data/datasources/snake_g
 import 'package:pixel_retro_app/app/features/snake-game/data/repositories/snake_game_repository_impl.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/datasources/snake_game_datasource.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/repositories/snake_game_repository.dart';
+import 'package:pixel_retro_app/app/features/streak/data/datasources/streak_datasource_impl.dart';
+import 'package:pixel_retro_app/app/features/streak/data/repositories/streak_repository_impl.dart';
+import 'package:pixel_retro_app/app/features/streak/domain/datasources/streak_datasource.dart';
+import 'package:pixel_retro_app/app/features/streak/domain/repositories/streak_repository.dart';
 import 'package:pixel_retro_app/app/features/time/data/datasources/time_datasource_impl.dart';
 import 'package:pixel_retro_app/app/features/time/data/repositories/time_repository_impl.dart';
 import 'package:pixel_retro_app/app/features/time/domain/datasources/time_datasource.dart';
@@ -61,6 +65,9 @@ void setup({required String userId}) {
   getIt.registerLazySingleton<SnakeGameDataSource>(
     () => SnakeGameDataSourceImpl(getIt<Api>(), getIt<SessionService>()),
   );
+  getIt.registerLazySingleton<StreakDataSource>(
+    () => StreakDataSourceImpl(getIt<Api>(), getIt<SessionService>()),
+  );
 
   // Repositories
   getIt.registerLazySingleton<UserRepository>(
@@ -83,5 +90,8 @@ void setup({required String userId}) {
   );
   getIt.registerLazySingleton<SnakeGameRepository>(
     () => SnakeGameRepositoryImpl(getIt<SnakeGameDataSource>()),
+  );
+  getIt.registerLazySingleton<StreakRepository>(
+    () => StreakRepositoryImpl(getIt<StreakDataSource>()),
   );
 }

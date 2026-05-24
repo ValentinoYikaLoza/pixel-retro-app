@@ -9,6 +9,7 @@ class UserStatsMapper {
       coins: dto.data.coins,
       lives: dto.data.lives,
       streak: dto.data.streak,
+      streakIncremented: dto.data.streakIncremented,
       divisionId: dto.data.divisionId,
     );
   }

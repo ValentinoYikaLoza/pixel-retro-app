@@ -7,6 +7,7 @@ import 'package:pixel_retro_app/app/features/mission/presentation/screens/missio
 import 'package:pixel_retro_app/app/features/shop/presentation/screens/shop_screen.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/level_snake_game_screen.dart';
 import 'package:pixel_retro_app/app/features/snake-game/presentation/screens/snake_game_screen.dart';
+import 'package:pixel_retro_app/app/features/streak/presentation/screens/streak_screen.dart';
 import 'package:pixel_retro_app/app/features/tetris-game/presentation/screens/level_tetris_game_screen.dart';
 import 'package:pixel_retro_app/app/features/tetris-game/presentation/screens/tetris_game_screen.dart';
 import 'package:pixel_retro_app/app/shared/layouts/presentation/screens/layout_view.dart';
@@ -47,6 +48,11 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.shop,
       pageBuilder: (context, state) =>
           _fade(state, const LayoutView(child: ShopScreen())),
+    ),
+    // Racha (calendario + metas mensuales + hitos)
+    GoRoute(
+      path: AppRoutes.streak,
+      pageBuilder: (context, state) => _scale(state, const StreakScreen()),
     ),
     // Intro de marca al entrar a un juego (también hace el cambio a landscape;
     // el fade de la ruta enmascara la rotación).

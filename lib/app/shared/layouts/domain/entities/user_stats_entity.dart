@@ -9,6 +9,9 @@ class UserStatsEntity extends Equatable {
   final int? coins;
   final int? lives;
   final int? streak;
+
+  /// True si el check-in diario de hoy subió la racha (solo vía HTTP getUser).
+  final bool streakIncremented;
   final int? divisionId;
 
   const UserStatsEntity({
@@ -16,9 +19,17 @@ class UserStatsEntity extends Equatable {
     this.coins,
     this.lives,
     this.streak,
+    this.streakIncremented = false,
     this.divisionId,
   });
 
   @override
-  List<Object?> get props => [userId, coins, lives, streak, divisionId];
+  List<Object?> get props => [
+    userId,
+    coins,
+    lives,
+    streak,
+    streakIncremented,
+    divisionId,
+  ];
 }

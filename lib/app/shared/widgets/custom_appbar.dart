@@ -68,10 +68,15 @@ class CustomAppbarState extends ConsumerState<CustomAppbar> {
                             color: AppColors.yellow,
                           ),
                         ),
-                        AppBarRow(
-                          asset: 'assets/icons/fire.svg',
-                          text: '${userState.streak}',
-                          color: AppColors.orange,
+                        GestureDetector(
+                          onTap: () {
+                            AppRoutes.go(AppRoutes.streak);
+                          },
+                          child: AppBarRow(
+                            asset: 'assets/icons/fire.svg',
+                            text: '${userState.streak}',
+                            color: AppColors.orange,
+                          ),
                         ),
                         GestureDetector(
                           onTap: () {

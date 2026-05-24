@@ -29,9 +29,19 @@ class UserDto {
   final int? coins;
   final int? lives;
   final int? streak;
+
+  /// True si el check-in diario de hoy subió la racha (para el toast).
+  final bool streakIncremented;
   final int? divisionId;
 
-  UserDto({this.id, this.coins, this.lives, this.streak, this.divisionId});
+  UserDto({
+    this.id,
+    this.coins,
+    this.lives,
+    this.streak,
+    this.streakIncremented = false,
+    this.divisionId,
+  });
 
   factory UserDto.fromJson(Map<String, dynamic> json) {
     return UserDto(
@@ -39,6 +49,7 @@ class UserDto {
       coins: json['coins'] as int?,
       lives: json['lives'] as int?,
       streak: json['streak'] as int?,
+      streakIncremented: json['streak_incremented'] as bool? ?? false,
       divisionId: json['division_id'] as int?,
     );
   }

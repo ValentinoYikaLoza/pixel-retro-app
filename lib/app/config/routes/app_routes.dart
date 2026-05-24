@@ -10,6 +10,9 @@ class AppRoutes {
   static const String mission = '/mission';
   static const String shop = '/shop';
 
+  // Racha (calendario + metas mensuales + hitos)
+  static const String streak = '/streak';
+
   // Intro de marca al entrar a un juego
   static const String welcome = '/welcome-screen';
 

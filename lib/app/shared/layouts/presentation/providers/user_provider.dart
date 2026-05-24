@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pixel_retro_app/app/features/streak/presentation/widgets/streak_celebration.dart';
 import 'package:pixel_retro_app/app/shared/enums/snackbar_type.dart';
 import 'package:pixel_retro_app/app/shared/layouts/data/mappers/user_stats_mapper.dart';
 import 'package:pixel_retro_app/app/shared/layouts/domain/repositories/user_repository.dart';
@@ -20,13 +22,24 @@ final userInitProvider = FutureProvider<void>((ref) async {
   await ref.read(userProvider.notifier).getUser();
 });
 
-class UserNotifier extends StateNotifier<UserState> {
-  UserNotifier(this.ref) : super(UserState());
+class UserNotifier extends StateNotifier<UserState>
+    with WidgetsBindingObserver {
+  UserNotifier(this.ref) : super(UserState()) {
+    // Re-hace el check-in diario al volver del background (cruce de medianoche).
+    WidgetsBinding.instance.addObserver(this);
+  }
 
   final Ref ref;
   final UserRepository repository = getIt<UserRepository>();
 
   StreamSubscription<Map<String, dynamic>>? _statsSub;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      getUser();
+    }
+  }
 
   /// Inicializa el usuario y se suscribe a los streams del WebSocket
   Future<void> initData() async {
@@ -59,6 +72,12 @@ class UserNotifier extends StateNotifier<UserState> {
       streak: stats.streak,
       divisionId: stats.divisionId,
     );
+
+    // El backend hace el check-in diario al cargar el usuario; si la racha
+    // subió hoy, celebramos con la animación.
+    if (stats.streakIncremented && (stats.streak ?? 0) > 0) {
+      showStreakCelebration(stats.streak!);
+    }
   }
 
   Future<void> updateCoins(int coins) async {
@@ -107,6 +126,7 @@ class UserNotifier extends StateNotifier<UserState> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _statsSub?.cancel();
     super.dispose();
   }
