@@ -25,8 +25,9 @@ class _StreakScreenState extends ConsumerState<StreakScreen> {
   @override
   void initState() {
     super.initState();
-    OrientationService.setOverlayColor(AppColors.orange);
-    OrientationService.setPortrait();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      OrientationService.setOverlayColor(AppColors.neonPurple);
+    });
   }
 
   @override
@@ -162,7 +163,10 @@ class _FreezeCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: _freezeColor.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _freezeColor.withValues(alpha: 0.6), width: 1.5),
+        border: Border.all(
+          color: _freezeColor.withValues(alpha: 0.6),
+          width: 1.5,
+        ),
       ),
       child: Row(
         children: [
@@ -210,7 +214,9 @@ class _BuyFreezeButton extends ConsumerWidget {
     return Opacity(
       opacity: enabled ? 1 : 0.5,
       child: GestureDetector(
-        onTap: enabled ? () => ref.read(streakProvider.notifier).buyFreeze() : null,
+        onTap: enabled
+            ? () => ref.read(streakProvider.notifier).buyFreeze()
+            : null,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
@@ -247,8 +253,18 @@ class _CalendarCard extends StatelessWidget {
   const _CalendarCard({required this.overview});
 
   static const _months = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
   ];
   static const _weekdays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
@@ -262,7 +278,9 @@ class _CalendarCard extends StatelessWidget {
     final checked = overview.checkedInDays.toSet();
 
     final nowUtc = DateTime.now().toUtc();
-    final todayDay = (nowUtc.year == year && nowUtc.month == mon) ? nowUtc.day : -1;
+    final todayDay = (nowUtc.year == year && nowUtc.month == mon)
+        ? nowUtc.day
+        : -1;
 
     // Celdas: blancos iniciales + días del mes, completadas a múltiplo de 7.
     final totalCells = lead + overview.daysInMonth;
@@ -419,8 +437,12 @@ class _Milestones extends StatelessWidget {
                 child: Column(
                   children: [
                     Icon(
-                      m.reached ? Icons.check_circle : Icons.local_fire_department,
-                      color: m.reached ? AppColors.emerald : AppColors.white.withValues(alpha: 0.7),
+                      m.reached
+                          ? Icons.check_circle
+                          : Icons.local_fire_department,
+                      color: m.reached
+                          ? AppColors.emerald
+                          : AppColors.white.withValues(alpha: 0.7),
                       size: 22,
                     ),
                     const SizedBox(height: 6),
@@ -436,7 +458,11 @@ class _Milestones extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SvgPicture.asset('assets/icons/coin.svg', height: 12, width: 12),
+                        SvgPicture.asset(
+                          'assets/icons/coin.svg',
+                          height: 12,
+                          width: 12,
+                        ),
                         const SizedBox(width: 3),
                         Text(
                           '${m.rewardCoins}',
@@ -591,7 +617,9 @@ class _ClaimButton extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: enabled ? AppColors.emerald : AppColors.gray.withValues(alpha: 0.3),
+            color: enabled
+                ? AppColors.emerald
+                : AppColors.gray.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(10),
             boxShadow: enabled
                 ? [
