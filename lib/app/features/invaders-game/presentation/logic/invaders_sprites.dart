@@ -7,8 +7,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 /// poder dibujarlos en el `CustomPaint` del tablero (el canvas no dibuja SVG
 /// directamente). Se carga una sola vez por sesión.
 ///
-/// Nota: los assets viven bajo `games/tetris/` (la carpeta está mal nombrada;
-/// su contenido es de Invaders).
 class InvadersSprites {
   InvadersSprites._(this._images);
 
@@ -18,7 +16,7 @@ class InvadersSprites {
 
   static InvadersSprites? _instance;
 
-  static const String _base = 'assets/icons/games/tetris';
+  static const String _base = 'assets/icons/games/invaders';
   static const Map<String, String> _assets = {
     'player': '$_base/player/player.svg',
     'pBullet': '$_base/player/normal_player_projectile.svg',

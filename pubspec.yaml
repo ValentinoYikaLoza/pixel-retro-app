@@ -44,9 +44,9 @@ flutter:
     - assets/icons/
     - assets/icons/trophies/
     - assets/icons/games/snake/
-    - assets/icons/games/tetris/enemy/
-    - assets/icons/games/tetris/player/
-    - assets/icons/games/tetris/wall/
+    - assets/icons/games/invaders/enemy/
+    - assets/icons/games/invaders/player/
+    - assets/icons/games/invaders/wall/
   fonts:
     - family: Inter
       fonts:
