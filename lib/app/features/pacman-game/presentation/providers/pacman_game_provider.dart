@@ -59,6 +59,7 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
   double _prog = 0;
   PacDir _dir = PacDir.none;
   PacDir _want = PacDir.none;
+  PacDir _facing = PacDir.left; // dirección visual (se mantiene al detenerse)
 
   // --- Fantasmas ---
   final List<Ghost> _ghosts = [];
@@ -133,6 +134,7 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
       _lives = _startLives;
       _level = session.level;
       _frame = 0;
+      _mouth = 0;
       _modeIndex = 0;
       // Niveles altos = menos dispersión (scatter más corto) → más persecución.
       final scatterFactor = (1 - (_level - 1) * 0.09).clamp(0.25, 1.0);
@@ -204,6 +206,7 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
     // Quieto hasta el primer swipe (no arranca solo).
     _dir = PacDir.none;
     _want = PacDir.none;
+    _facing = PacDir.left;
     _spawnGhosts();
     final b = _boss;
     if (b != null) {
@@ -278,8 +281,13 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
     }
     _checkCollisions();
 
-    // La boca solo anima si se está moviendo (quieto = boca fija).
-    if (_dir != PacDir.none) _mouth = (_mouth + 0.18) % 1.0;
+    // La boca solo anima si se está moviendo (quieto = boca fija). Y mantenemos
+    // la dirección visual: al detenerse contra una pared no debe "mirar" a otro
+    // lado, conserva su última dirección.
+    if (_dir != PacDir.none) {
+      _mouth = (_mouth + 0.18) % 1.0;
+      _facing = _dir;
+    }
     _frame++;
 
     if (state.hasWon || state.hasLost) return;
@@ -910,7 +918,7 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
       hasLost: hasLost,
       pacX: _pacPxX(),
       pacY: _pacPxY(),
-      pacDir: _dir,
+      pacDir: _facing,
       mouth: _mouth,
       score: _score,
       pelletsEaten: _pellets,

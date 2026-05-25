@@ -167,16 +167,22 @@ class _PacmanPainter extends CustomPainter {
       PacDir.none => pi,
     };
     final pac = Paint()..color = AppColors.yellow;
-    final path = Path()
-      ..moveTo(cx, cy)
-      ..arcTo(
-        Rect.fromCircle(center: Offset(cx, cy), radius: radius),
-        base + half,
-        2 * pi - 2 * half,
-        false,
-      )
-      ..close();
-    canvas.drawPath(path, pac);
+    if (half < 0.06) {
+      // Boca (casi) cerrada: un arco de ~360° degenera y no pinta nada, así que
+      // dibujamos el círculo completo (Pac quieto/boca cerrada visible).
+      canvas.drawCircle(Offset(cx, cy), radius, pac);
+    } else {
+      final path = Path()
+        ..moveTo(cx, cy)
+        ..arcTo(
+          Rect.fromCircle(center: Offset(cx, cy), radius: radius),
+          base + half,
+          2 * pi - 2 * half,
+          false,
+        )
+        ..close();
+      canvas.drawPath(path, pac);
+    }
 
     // Anillo de escudo (escudo listo o invulnerabilidad reciente). Parpadea
     // durante la invulnerabilidad.
