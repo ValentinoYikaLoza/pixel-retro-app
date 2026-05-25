@@ -55,6 +55,7 @@ class InvadersGameNotifier extends StateNotifier<InvadersGameState> {
   late LevelPlan _plan;
   int _baseStepMs = 500;
   int _targetScore = 0;
+  bool _isInfinite = false; // modo infinito (level 0): sin meta, oleadas sin fin
   int _gridW = 24;
   int _gridH = 24;
 
@@ -99,7 +100,10 @@ class InvadersGameNotifier extends StateNotifier<InvadersGameState> {
       _gridH = session.gridHeight;
       _baseStepMs = session.tickMs;
       _targetScore = session.targetScore;
-      _plan = LevelPlan.forLevel(session.level);
+      _isInfinite = session.level == 0;
+      // En infinito no hay plan de nivel: usa el plan base (nivel 1) y las
+      // oleadas escalan sin fin con _wave.
+      _plan = LevelPlan.forLevel(_isInfinite ? 1 : session.level);
 
       _shipX = kFieldW / 2;
       _shipLives = kStartShipLives;
@@ -536,8 +540,9 @@ class InvadersGameNotifier extends StateNotifier<InvadersGameState> {
   void _checkWaveAndEnd() {
     if (state.hasLost) return;
 
-    // Ganó: alcanzó la meta de puntos.
-    if (_score >= _targetScore) {
+    // Ganó: alcanzó la meta de puntos. En modo infinito no hay meta: nunca
+    // termina por puntos, solo al perder todas las vidas.
+    if (!_isInfinite && _score >= _targetScore) {
       _lose(); // termina la partida; el backend marca levelCleared (score>=target)
       return;
     }

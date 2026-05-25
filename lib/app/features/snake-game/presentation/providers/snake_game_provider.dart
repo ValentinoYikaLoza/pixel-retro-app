@@ -197,6 +197,20 @@ class SnakeGameNotifier extends StateNotifier<SnakeGameState> {
       newSnake.removeLast();
       state = state.copyWith(snake: newSnake, direction: direction);
     }
+
+    _rampInfinite();
+  }
+
+  /// Modo infinito (level 0): la velocidad sube según comes (de 200ms a 70ms
+  /// por casilla). Recrea el timer cuando cambia el ritmo.
+  void _rampInfinite() {
+    if (state.level != 0) return;
+    final t = (200 - state.foodEaten * 4).clamp(70, 200);
+    if (t != state.tickMs) {
+      state = state.copyWith(tickMs: t);
+      _timer?.cancel();
+      _timer = Timer.periodic(Duration(milliseconds: t), (_) => _move());
+    }
   }
 
   void _lose() {

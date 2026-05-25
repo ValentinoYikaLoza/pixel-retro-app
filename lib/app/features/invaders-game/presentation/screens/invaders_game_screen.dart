@@ -158,7 +158,10 @@ class _TopBar extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _StrokedText('NIVEL ${state.level}', fontSize: 18),
+                _StrokedText(
+                  state.level == 0 ? 'INFINITO' : 'NIVEL ${state.level}',
+                  fontSize: 18,
+                ),
                 Text(
                   'Oleada ${state.wave}',
                   style: TextStyle(
@@ -226,7 +229,7 @@ class _TopBar extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              'meta ${state.targetScore}',
+              state.level == 0 ? '∞ infinito' : 'meta ${state.targetScore}',
               style: TextStyle(
                 color: AppColors.white.withValues(alpha: 0.7),
                 fontSize: 12,
@@ -340,6 +343,20 @@ class _GameOver extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            if (state.level == 0 && result != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                result.isHighScore
+                    ? '¡NUEVO RÉCORD!'
+                    : 'Récord: ${result.highScore}',
+                style: const TextStyle(
+                  color: AppColors.emerald,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Pixel',
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             if (state.isSubmitting || result == null)
               const SizedBox(

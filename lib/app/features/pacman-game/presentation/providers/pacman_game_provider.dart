@@ -75,9 +75,44 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
   int _score = 0;
   int _pellets = 0; // comidos (métrica del objetivo)
   int _lives = _startLives;
-  int _level = 1;
+  int _level = 1; // 0 = modo infinito
   int _frame = 0;
   double _mouth = 0; // fase de la boca (animación)
+
+  // --- Modo infinito (level 0): mazes en bucle, cada uno más rápido ---
+  int _round = 0; // mazes limpiados en infinito
+  int _baseTick = 200; // tick base del juego
+
+  bool get _isInfinite => _level == 0;
+
+  /// Dificultad efectiva para la IA de fantasmas: en niveles es el nivel; en
+  /// infinito sube con las rondas (reusa la curva de dificultad existente).
+  int get _diffLevel => _isInfinite ? (1 + _round).clamp(1, 10) : _level;
+
+  /// Maze del modo infinito según la ronda (rota A→C→B→D, cada vez más cerrado).
+  List<String> _infiniteMaze(int round) {
+    const cycle = [kPacmanMazeA, kPacmanMazeC, kPacmanMazeB, kPacmanMazeD];
+    return cycle[round % cycle.length];
+  }
+
+  /// Tick actual: en infinito baja con la ronda (más rápido); en niveles, fijo.
+  int _currentTick() =>
+      _isInfinite ? (_baseTick - _round * 8).clamp(90, _baseTick) : _baseTick;
+
+  /// Cronograma scatter/chase según [_diffLevel] (menos scatter = más caza).
+  void _buildModeSchedule() {
+    final scatterFactor = (1 - (_diffLevel - 1) * 0.09).clamp(0.25, 1.0);
+    _modeSchedule = [
+      for (var i = 0; i < _modeBaseScheduleMs.length; i++)
+        _modeBaseScheduleMs[i] < 0
+            ? -1
+            : (i.isEven
+                  ? (_modeBaseScheduleMs[i] * scatterFactor).round()
+                  : _modeBaseScheduleMs[i]),
+    ];
+    _modeIndex = 0;
+    _modeAccumMs = 0;
+  }
 
   // --- Fruta (bonus): aparece bajo la casa al comer ciertos pellets ---
   bool _fruitActive = false;
@@ -121,9 +156,14 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
       final session = await _repository.startGame(_pacmanGameCode, level);
 
       _sessionId = session.sessionId;
-      _maze = PacmanMaze(mazeForLevel(session.level));
+      _level = session.level;
+      _round = 0;
+      _baseTick = session.tickMs;
+      _maze = PacmanMaze(
+        _isInfinite ? _infiniteMaze(0) : mazeForLevel(session.level),
+      );
       _maze.resetPellets();
-      _speed = 1 / session.tickMs;
+      _speed = 1 / _currentTick();
       _runWatch
         ..reset()
         ..start();
@@ -132,21 +172,9 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
       _score = 0;
       _pellets = 0;
       _lives = _startLives;
-      _level = session.level;
       _frame = 0;
       _mouth = 0;
-      _modeIndex = 0;
-      // Niveles altos = menos dispersión (scatter más corto) → más persecución.
-      final scatterFactor = (1 - (_level - 1) * 0.09).clamp(0.25, 1.0);
-      _modeSchedule = [
-        for (var i = 0; i < _modeBaseScheduleMs.length; i++)
-          _modeBaseScheduleMs[i] < 0
-              ? -1
-              : (i.isEven
-                    ? (_modeBaseScheduleMs[i] * scatterFactor).round()
-                    : _modeBaseScheduleMs[i]),
-      ];
-      _modeAccumMs = 0;
+      _buildModeSchedule(); // scatter/chase según la dificultad efectiva
       _frightenedMs = 0;
       _ghostCombo = 0;
       _fruitActive = false;
@@ -225,7 +253,7 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
     final exit = _maze.ghostExit;
     final base = _runWatch.elapsedMilliseconds;
     // Niveles altos = salida más rápida (más presión desde el inicio).
-    final rf = (1 - (_level - 1) * 0.08).clamp(0.35, 1.0);
+    final rf = (1 - (_diffLevel - 1) * 0.08).clamp(0.35, 1.0);
     int rel(int ms) => base + (ms * rf).round();
     // Blinky empieza fuera (sobre la puerta); los demás esperan dentro y salen
     // escalonados.
@@ -292,13 +320,38 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
 
     if (state.hasWon || state.hasLost) return;
 
-    // Comer todos los pellets = nivel superado.
+    // Limpiar el maze: en niveles = victoria; en infinito = siguiente maze.
     if (_maze.cleared) {
-      _win();
+      if (_isInfinite) {
+        _advanceInfiniteMaze();
+      } else {
+        _win();
+      }
       return;
     }
 
     state = _snapshot();
+  }
+
+  /// Modo infinito: pasa al siguiente maze (rotación) más rápido, sube la
+  /// dificultad de fantasmas y recoloca a todos, conservando puntaje y vidas.
+  void _advanceInfiniteMaze() {
+    _round++;
+    _maze = PacmanMaze(_infiniteMaze(_round));
+    _maze.resetPellets();
+    _speed = 1 / _currentTick();
+    _buildModeSchedule();
+    _frightenedMs = 0;
+    _ghostCombo = 0;
+    _powerups.clear();
+    _nextPowerAtPellets = _pellets + 35;
+    _resetActors(); // respawnea fantasmas con la nueva dificultad y maze
+    _eatAt(_tx, _ty); // come el pellet de spawn
+    state = _snapshot(
+      maze: _maze,
+      gridWidth: _maze.width,
+      gridHeight: _maze.height,
+    );
   }
 
   /// Avanza el cronómetro de modo (scatter/chase). Congelado mientras dura el
@@ -501,7 +554,7 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
 
   void _triggerFrightened() {
     // Se acorta con el nivel (de ~7 s a ~2 s): el power pellet protege menos.
-    _frightenedMs = (_frightenedBaseMs - (_level - 1) * 550).clamp(
+    _frightenedMs = (_frightenedBaseMs - (_diffLevel - 1) * 550).clamp(
       2000,
       _frightenedBaseMs,
     );

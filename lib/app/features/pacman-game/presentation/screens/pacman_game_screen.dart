@@ -172,7 +172,10 @@ class _TopBar extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _StrokedText('NIVEL ${state.level}', fontSize: 18),
+            _StrokedText(
+              state.level == 0 ? 'INFINITO' : 'NIVEL ${state.level}',
+              fontSize: 18,
+            ),
             const Spacer(),
             // Vidas.
             Row(
@@ -221,7 +224,9 @@ class _TopBar extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             Text(
-              'puntos ${state.pelletsEaten}/${state.targetScore}',
+              state.level == 0
+                  ? '∞ infinito'
+                  : 'puntos ${state.pelletsEaten}/${state.targetScore}',
               style: TextStyle(
                 color: AppColors.white.withValues(alpha: 0.7),
                 fontSize: 12,
@@ -333,6 +338,21 @@ class _GameOver extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            // Récord del modo infinito.
+            if (state.level == 0 && result != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                result.isHighScore
+                    ? '¡NUEVO RÉCORD!'
+                    : 'Récord: ${result.highScore}',
+                style: const TextStyle(
+                  color: AppColors.emerald,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Pixel',
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             if (state.isSubmitting || result == null)
               const SizedBox(

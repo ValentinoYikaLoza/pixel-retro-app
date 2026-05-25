@@ -11,6 +11,7 @@ import 'package:pixel_retro_app/app/features/invaders-game/presentation/widgets/
 import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_level_entity.dart';
 import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_icon_button.dart';
+import 'package:pixel_retro_app/app/shared/widgets/infinite_mode_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/screen_status.dart';
 
@@ -135,6 +136,16 @@ class _LevelInvadersGameScreenState
                   width: 48,
                   height: 48,
                   imagePath: 'assets/icons/back.svg',
+                ),
+              ),
+              Positioned(
+                top: 10,
+                right: 12,
+                child: InfiniteModeButton(
+                  onTap: () => AppRoutes.go(
+                    AppRoutes.invadersGame,
+                    arguments: {'level': 0},
+                  ),
                 ),
               ),
             ],

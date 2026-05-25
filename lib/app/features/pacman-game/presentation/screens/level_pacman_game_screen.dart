@@ -8,6 +8,7 @@ import 'package:pixel_retro_app/app/features/pacman-game/presentation/widgets/pa
 import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_level_entity.dart';
 import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_icon_button.dart';
+import 'package:pixel_retro_app/app/shared/widgets/infinite_mode_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/screen_status.dart';
 
@@ -126,6 +127,16 @@ class _LevelPacmanGameScreenState extends ConsumerState<LevelPacmanGameScreen> {
                   width: 48,
                   height: 48,
                   imagePath: 'assets/icons/back.svg',
+                ),
+              ),
+              Positioned(
+                top: 10,
+                right: 12,
+                child: InfiniteModeButton(
+                  onTap: () => AppRoutes.go(
+                    AppRoutes.pacmanGame,
+                    arguments: {'level': 0},
+                  ),
                 ),
               ),
             ],

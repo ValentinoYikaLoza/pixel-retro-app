@@ -168,13 +168,18 @@ class _TopBar extends StatelessWidget {
               children: [
                 _Lives(lives),
                 const SizedBox(width: 10),
-                _StrokedText('NIVEL ${state.level}', fontSize: 18),
+                _StrokedText(
+                  state.level == 0 ? 'INFINITO' : 'NIVEL ${state.level}',
+                  fontSize: 18,
+                ),
               ],
             ),
             const SizedBox(height: 2),
-            // Objetivo del nivel en LÍNEAS (Tetris se supera por líneas).
+            // Objetivo en LÍNEAS (en infinito no hay meta: solo el conteo).
             Text(
-              '${state.lines} / ${state.targetScore} líneas',
+              state.level == 0
+                  ? '${state.lines} líneas'
+                  : '${state.lines} / ${state.targetScore} líneas',
               style: const TextStyle(
                 color: AppColors.white,
                 fontSize: 16,
@@ -307,6 +312,20 @@ class _GameOver extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            if (state.level == 0 && result != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                result.isHighScore
+                    ? '¡NUEVO RÉCORD!'
+                    : 'Récord: ${result.highScore}',
+                style: const TextStyle(
+                  color: AppColors.emerald,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Pixel',
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             if (state.isSubmitting || result == null)
               const SizedBox(

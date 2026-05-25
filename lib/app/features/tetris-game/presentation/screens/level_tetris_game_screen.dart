@@ -8,6 +8,7 @@ import 'package:pixel_retro_app/app/features/tetris-game/presentation/providers/
 import 'package:pixel_retro_app/app/features/tetris-game/presentation/widgets/tetris_starting_loader.dart';
 import 'package:pixel_retro_app/app/shared/services/orientation_service.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_icon_button.dart';
+import 'package:pixel_retro_app/app/shared/widgets/infinite_mode_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/custom_text_button.dart';
 import 'package:pixel_retro_app/app/shared/widgets/screen_status.dart';
 
@@ -129,6 +130,16 @@ class _LevelTetrisGameScreenState extends ConsumerState<LevelTetrisGameScreen> {
                   width: 48,
                   height: 48,
                   imagePath: 'assets/icons/back.svg',
+                ),
+              ),
+              Positioned(
+                top: 10,
+                right: 12,
+                child: InfiniteModeButton(
+                  onTap: () => AppRoutes.go(
+                    AppRoutes.tetrisGame,
+                    arguments: {'level': 0},
+                  ),
                 ),
               ),
             ],

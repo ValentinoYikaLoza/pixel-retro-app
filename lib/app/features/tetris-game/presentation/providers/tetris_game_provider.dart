@@ -44,6 +44,7 @@ class TetrisGameNotifier extends StateNotifier<TetrisGameState> {
   int _lockAccum = 0;
   int _lockResets = 0;
   bool _lastWasRotation = false;
+  int _baseGravity = 800; // gravedad inicial (para la rampa del modo infinito)
 
   // ---- Ciclo de vida -------------------------------------------------------
 
@@ -60,6 +61,7 @@ class TetrisGameNotifier extends StateNotifier<TetrisGameState> {
       final session = await _repository.startGame(_tetrisGameCode, level);
 
       _sessionId = session.sessionId;
+      _baseGravity = session.tickMs;
       _rng = Random(session.seed);
       _bag.clear();
       _runWatch
@@ -382,8 +384,18 @@ class TetrisGameNotifier extends StateNotifier<TetrisGameState> {
       backToBack: _nextBackToBack(cleared, tSpin),
     );
 
+    // Modo infinito (level 0): la gravedad acelera con las líneas (de la base
+    // a 120ms), sin fin.
+    if (_isInfinite && cleared > 0) {
+      state = state.copyWith(
+        gravityMs: (_baseGravity - state.lines * 12).clamp(120, _baseGravity),
+      );
+    }
+
     _spawnFromQueue();
   }
+
+  bool get _isInfinite => state.level == 0;
 
   /// Quita las filas completas (mutando la copia) y desplaza hacia abajo.
   int _clearFullRows(List<List<Color?>> board) {
