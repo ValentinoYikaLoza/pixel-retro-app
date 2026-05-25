@@ -16,6 +16,7 @@ class GameLevelsMapper {
             walls: wallsToOffsets(l.walls),
             targetScore: l.targetScore,
             bestScore: l.bestScore,
+            bestPoints: l.bestPoints,
             cleared: l.cleared,
             unlocked: l.unlocked,
           ),

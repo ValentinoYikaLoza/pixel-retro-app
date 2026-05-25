@@ -109,6 +109,11 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
       startFailed: false,
       startError: () => null,
       result: () => null,
+      // Limpia el fin de partida anterior: si no, al REINTENTAR el overlay de
+      // "Perdiste"/"Superado" se quedaba pegado sobre la nueva partida.
+      hasWon: false,
+      hasLost: false,
+      isPaused: false,
     );
 
     try {
@@ -196,8 +201,9 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
     _tx = _maze.pacSpawn.x;
     _ty = _maze.pacSpawn.y;
     _prog = 0;
-    _dir = PacDir.left;
-    _want = PacDir.left;
+    // Quieto hasta el primer swipe (no arranca solo).
+    _dir = PacDir.none;
+    _want = PacDir.none;
     _spawnGhosts();
     final b = _boss;
     if (b != null) {
@@ -272,7 +278,8 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
     }
     _checkCollisions();
 
-    _mouth = (_mouth + 0.18) % 1.0;
+    // La boca solo anima si se está moviendo (quieto = boca fija).
+    if (_dir != PacDir.none) _mouth = (_mouth + 0.18) % 1.0;
     _frame++;
 
     if (state.hasWon || state.hasLost) return;

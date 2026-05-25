@@ -250,19 +250,19 @@ class _LevelCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
+                  // Dificultad (estrellas por nivel) + récord de PUNTOS reales:
+                  // dos datos que varían y motivan, sin repetir el conteo de
+                  // pellets (que el thumbnail/objetivo ya implican).
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _Chip(
-                          label: 'Puntos ${level.targetScore}',
-                          color: AppColors.purple,
-                        ),
+                        _DifficultyStars(level.level),
                         const SizedBox(width: 8),
                         _Chip(
-                          label: 'Mejor ${level.bestScore}',
-                          color: level.bestScore > 0
+                          label: 'Récord ${level.bestPoints}',
+                          color: level.bestPoints > 0
                               ? AppColors.orange
                               : AppColors.gray,
                         ),
@@ -351,6 +351,39 @@ class _PacmanPreviewPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_PacmanPreviewPainter oldDelegate) => false;
+}
+
+/// Estrellas de dificultad (1..5) según el nivel: L1-2=1★ … L9-10=5★.
+class _DifficultyStars extends StatelessWidget {
+  final int level;
+
+  const _DifficultyStars(this.level);
+
+  @override
+  Widget build(BuildContext context) {
+    final diff = ((level - 1) ~/ 2) + 1;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.purple.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.purple, width: 1.2),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(
+          5,
+          (i) => Icon(
+            i < diff ? Icons.star_rounded : Icons.star_outline_rounded,
+            size: 13,
+            color: i < diff
+                ? AppColors.yellow
+                : AppColors.white.withValues(alpha: 0.35),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _Chip extends StatelessWidget {

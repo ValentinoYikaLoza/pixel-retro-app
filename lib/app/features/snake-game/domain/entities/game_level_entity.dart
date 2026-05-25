@@ -13,6 +13,10 @@ class GameLevelEntity extends Equatable {
   final List<Offset> walls;
   final int targetScore;
   final int bestScore;
+
+  /// Mejor PUNTAJE real (score) logrado en el nivel — distinto de [bestScore],
+  /// que es la métrica del objetivo (p. ej. pellets/líneas).
+  final int bestPoints;
   final bool cleared;
   final bool unlocked;
 
@@ -25,6 +29,7 @@ class GameLevelEntity extends Equatable {
     required this.walls,
     required this.targetScore,
     required this.bestScore,
+    this.bestPoints = 0,
     required this.cleared,
     required this.unlocked,
   });
@@ -39,6 +44,7 @@ class GameLevelEntity extends Equatable {
     walls,
     targetScore,
     bestScore,
+    bestPoints,
     cleared,
     unlocked,
   ];

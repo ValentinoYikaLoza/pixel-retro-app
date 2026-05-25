@@ -40,6 +40,7 @@ class GameLevelDto {
   final List<List<int>> walls;
   final int targetScore;
   final int bestScore;
+  final int bestPoints;
   final bool cleared;
   final bool unlocked;
 
@@ -52,6 +53,7 @@ class GameLevelDto {
     required this.walls,
     required this.targetScore,
     required this.bestScore,
+    required this.bestPoints,
     required this.cleared,
     required this.unlocked,
   });
@@ -66,6 +68,7 @@ class GameLevelDto {
       walls: parseWalls(json['walls']),
       targetScore: (json['target_score'] as num?)?.toInt() ?? 0,
       bestScore: (json['best_score'] as num?)?.toInt() ?? 0,
+      bestPoints: (json['best_points'] as num?)?.toInt() ?? 0,
       cleared: json['cleared'] as bool? ?? false,
       unlocked: json['unlocked'] as bool? ?? false,
     );
