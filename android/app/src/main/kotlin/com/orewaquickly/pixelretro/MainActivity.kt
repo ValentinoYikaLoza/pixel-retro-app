@@ -1,4 +1,4 @@
-package com.example.pixel_retro_app
+package com.orewaquickly.pixelretro
 
 import io.flutter.embedding.android.FlutterActivity
 
