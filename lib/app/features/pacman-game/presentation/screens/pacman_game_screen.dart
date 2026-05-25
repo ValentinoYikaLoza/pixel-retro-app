@@ -229,9 +229,46 @@ class _TopBar extends StatelessWidget {
                 fontFamily: 'Inter',
               ),
             ),
+            const Spacer(),
+            // Combo (cadena de pellets) y power-ups activos.
+            if (state.chainMult > 1)
+              _Badge('x${state.chainMult}', AppColors.yellow),
+            if (state.speedActive) _Badge('V', AppColors.orange),
+            if (state.freezeActive) _Badge('F', const Color(0xFF49E0E0)),
+            if (state.doubleActive) _Badge('x2', AppColors.emerald),
+            if (state.magnetActive) _Badge('M', const Color(0xFFB57BFF)),
+            if (state.shieldActive) _Badge('S', const Color(0xFF4FC3F7)),
           ],
         ),
       ],
+    );
+  }
+}
+
+class _Badge extends StatelessWidget {
+  final String text;
+  final Color color;
+
+  const _Badge(this.text, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(left: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color, width: 1.2),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: AppColors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }

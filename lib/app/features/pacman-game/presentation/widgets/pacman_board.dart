@@ -134,6 +134,19 @@ class _PacmanPainter extends CustomPainter {
       );
     }
 
+    // Power-ups (placeholder: cápsula de color con letra) hasta tener sprite.
+    for (final p in state.powerups) {
+      final pc = Offset((p.tx + 0.5) * s, (p.ty + 0.5) * s);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: pc, width: s * 0.74, height: s * 0.74),
+          Radius.circular(s * 0.2),
+        ),
+        Paint()..color = _powerColor(p.type),
+      );
+      _glyph(canvas, _powerGlyph(p.type), pc, s * 0.42);
+    }
+
     // Fantasmas (placeholder: cuerpo de domo + ojos; frightened azul/flash;
     // comido = solo ojos).
     for (final g in state.ghosts) {
@@ -166,6 +179,50 @@ class _PacmanPainter extends CustomPainter {
       )
       ..close();
     canvas.drawPath(path, pac);
+
+    // Anillo de escudo (escudo listo o invulnerabilidad reciente). Parpadea
+    // durante la invulnerabilidad.
+    if (state.shieldActive || (state.invuln && (state.frame ~/ 6) % 2 == 0)) {
+      canvas.drawCircle(
+        Offset(cx, cy),
+        radius + s * 0.18,
+        Paint()
+          ..color = const Color(0xFF4FC3F7)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = s * 0.12,
+      );
+    }
+  }
+
+  Color _powerColor(PacPower t) => switch (t) {
+    PacPower.speed => const Color(0xFFFFA84A), // naranja
+    PacPower.freeze => const Color(0xFF49E0E0), // cian
+    PacPower.shield => const Color(0xFF4FC3F7), // azul
+    PacPower.doublePoints => const Color(0xFF42D77D), // verde
+    PacPower.magnet => const Color(0xFFB57BFF), // morado
+  };
+
+  String _powerGlyph(PacPower t) => switch (t) {
+    PacPower.speed => 'V',
+    PacPower.freeze => 'F',
+    PacPower.shield => 'S',
+    PacPower.doublePoints => 'x2',
+    PacPower.magnet => 'M',
+  };
+
+  void _glyph(Canvas canvas, String t, Offset center, double size) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: t,
+        style: TextStyle(
+          color: AppColors.backgroundDark,
+          fontSize: size,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(canvas, center - Offset(tp.width / 2, tp.height / 2));
   }
 
   Color _ghostColor(GhostType t) => switch (t) {

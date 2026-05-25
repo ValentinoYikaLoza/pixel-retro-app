@@ -38,3 +38,20 @@ class Ghost {
 
   bool get inMaze => mode == GhostMode.scatter || mode == GhostMode.chase;
 }
+
+/// Power-ups (cápsulas) que aparecen en el laberinto y dan una mejora temporal.
+/// - [speed]: Pac-Man más rápido.
+/// - [freeze]: congela a los fantasmas.
+/// - [shield]: sobrevives un golpe (se consume).
+/// - [doublePoints]: puntos x2 un rato.
+/// - [magnet]: atrae/come pellets cercanos.
+enum PacPower { speed, freeze, shield, doublePoints, magnet }
+
+/// Cápsula de power-up en una casilla; expira si no se recoge a tiempo.
+class PowerUp {
+  PowerUp(this.type, this.tx, this.ty, {required this.untilMs});
+
+  final PacPower type;
+  final int tx, ty;
+  final int untilMs;
+}

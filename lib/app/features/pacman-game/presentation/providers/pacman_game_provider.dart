@@ -83,6 +83,22 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
   int _fruitUntilMs = 0;
   final Set<int> _fruitMilestones = {}; // pellets a los que ya apareció
 
+  // --- Power-ups + combo (Fase 3) ---
+  final List<PowerUp> _powerups = [];
+  int _nextPowerAtPellets = 35; // próximo umbral de aparición
+  int _speedUntil = 0, _freezeUntil = 0, _doubleUntil = 0, _magnetUntil = 0;
+  int _invulnUntil = 0; // invulnerabilidad breve tras usar el escudo
+  bool _shield = false;
+  int _chain = 0; // pellets seguidos (cadena/combo)
+  int _lastPelletMs = -100000;
+
+  bool get _speedActive => _runWatch.elapsedMilliseconds < _speedUntil;
+  bool get _freezeActive => _runWatch.elapsedMilliseconds < _freezeUntil;
+  bool get _doubleActive => _runWatch.elapsedMilliseconds < _doubleUntil;
+  bool get _magnetActive => _runWatch.elapsedMilliseconds < _magnetUntil;
+  bool get _invuln => _runWatch.elapsedMilliseconds < _invulnUntil;
+  int get _chainMult => (1 + _chain ~/ 12).clamp(1, 5);
+
   // ---- Ciclo de vida -------------------------------------------------------
 
   Future<void> startGame({int level = 1}) async {
@@ -127,6 +143,13 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
       _ghostCombo = 0;
       _fruitActive = false;
       _fruitMilestones.clear();
+      _powerups.clear();
+      _nextPowerAtPellets = 35;
+      _speedUntil = _freezeUntil = _doubleUntil = _magnetUntil = 0;
+      _invulnUntil = 0;
+      _shield = false;
+      _chain = 0;
+      _lastPelletMs = -100000;
       _resetActors();
       // Come el pellet de la casilla de spawn (si lo hay): solo se come al
       // "llegar" a una casilla, así que el inicial nunca se comería y el nivel
@@ -214,13 +237,18 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
       return;
     }
 
-    if (_fruitActive && _runWatch.elapsedMilliseconds > _fruitUntilMs) {
-      _fruitActive = false;
-    }
+    final now = _runWatch.elapsedMilliseconds;
+    if (_fruitActive && now > _fruitUntilMs) _fruitActive = false;
+    _powerups.removeWhere((p) => now > p.untilMs); // cápsulas que caducan
+
     _advanceMode(_loopMs);
     _stepPac(_loopMs.toDouble());
-    for (final g in _ghosts) {
-      _stepGhost(g, _loopMs.toDouble());
+    if (_magnetActive) _magnetVacuum();
+    // Los fantasmas no se mueven mientras dure el "freeze".
+    if (!_freezeActive) {
+      for (final g in _ghosts) {
+        _stepGhost(g, _loopMs.toDouble());
+      }
     }
     _checkCollisions();
 
@@ -291,7 +319,7 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
       }
     }
 
-    var dist = _speed * dtMs;
+    var dist = _speed * (_speedActive ? 1.5 : 1.0) * dtMs;
     while (dist > 0) {
       final toCenter = 1 - _prog;
       if (dist < toCenter) {
@@ -325,19 +353,101 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
   void _eatAt(int x, int y) {
     // Fruta (bonus): se come al pasar por su casilla mientras está activa.
     if (_fruitActive && x == _fruitX && y == _fruitY) {
-      _score += _fruitPoints();
+      _score += _fruitPoints() * (_doubleActive ? 2 : 1);
       _fruitActive = false;
     }
+    _collectPowerUpAt(x, y);
     final what = _maze.eat(x, y);
     if (what == 'pellet') {
-      _score += 10;
-      _pellets++;
-      _maybeSpawnFruit();
+      _eatPellet(10);
     } else if (what == 'power') {
-      _score += 50;
-      _pellets++;
-      _maybeSpawnFruit();
+      _eatPellet(50);
       _triggerFrightened();
+    }
+  }
+
+  /// Suma un pellet: actualiza la cadena (combo), aplica multiplicador y x2,
+  /// y dispara apariciones de fruta/power-up.
+  void _eatPellet(int base) {
+    final now = _runWatch.elapsedMilliseconds;
+    _chain = (now - _lastPelletMs <= 1500) ? _chain + 1 : 1;
+    _lastPelletMs = now;
+    _score += base * _chainMult * (_doubleActive ? 2 : 1);
+    _pellets++;
+    _maybeSpawnFruit();
+    _maybeSpawnPowerUp();
+  }
+
+  /// Imán: come los pellets/power dentro de un radio de Pac (puntos base, sin
+  /// cadena) mientras el power-up esté activo.
+  void _magnetVacuum() {
+    const r = 3;
+    final cx = _tx;
+    final cy = _ty;
+    for (var dy = -r; dy <= r; dy++) {
+      for (var dx = -r; dx <= r; dx++) {
+        if (dx.abs() + dy.abs() > r) continue;
+        final x = _maze.wrapX(cx + dx, cy + dy);
+        final y = cy + dy;
+        if (y < 0 || y >= _maze.height) continue;
+        final what = _maze.eat(x, y);
+        if (what == null) continue;
+        _score += (what == 'power' ? 50 : 10) * (_doubleActive ? 2 : 1);
+        _pellets++;
+        if (what == 'power') _triggerFrightened();
+      }
+    }
+  }
+
+  void _collectPowerUpAt(int x, int y) {
+    final i = _powerups.indexWhere((p) => p.tx == x && p.ty == y);
+    if (i < 0) return;
+    _activatePower(_powerups.removeAt(i).type);
+    _score += 100 * (_doubleActive ? 2 : 1);
+  }
+
+  void _activatePower(PacPower type) {
+    final now = _runWatch.elapsedMilliseconds;
+    switch (type) {
+      case PacPower.speed:
+        _speedUntil = now + 6000;
+      case PacPower.freeze:
+        _freezeUntil = now + 4500;
+      case PacPower.doublePoints:
+        _doubleUntil = now + 9000;
+      case PacPower.magnet:
+        _magnetUntil = now + 6000;
+      case PacPower.shield:
+        _shield = true;
+    }
+  }
+
+  void _maybeSpawnPowerUp() {
+    if (_pellets < _nextPowerAtPellets) return;
+    _nextPowerAtPellets += 35;
+    _spawnPowerUp();
+  }
+
+  /// Coloca un power-up aleatorio en una casilla caminable, lejos de Pac y de la
+  /// casa. Dura 12 s.
+  void _spawnPowerUp() {
+    const types = PacPower.values;
+    for (var tries = 0; tries < 80; tries++) {
+      final x = _rng.nextInt(_maze.width);
+      final y = _rng.nextInt(_maze.height);
+      if (_maze.isWall(x, y) || _maze.isDoor(x, y)) continue;
+      if (_maze.house.containsPoint(Point(x, y))) continue;
+      if ((x - _tx).abs() + (y - _ty).abs() < 5) continue;
+      if (_powerups.any((p) => p.tx == x && p.ty == y)) continue;
+      _powerups.add(
+        PowerUp(
+          types[_rng.nextInt(types.length)],
+          x,
+          y,
+          untilMs: _runWatch.elapsedMilliseconds + 12000,
+        ),
+      );
+      return;
     }
   }
 
@@ -549,7 +659,8 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
       if (dx * dx + dy * dy >= 0.5 * 0.5) continue;
       if (g.mode == GhostMode.frightened) {
         _eatGhost(g);
-      } else if (g.mode == GhostMode.scatter || g.mode == GhostMode.chase) {
+      } else if (!_invuln &&
+          (g.mode == GhostMode.scatter || g.mode == GhostMode.chase)) {
         _pacDies();
         return;
       }
@@ -557,12 +668,18 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
   }
 
   void _eatGhost(Ghost g) {
-    _score += 200 * (1 << _ghostCombo); // 200/400/800/1600
+    _score += 200 * (1 << _ghostCombo) * (_doubleActive ? 2 : 1); // 200..1600
     if (_ghostCombo < 3) _ghostCombo++;
     g.mode = GhostMode.eaten;
   }
 
   void _pacDies() {
+    // Escudo: absorbe el golpe y da una invulnerabilidad breve (sin perder vida).
+    if (_shield) {
+      _shield = false;
+      _invulnUntil = _runWatch.elapsedMilliseconds + 1500;
+      return;
+    }
     _lives--;
     if (_lives <= 0) {
       _lose();
@@ -706,6 +823,14 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
       fruitActive: _fruitActive,
       fruitX: _fruitX,
       fruitY: _fruitY,
+      powerups: List<PowerUp>.from(_powerups),
+      speedActive: _speedActive,
+      freezeActive: _freezeActive,
+      doubleActive: _doubleActive,
+      magnetActive: _magnetActive,
+      shieldActive: _shield,
+      invuln: _invuln,
+      chainMult: _chainMult,
       frame: _frame,
     );
   }
@@ -735,6 +860,16 @@ class PacmanGameState extends Equatable {
   final bool fruitActive;
   final int fruitX;
   final int fruitY;
+
+  /// Power-ups en el laberinto y efectos activos (Fase 3).
+  final List<PowerUp> powerups;
+  final bool speedActive;
+  final bool freezeActive;
+  final bool doubleActive;
+  final bool magnetActive;
+  final bool shieldActive;
+  final bool invuln;
+  final int chainMult; // multiplicador de la cadena de pellets (1..5)
 
   final int score;
   final int pelletsEaten;
@@ -772,6 +907,14 @@ class PacmanGameState extends Equatable {
     this.fruitActive = false,
     this.fruitX = 0,
     this.fruitY = 0,
+    this.powerups = const [],
+    this.speedActive = false,
+    this.freezeActive = false,
+    this.doubleActive = false,
+    this.magnetActive = false,
+    this.shieldActive = false,
+    this.invuln = false,
+    this.chainMult = 1,
     this.score = 0,
     this.pelletsEaten = 0,
     this.lives = _startLives,
@@ -803,6 +946,14 @@ class PacmanGameState extends Equatable {
     bool? fruitActive,
     int? fruitX,
     int? fruitY,
+    List<PowerUp>? powerups,
+    bool? speedActive,
+    bool? freezeActive,
+    bool? doubleActive,
+    bool? magnetActive,
+    bool? shieldActive,
+    bool? invuln,
+    int? chainMult,
     int? score,
     int? pelletsEaten,
     int? lives,
@@ -833,6 +984,14 @@ class PacmanGameState extends Equatable {
       fruitActive: fruitActive ?? this.fruitActive,
       fruitX: fruitX ?? this.fruitX,
       fruitY: fruitY ?? this.fruitY,
+      powerups: powerups ?? this.powerups,
+      speedActive: speedActive ?? this.speedActive,
+      freezeActive: freezeActive ?? this.freezeActive,
+      doubleActive: doubleActive ?? this.doubleActive,
+      magnetActive: magnetActive ?? this.magnetActive,
+      shieldActive: shieldActive ?? this.shieldActive,
+      invuln: invuln ?? this.invuln,
+      chainMult: chainMult ?? this.chainMult,
       score: score ?? this.score,
       pelletsEaten: pelletsEaten ?? this.pelletsEaten,
       lives: lives ?? this.lives,
@@ -864,6 +1023,13 @@ class PacmanGameState extends Equatable {
     fruitActive,
     fruitX,
     fruitY,
+    speedActive,
+    freezeActive,
+    doubleActive,
+    magnetActive,
+    shieldActive,
+    invuln,
+    chainMult,
     score,
     pelletsEaten,
     lives,
