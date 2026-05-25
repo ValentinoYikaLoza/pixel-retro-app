@@ -4,7 +4,6 @@ import 'package:pixel_retro_app/app/features/mission/data/dtos/get_mission_list_
 import 'package:pixel_retro_app/app/features/mission/data/mappers/mission_mapper.dart';
 import 'package:pixel_retro_app/app/features/mission/domain/datasources/mission_datasource.dart';
 import 'package:pixel_retro_app/app/features/mission/domain/entities/missions_board_entity.dart';
-import 'package:pixel_retro_app/app/features/mission/domain/models/update_progress_request_model.dart';
 import 'package:pixel_retro_app/app/shared/services/error_service.dart';
 import 'package:pixel_retro_app/app/shared/services/session_service.dart';
 
@@ -30,24 +29,6 @@ class MissionDataSourceImpl implements MissionDataSource {
       throw ErrorService.toServiceException(
         e,
         fallback: 'Error al obtener las misiones',
-      );
-    }
-  }
-
-  @override
-  Future<void> updateProgress(UpdateProgressRequestModel request) async {
-    try {
-      final formData = {
-        'user_id': _session.userId,
-        'mission_type': request.missionType.name,
-        'mission_id': '${request.missionId}',
-        'progress': '${request.progress}',
-      };
-      await _api.post(ApiEndpoints.updateProgress, data: formData);
-    } catch (e) {
-      throw ErrorService.toServiceException(
-        e,
-        fallback: 'Error al actualizar el progreso',
       );
     }
   }

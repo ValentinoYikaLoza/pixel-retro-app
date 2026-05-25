@@ -27,7 +27,6 @@ class ApiEndpoints {
 
   // Mission
   static const String listMissions = '/listMissions';
-  static const String updateProgress = '/updateProgress';
 
   // Streak (racha: calendario, metas mensuales, hitos y congeladores)
   static const String getStreak = '/getStreak';

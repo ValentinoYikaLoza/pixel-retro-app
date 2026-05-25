@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/features/mission/domain/entities/mission_entity.dart';
-import 'package:pixel_retro_app/app/features/mission/domain/models/update_progress_request_model.dart';
 import 'package:pixel_retro_app/app/features/mission/domain/repositories/mission_repository.dart';
 import 'package:pixel_retro_app/app/features/mission/data/mappers/mission_mapper.dart';
 import 'package:pixel_retro_app/app/features/time/presentation/providers/time_provider.dart';
@@ -78,22 +77,6 @@ class MissionNotifier extends StateNotifier<MissionState> {
       dailyRewards: board.dailyRewards,
       weeklyReward: board.weeklyReward,
       monthlyReward: board.monthlyReward,
-    );
-  }
-
-  /// Avanza el progreso de una misión concreta. El backend actualiza la fila y
-  /// reemite la lista por el WebSocket (MissionsUpdated).
-  Future<void> updateProgress(
-    MissionType type,
-    int missionId,
-    int progress,
-  ) async {
-    await repository.updateProgress(
-      UpdateProgressRequestModel(
-        missionType: type,
-        missionId: missionId,
-        progress: progress,
-      ),
     );
   }
 
