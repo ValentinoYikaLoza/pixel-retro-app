@@ -134,17 +134,11 @@ class _PacmanPainter extends CustomPainter {
       );
     }
 
-    // Power-ups (placeholder: cápsula de color con letra) hasta tener sprite.
+    // Power-ups: solo la letra, grande y con diseño (halo + contorno) para que
+    // se distinga sin necesidad de cápsula.
     for (final p in state.powerups) {
       final pc = Offset((p.tx + 0.5) * s, (p.ty + 0.5) * s);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(center: pc, width: s * 0.74, height: s * 0.74),
-          Radius.circular(s * 0.2),
-        ),
-        Paint()..color = _powerColor(p.type),
-      );
-      _glyph(canvas, _powerGlyph(p.type), pc, s * 0.42);
+      _drawPowerGlyph(canvas, _powerGlyph(p.type), pc, _powerColor(p.type), s);
     }
 
     // Fantasmas (placeholder: cuerpo de domo + ojos; frightened azul/flash;
@@ -152,6 +146,10 @@ class _PacmanPainter extends CustomPainter {
     for (final g in state.ghosts) {
       _drawGhost(canvas, g, s);
     }
+
+    // Jefe (más grande, con barra de vida).
+    final boss = state.boss;
+    if (boss != null) _drawBoss(canvas, boss, s);
 
     // Pac-Man (círculo amarillo con boca animada que apunta a su dirección).
     final cx = (state.pacX + 0.5) * s;
@@ -210,19 +208,42 @@ class _PacmanPainter extends CustomPainter {
     PacPower.magnet => 'M',
   };
 
-  void _glyph(Canvas canvas, String t, Offset center, double size) {
-    final tp = TextPainter(
-      text: TextSpan(
-        text: t,
-        style: TextStyle(
-          color: AppColors.backgroundDark,
-          fontSize: size,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+  /// Dibuja la letra de un power-up grande, con halo de color y contorno
+  /// oscuro, para que resalte (sin cápsula). Pulsa suavemente.
+  void _drawPowerGlyph(Canvas canvas, String t, Offset center, Color color, double s) {
+    final pulse = 1 + 0.08 * sin(state.frame * 0.25);
+    final fs = (t.length > 1 ? s * 0.95 : s * 1.25) * pulse;
+
+    TextPainter tp(TextStyle style) => TextPainter(
+      text: TextSpan(text: t, style: style),
       textDirection: TextDirection.ltr,
     )..layout();
-    tp.paint(canvas, center - Offset(tp.width / 2, tp.height / 2));
+
+    // Capa 1: contorno + halo de color (glow).
+    final outline = tp(
+      TextStyle(
+        fontSize: fs,
+        fontFamily: 'Pixel',
+        height: 1,
+        shadows: [Shadow(color: color, blurRadius: s * 0.45)],
+        foreground: Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = s * 0.16
+          ..color = AppColors.backgroundDark,
+      ),
+    );
+    outline.paint(canvas, center - Offset(outline.width / 2, outline.height / 2));
+
+    // Capa 2: relleno del color del power-up.
+    final fill = tp(
+      TextStyle(
+        fontSize: fs,
+        fontFamily: 'Pixel',
+        height: 1,
+        color: color,
+      ),
+    );
+    fill.paint(canvas, center - Offset(fill.width / 2, fill.height / 2));
   }
 
   Color _ghostColor(GhostType t) => switch (t) {
@@ -287,6 +308,69 @@ class _PacmanPainter extends CustomPainter {
         Paint()..color = pupilColor,
       );
     }
+  }
+
+  void _drawBoss(Canvas canvas, Boss b, double s) {
+    final cx = (b.px + 0.5) * s;
+    final cy = (b.py + 0.5) * s;
+    final r = s * 0.85; // más grande que un fantasma normal
+    final vulnerable = state.frightenedMs > 0;
+    final body = vulnerable
+        ? const Color(0xFF2733D6) // azul (vulnerable)
+        : const Color(0xFF9B1B2E); // rojo oscuro (peligroso)
+
+    final left = cx - r;
+    final right = cx + r;
+    final top = cy - r;
+    final bottom = cy + r;
+    final path = Path()
+      ..moveTo(left, bottom)
+      ..lineTo(left, cy)
+      ..arcTo(Rect.fromLTRB(left, top, right, top + 2 * r), pi, pi, false)
+      ..lineTo(right, bottom);
+    final w = (right - left) / 3;
+    path
+      ..lineTo(right - w * 0.5, bottom - r * 0.32)
+      ..lineTo(right - w, bottom)
+      ..lineTo(right - w * 1.5, bottom - r * 0.32)
+      ..lineTo(left + w, bottom)
+      ..lineTo(left + w * 0.5, bottom - r * 0.32)
+      ..close();
+    canvas.drawPath(path, Paint()..color = body);
+
+    // Ojos grandes mirando hacia Pac.
+    final ex = b.dir.vec.x * r * 0.18;
+    final ey = b.dir.vec.y * r * 0.18;
+    for (final sx in [-1.0, 1.0]) {
+      final eyeC = Offset(cx + sx * r * 0.34, cy - r * 0.15);
+      canvas.drawCircle(eyeC, r * 0.24, Paint()..color = Colors.white);
+      canvas.drawCircle(
+        eyeC + Offset(ex, ey),
+        r * 0.13,
+        Paint()..color = const Color(0xFF1B2A6B),
+      );
+    }
+
+    // Barra de vida encima.
+    final barW = r * 1.8;
+    final barH = s * 0.2;
+    final barX = cx - barW / 2;
+    final barY = top - s * 0.55;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(barX, barY, barW, barH),
+        Radius.circular(barH / 2),
+      ),
+      Paint()..color = AppColors.backgroundDark,
+    );
+    final frac = (b.hp / b.maxHp).clamp(0.0, 1.0);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(barX, barY, barW * frac, barH),
+        Radius.circular(barH / 2),
+      ),
+      Paint()..color = AppColors.emerald,
+    );
   }
 
   @override

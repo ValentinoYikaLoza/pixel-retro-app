@@ -55,3 +55,20 @@ class PowerUp {
   final int tx, ty;
   final int untilMs;
 }
+
+/// Jefe: un fantasma grande con vida que aparece en niveles altos. Persigue a
+/// Pac-Man (mortal al contacto); solo es vulnerable durante el frightened, donde
+/// embestirlo le quita vida. Al morir da un gran bonus.
+class Boss {
+  Boss(this.tx, this.ty, {required this.hp, required this.maxHp, this.dir = PacDir.left});
+
+  int tx, ty;
+  double prog = 0;
+  PacDir dir;
+  int hp;
+  final int maxHp;
+  int hitCooldownUntil = 0; // tras un golpe: invulnerable y "reculando"
+
+  double get px => tx + dir.vec.x * prog;
+  double get py => ty + dir.vec.y * prog;
+}

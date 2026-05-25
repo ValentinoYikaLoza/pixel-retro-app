@@ -62,6 +62,7 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
 
   // --- Fantasmas ---
   final List<Ghost> _ghosts = [];
+  Boss? _boss; // jefe (niveles 5 y 10)
   int _modeIndex = 0; // índice en _modeSchedule (par=scatter, impar=chase)
   List<int> _modeSchedule = _modeBaseScheduleMs; // ajustado por nivel
   int _modeAccumMs = 0;
@@ -150,6 +151,16 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
       _shield = false;
       _chain = 0;
       _lastPelletMs = -100000;
+      // Jefe en niveles 5 y 10 (más vida en el 10). Debe crearse antes de
+      // _resetActors para que este lo recoloque.
+      _boss = (session.level == 5 || session.level == 10)
+          ? Boss(
+              _maze.ghostExit.x,
+              _maze.ghostExit.y,
+              hp: session.level == 10 ? 5 : 3,
+              maxHp: session.level == 10 ? 5 : 3,
+            )
+          : null;
       _resetActors();
       // Come el pellet de la casilla de spawn (si lo hay): solo se come al
       // "llegar" a una casilla, así que el inicial nunca se comería y el nivel
@@ -188,6 +199,14 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
     _dir = PacDir.left;
     _want = PacDir.left;
     _spawnGhosts();
+    final b = _boss;
+    if (b != null) {
+      b.tx = _maze.ghostExit.x;
+      b.ty = _maze.ghostExit.y;
+      b.prog = 0;
+      b.dir = PacDir.left;
+      b.hitCooldownUntil = 0;
+    }
     _readyMs = _readyDurationMs;
   }
 
@@ -244,11 +263,12 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
     _advanceMode(_loopMs);
     _stepPac(_loopMs.toDouble());
     if (_magnetActive) _magnetVacuum();
-    // Los fantasmas no se mueven mientras dure el "freeze".
+    // Los fantasmas (y el jefe) no se mueven mientras dure el "freeze".
     if (!_freezeActive) {
       for (final g in _ghosts) {
         _stepGhost(g, _loopMs.toDouble());
       }
+      if (_boss != null) _stepBoss(_loopMs.toDouble());
     }
     _checkCollisions();
 
@@ -648,6 +668,51 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
     }
   }
 
+  // ---- Jefe ----------------------------------------------------------------
+
+  void _stepBoss(double dtMs) {
+    final b = _boss!;
+    final now = _runWatch.elapsedMilliseconds;
+    // Vulnerable (frightened) o reculando (cooldown) → más lento; si no,
+    // persigue agresivo.
+    final scale = (_frightenedMs > 0 || now < b.hitCooldownUntil) ? 0.6 : 0.95;
+    var dist = _speed * scale * dtMs;
+    while (dist > 0) {
+      final toCenter = 1 - b.prog;
+      if (dist < toCenter) {
+        b.prog += dist;
+        dist = 0;
+      } else {
+        dist -= toCenter;
+        b.tx = _maze.wrapX(b.tx + b.dir.vec.x, b.ty);
+        b.ty += b.dir.vec.y;
+        b.prog = 0;
+        b.dir = _chooseTowardBoss(b, Point(_tx, _ty));
+        if (b.dir == PacDir.none) break;
+      }
+    }
+  }
+
+  PacDir _chooseTowardBoss(Boss b, Point<int> target) {
+    var best = PacDir.none;
+    var bestD = double.infinity;
+    for (final d in const [PacDir.up, PacDir.left, PacDir.down, PacDir.right]) {
+      if (d == b.dir.opposite) continue;
+      final nx = _maze.wrapX(b.tx + d.vec.x, b.ty);
+      final ny = b.ty + d.vec.y;
+      if (ny < 0 || ny >= _maze.height) continue;
+      if (_ghostBlocked(nx, ny, false)) continue;
+      final ddx = (nx - target.x).toDouble();
+      final ddy = (ny - target.y).toDouble();
+      final dd = ddx * ddx + ddy * ddy;
+      if (dd < bestD) {
+        bestD = dd;
+        best = d;
+      }
+    }
+    return best == PacDir.none ? b.dir.opposite : best;
+  }
+
   // ---- Colisiones ----------------------------------------------------------
 
   void _checkCollisions() {
@@ -663,6 +728,32 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
           (g.mode == GhostMode.scatter || g.mode == GhostMode.chase)) {
         _pacDies();
         return;
+      }
+    }
+
+    // Jefe: vulnerable solo en frightened (embestirlo le quita vida); si no,
+    // mortal al contacto. Tras un golpe queda inmune un instante (cooldown).
+    final boss = _boss;
+    if (boss != null) {
+      final bdx = boss.px - px;
+      final bdy = boss.py - py;
+      if (bdx * bdx + bdy * bdy < 0.8 * 0.8) {
+        final now = _runWatch.elapsedMilliseconds;
+        if (now >= boss.hitCooldownUntil) {
+          if (_frightenedMs > 0) {
+            boss.hp--;
+            _score += 500 * (_doubleActive ? 2 : 1);
+            boss.hitCooldownUntil = now + 1200;
+            boss.dir = boss.dir.opposite; // recula
+            if (boss.hp <= 0) {
+              _score += 2000 * (_doubleActive ? 2 : 1);
+              _boss = null;
+            }
+          } else if (!_invuln) {
+            _pacDies();
+            return;
+          }
+        }
       }
     }
   }
@@ -818,6 +909,7 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
       pelletsEaten: _pellets,
       lives: _lives,
       ghosts: List<Ghost>.from(_ghosts),
+      boss: () => _boss,
       frightenedMs: _frightenedMs,
       ready: _readyMs > 0,
       fruitActive: _fruitActive,
@@ -853,6 +945,10 @@ class PacmanGameState extends Equatable {
 
   /// Fantasmas (instantánea por frame; el repintado lo dispara [frame]).
   final List<Ghost> ghosts;
+
+  /// Jefe (niveles 5 y 10); null si no hay o fue derrotado.
+  final Boss? boss;
+
   final int frightenedMs;
   final bool ready;
 
@@ -902,6 +998,7 @@ class PacmanGameState extends Equatable {
     this.pacDir = PacDir.none,
     this.mouth = 0,
     this.ghosts = const [],
+    this.boss,
     this.frightenedMs = 0,
     this.ready = false,
     this.fruitActive = false,
@@ -941,6 +1038,7 @@ class PacmanGameState extends Equatable {
     PacDir? pacDir,
     double? mouth,
     List<Ghost>? ghosts,
+    ValueGetter<Boss?>? boss,
     int? frightenedMs,
     bool? ready,
     bool? fruitActive,
@@ -979,6 +1077,7 @@ class PacmanGameState extends Equatable {
       pacDir: pacDir ?? this.pacDir,
       mouth: mouth ?? this.mouth,
       ghosts: ghosts ?? this.ghosts,
+      boss: boss != null ? boss() : this.boss,
       frightenedMs: frightenedMs ?? this.frightenedMs,
       ready: ready ?? this.ready,
       fruitActive: fruitActive ?? this.fruitActive,
