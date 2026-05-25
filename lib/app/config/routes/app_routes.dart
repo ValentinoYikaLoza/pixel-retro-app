@@ -28,6 +28,10 @@ class AppRoutes {
   static const String levelInvadersGame = '/level-invaders-game';
   static const String invadersGame = '/invaders-game';
 
+  // Pac-Man Game
+  static const String levelPacmanGame = '/level-pacman-game';
+  static const String pacmanGame = '/pacman-game';
+
   // Ads
   static const String adRewardedCoins = '/ad-rewardedCoins';
   static const String adRewardedLives = '/ad-rewardedLives';
