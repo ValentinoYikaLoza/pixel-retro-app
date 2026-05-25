@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
 import 'package:pixel_retro_app/app/config/routes/app_routes.dart';
+import 'package:pixel_retro_app/app/features/pacman-game/presentation/logic/pacman_maze.dart';
 import 'package:pixel_retro_app/app/features/pacman-game/presentation/providers/pacman_game_provider.dart';
 import 'package:pixel_retro_app/app/features/pacman-game/presentation/widgets/pacman_board.dart';
 import 'package:pixel_retro_app/app/features/pacman-game/presentation/widgets/pacman_starting_loader.dart';
@@ -22,6 +23,27 @@ class PacmanGameScreen extends ConsumerStatefulWidget {
 }
 
 class _PacmanGameScreenState extends ConsumerState<PacmanGameScreen> {
+  /// Origen del arrastre actual y umbral mínimo para registrar un swipe. El
+  /// gesto se captura en toda la pantalla (no solo sobre el tablero).
+  Offset? _dragStart;
+  static const double _swipeThreshold = 14;
+
+  void _onPanUpdate(Offset current) {
+    final start = _dragStart;
+    if (start == null) {
+      _dragStart = current;
+      return;
+    }
+    final dx = current.dx - start.dx;
+    final dy = current.dy - start.dy;
+    if (dx.abs() < _swipeThreshold && dy.abs() < _swipeThreshold) return;
+    final dir = dx.abs() > dy.abs()
+        ? (dx > 0 ? PacDir.right : PacDir.left)
+        : (dy > 0 ? PacDir.down : PacDir.up);
+    ref.read(pacmanGameProvider.notifier).setWantDir(dir);
+    _dragStart = current; // permite encadenar flicks dentro del mismo arrastre
+  }
+
   @override
   void initState() {
     super.initState();
@@ -87,8 +109,15 @@ class _PacmanGameScreenState extends ConsumerState<PacmanGameScreen> {
       child: Scaffold(
         backgroundColor: AppColors.backgroundDark,
         body: GestureDetector(
-          behavior: HitTestBehavior.deferToChild,
+          // Opaco para capturar el swipe en toda la pantalla, también fuera del
+          // tablero (antes solo respondía sobre él).
+          behavior: HitTestBehavior.opaque,
           onTap: setScreenConfig,
+          onPanDown: (d) => _dragStart = d.localPosition,
+          onPanStart: (d) => _dragStart = d.localPosition,
+          onPanUpdate: (d) => _onPanUpdate(d.localPosition),
+          onPanEnd: (_) => _dragStart = null,
+          onPanCancel: () => _dragStart = null,
           child: SafeArea(
             child: state.isStarting
                 ? const PacmanStartingLoader()
@@ -106,9 +135,6 @@ class _PacmanGameScreenState extends ConsumerState<PacmanGameScreen> {
                           child: Center(
                             child: PacmanBoard(
                               state: state,
-                              onSwipe: (d) => ref
-                                  .read(pacmanGameProvider.notifier)
-                                  .setWantDir(d),
                               overlay: _boardOverlay(state),
                             ),
                           ),

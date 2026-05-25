@@ -232,7 +232,7 @@ class _LevelCard extends StatelessWidget {
                             width: previewWidth,
                             height: previewWidth * 29 / 28,
                             child: CustomPaint(
-                              painter: _PacmanPreviewPainter(),
+                              painter: _PacmanPreviewPainter(level.level),
                             ),
                           ),
                         ),
@@ -306,9 +306,11 @@ class _LevelCard extends StatelessWidget {
   }
 }
 
-/// Miniatura del laberinto de Pac-Man (paredes + Pac en su spawn).
+/// Miniatura del laberinto de Pac-Man (paredes + Pac en su spawn) del nivel.
 class _PacmanPreviewPainter extends CustomPainter {
-  static final PacmanMaze _maze = PacmanMaze(kPacmanMazeL1);
+  _PacmanPreviewPainter(int level) : _maze = PacmanMaze(mazeForLevel(level));
+
+  final PacmanMaze _maze;
 
   @override
   void paint(Canvas canvas, Size size) {

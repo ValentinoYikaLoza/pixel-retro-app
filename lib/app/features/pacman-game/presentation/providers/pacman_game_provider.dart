@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pixel_retro_app/app/features/pacman-game/presentation/logic/pacman_actors.dart';
 import 'package:pixel_retro_app/app/features/pacman-game/presentation/logic/pacman_maze.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/entities/game_result_entity.dart';
 import 'package:pixel_retro_app/app/features/snake-game/domain/repositories/snake_game_repository.dart';
@@ -19,6 +21,18 @@ const int _loopMs = 16;
 /// sesión). Pierdes una al ser atrapado; game over al llegar a 0.
 const int _startLives = 3;
 
+/// Duración base del modo frightened tras comer un power pellet (ms). Se acorta
+/// con el nivel (ver _triggerFrightened).
+const int _frightenedBaseMs = 7000;
+
+/// Ciclo base scatter/chase (ms). Pares=scatter, impares=chase; -1 = chase
+/// indefinido. En niveles altos los tramos de scatter se acortan (más
+/// persecución) — ver el cálculo de _modeSchedule en startGame.
+const List<int> _modeBaseScheduleMs = [7000, 20000, 7000, 20000, 5000, 20000, 5000, -1];
+
+/// Pausa breve (ms) al iniciar y tras perder una vida.
+const int _readyDurationMs = 800;
+
 final pacmanGameProvider =
     StateNotifierProvider.autoDispose<PacmanGameNotifier, PacmanGameState>((
       ref,
@@ -34,6 +48,7 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
 
   Timer? _timer;
   final Stopwatch _runWatch = Stopwatch();
+  final Random _rng = Random();
   int? _sessionId;
   bool _closed = false;
 
@@ -45,12 +60,28 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
   PacDir _dir = PacDir.none;
   PacDir _want = PacDir.none;
 
+  // --- Fantasmas ---
+  final List<Ghost> _ghosts = [];
+  int _modeIndex = 0; // índice en _modeSchedule (par=scatter, impar=chase)
+  List<int> _modeSchedule = _modeBaseScheduleMs; // ajustado por nivel
+  int _modeAccumMs = 0;
+  int _frightenedMs = 0; // restante de frightened
+  int _ghostCombo = 0; // 0..3 → 200/400/800/1600
+  int _readyMs = 0; // pausa breve (inicio / tras morir)
+
   double _speed = 0; // casillas por ms (= 1 / tick_ms)
   int _score = 0;
   int _pellets = 0; // comidos (métrica del objetivo)
   int _lives = _startLives;
+  int _level = 1;
   int _frame = 0;
   double _mouth = 0; // fase de la boca (animación)
+
+  // --- Fruta (bonus): aparece bajo la casa al comer ciertos pellets ---
+  bool _fruitActive = false;
+  int _fruitX = 0, _fruitY = 0;
+  int _fruitUntilMs = 0;
+  final Set<int> _fruitMilestones = {}; // pellets a los que ya apareció
 
   // ---- Ciclo de vida -------------------------------------------------------
 
@@ -67,7 +98,7 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
       final session = await _repository.startGame(_pacmanGameCode, level);
 
       _sessionId = session.sessionId;
-      _maze = PacmanMaze(kPacmanMazeL1);
+      _maze = PacmanMaze(mazeForLevel(session.level));
       _maze.resetPellets();
       _speed = 1 / session.tickMs;
       _runWatch
@@ -75,17 +106,34 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
         ..start();
       _closed = false;
 
-      _resetActors();
       _score = 0;
       _pellets = 0;
       _lives = _startLives;
+      _level = session.level;
       _frame = 0;
+      _modeIndex = 0;
+      // Niveles altos = menos dispersión (scatter más corto) → más persecución.
+      final scatterFactor = (1 - (_level - 1) * 0.09).clamp(0.25, 1.0);
+      _modeSchedule = [
+        for (var i = 0; i < _modeBaseScheduleMs.length; i++)
+          _modeBaseScheduleMs[i] < 0
+              ? -1
+              : (i.isEven
+                    ? (_modeBaseScheduleMs[i] * scatterFactor).round()
+                    : _modeBaseScheduleMs[i]),
+      ];
+      _modeAccumMs = 0;
+      _frightenedMs = 0;
+      _ghostCombo = 0;
+      _fruitActive = false;
+      _fruitMilestones.clear();
+      _resetActors();
       // Come el pellet de la casilla de spawn (si lo hay): solo se come al
       // "llegar" a una casilla, así que el inicial nunca se comería y el nivel
       // no podría completarse.
       _eatAt(_tx, _ty);
 
-      state = PacmanGameState(
+      state = _snapshot(
         isStarting: false,
         maze: _maze,
         gridWidth: _maze.width,
@@ -93,13 +141,6 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
         level: session.level,
         targetScore: session.targetScore,
         sessionId: session.sessionId,
-        pacX: _tx.toDouble(),
-        pacY: _ty.toDouble(),
-        pacDir: _dir,
-        score: _score,
-        pelletsEaten: _pellets,
-        lives: _lives,
-        frame: 0,
       );
 
       _timer = Timer.periodic(
@@ -115,23 +156,78 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
     }
   }
 
-  /// Coloca a Pac-Man en su spawn mirando a la izquierda.
+  /// Coloca a Pac-Man en su spawn (mirando a la izquierda) y (re)crea los
+  /// fantasmas en la casa. Pausa breve de "listo".
   void _resetActors() {
     _tx = _maze.pacSpawn.x;
     _ty = _maze.pacSpawn.y;
     _prog = 0;
     _dir = PacDir.left;
     _want = PacDir.left;
+    _spawnGhosts();
+    _readyMs = _readyDurationMs;
   }
+
+  void _spawnGhosts() {
+    _ghosts.clear();
+    final hc = _houseCenter;
+    final exit = _maze.ghostExit;
+    final base = _runWatch.elapsedMilliseconds;
+    // Niveles altos = salida más rápida (más presión desde el inicio).
+    final rf = (1 - (_level - 1) * 0.08).clamp(0.35, 1.0);
+    int rel(int ms) => base + (ms * rf).round();
+    // Blinky empieza fuera (sobre la puerta); los demás esperan dentro y salen
+    // escalonados.
+    _ghosts.add(
+      Ghost(GhostType.blinky, exit.x, exit.y,
+          mode: _globalGhostMode(), dir: PacDir.left),
+    );
+    _ghosts.add(
+      Ghost(GhostType.pinky, hc.x, hc.y,
+          mode: GhostMode.house, dir: PacDir.down, releaseAtMs: rel(2000)),
+    );
+    _ghosts.add(
+      Ghost(GhostType.inky, _maze.house.left, hc.y,
+          mode: GhostMode.house, dir: PacDir.up, releaseAtMs: rel(5000)),
+    );
+    _ghosts.add(
+      Ghost(GhostType.clyde, _maze.house.right, hc.y,
+          mode: GhostMode.house, dir: PacDir.up, releaseAtMs: rel(8000)),
+    );
+  }
+
+  Point<int> get _houseCenter => Point(
+    (_maze.house.left + _maze.house.right) ~/ 2,
+    (_maze.house.top + _maze.house.bottom) ~/ 2,
+  );
 
   // ---- Bucle ---------------------------------------------------------------
 
   void _loop() {
     if (state.hasWon || state.hasLost || state.isPaused) return;
 
+    // Pausa de "listo" (inicio / tras morir): nada se mueve.
+    if (_readyMs > 0) {
+      _readyMs -= _loopMs;
+      _frame++;
+      state = _snapshot();
+      return;
+    }
+
+    if (_fruitActive && _runWatch.elapsedMilliseconds > _fruitUntilMs) {
+      _fruitActive = false;
+    }
+    _advanceMode(_loopMs);
     _stepPac(_loopMs.toDouble());
+    for (final g in _ghosts) {
+      _stepGhost(g, _loopMs.toDouble());
+    }
+    _checkCollisions();
+
     _mouth = (_mouth + 0.18) % 1.0;
     _frame++;
+
+    if (state.hasWon || state.hasLost) return;
 
     // Comer todos los pellets = nivel superado.
     if (_maze.cleared) {
@@ -139,21 +235,44 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
       return;
     }
 
-    state = state.copyWith(
-      pacX: _pacPxX(),
-      pacY: _pacPxY(),
-      pacDir: _dir,
-      score: _score,
-      pelletsEaten: _pellets,
-      lives: _lives,
-      mouth: _mouth,
-      frame: _frame,
-    );
+    state = _snapshot();
   }
 
-  /// Avanza a Pac-Man [dtMs] ms, resolviendo giros y paredes en los centros de
-  /// casilla. El movimiento "salta" de centro en centro: en cada centro decide
-  /// si gira hacia [_want] o se detiene ante una pared.
+  /// Avanza el cronómetro de modo (scatter/chase). Congelado mientras dura el
+  /// frightened. Al cambiar de fase, los fantasmas en el laberinto se invierten.
+  void _advanceMode(int dtMs) {
+    if (_frightenedMs > 0) {
+      _frightenedMs -= dtMs;
+      if (_frightenedMs <= 0) {
+        _frightenedMs = 0;
+        for (final g in _ghosts) {
+          if (g.mode == GhostMode.frightened) g.mode = _globalGhostMode();
+        }
+      }
+      return;
+    }
+
+    final limit = _modeSchedule[_modeIndex];
+    if (limit < 0) return; // chase indefinido
+    _modeAccumMs += dtMs;
+    if (_modeAccumMs >= limit) {
+      _modeAccumMs = 0;
+      _modeIndex++;
+      final m = _globalGhostMode();
+      for (final g in _ghosts) {
+        if (g.inMaze) {
+          g.mode = m;
+          g.dir = g.dir.opposite; // inversión clásica al cambiar de fase
+        }
+      }
+    }
+  }
+
+  GhostMode _globalGhostMode() =>
+      _modeIndex.isEven ? GhostMode.scatter : GhostMode.chase;
+
+  // ---- Pac-Man -------------------------------------------------------------
+
   void _stepPac(double dtMs) {
     // Reversa (180°): permitida en cualquier punto → invierte sentido.
     if (_want != PacDir.none && _want == _dir.opposite && _dir != PacDir.none) {
@@ -165,7 +284,6 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
     }
 
     if (_dir == PacDir.none) {
-      // Parado: intenta arrancar hacia _want.
       if (_want != PacDir.none && _open(_tx, _ty, _want)) {
         _dir = _want;
       } else {
@@ -173,21 +291,18 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
       }
     }
 
-    var dist = _speed * dtMs; // casillas a avanzar
+    var dist = _speed * dtMs;
     while (dist > 0) {
       final toCenter = 1 - _prog;
       if (dist < toCenter) {
         _prog += dist;
         dist = 0;
       } else {
-        // Llega al centro de la siguiente casilla.
         dist -= toCenter;
         _tx = _maze.wrapX(_tx + _dir.vec.x, _ty);
         _ty += _dir.vec.y;
         _prog = 0;
         _eatAt(_tx, _ty);
-
-        // En el centro: gira si se pidió y se puede; si no, sigue o se detiene.
         if (_want != PacDir.none && _open(_tx, _ty, _want)) {
           _dir = _want;
         }
@@ -208,23 +323,257 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
   }
 
   void _eatAt(int x, int y) {
+    // Fruta (bonus): se come al pasar por su casilla mientras está activa.
+    if (_fruitActive && x == _fruitX && y == _fruitY) {
+      _score += _fruitPoints();
+      _fruitActive = false;
+    }
     final what = _maze.eat(x, y);
     if (what == 'pellet') {
       _score += 10;
       _pellets++;
+      _maybeSpawnFruit();
     } else if (what == 'power') {
       _score += 50;
       _pellets++;
-      // Fase 2: aquí se activará el modo "frightened" de los fantasmas.
+      _maybeSpawnFruit();
+      _triggerFrightened();
+    }
+  }
+
+  /// La fruta aparece bajo la casa al comer 70 y 170 pellets (una vez cada uno),
+  /// y dura ~9 s.
+  void _maybeSpawnFruit() {
+    if (_pellets != 70 && _pellets != 170) return;
+    if (!_fruitMilestones.add(_pellets)) return;
+    _fruitActive = true;
+    _fruitX = _maze.pacSpawn.x;
+    _fruitY = _maze.pacSpawn.y;
+    _fruitUntilMs = _runWatch.elapsedMilliseconds + 9000;
+  }
+
+  int _fruitPoints() => (100 * _level).clamp(100, 500);
+
+  void _triggerFrightened() {
+    // Se acorta con el nivel (de ~7 s a ~2 s): el power pellet protege menos.
+    _frightenedMs = (_frightenedBaseMs - (_level - 1) * 550).clamp(
+      2000,
+      _frightenedBaseMs,
+    );
+    _ghostCombo = 0;
+    for (final g in _ghosts) {
+      if (g.inMaze) {
+        g.mode = GhostMode.frightened;
+        g.dir = g.dir.opposite;
+      }
     }
   }
 
   double _pacPxX() => _tx + _dir.vec.x * _prog;
   double _pacPxY() => _ty + _dir.vec.y * _prog;
 
+  // ---- Fantasmas -----------------------------------------------------------
+
+  void _stepGhost(Ghost g, double dtMs) {
+    switch (g.mode) {
+      case GhostMode.house:
+        _stepHouse(g, dtMs);
+      case GhostMode.leaving:
+        _moveGhost(g, dtMs, 0.6, true, (gg) => _chooseToward(gg, _maze.ghostExit, true));
+        // Sale por arriba de la puerta: al alcanzar la fila de salida, se une al
+        // laberinto (evita pasarse y oscilar).
+        if (g.ty <= _maze.ghostExit.y) {
+          g.tx = _maze.ghostExit.x;
+          g.ty = _maze.ghostExit.y;
+          g.prog = 0;
+          g.mode = _frightenedMs > 0 ? GhostMode.frightened : _globalGhostMode();
+          g.dir = PacDir.left;
+        }
+      case GhostMode.eaten:
+        // Los ojos vuelven a la puerta y "reentran" a la casa a regenerarse.
+        _moveGhost(g, dtMs, 2.0, true, (gg) => _chooseToward(gg, _maze.ghostExit, true));
+        if (g.ty <= _maze.ghostExit.y && g.tx == _maze.ghostExit.x) {
+          g.tx = _houseCenter.x;
+          g.ty = _houseCenter.y;
+          g.prog = 0;
+          g.dir = PacDir.up;
+          g.mode = GhostMode.house;
+          g.releaseAtMs = _runWatch.elapsedMilliseconds + 1500;
+        }
+      case GhostMode.frightened:
+        _moveGhost(g, dtMs, 0.55, false, (gg) => _chooseRandom(gg, false));
+      case GhostMode.scatter:
+        _moveGhost(g, dtMs, 1.0, false,
+            (gg) => _chooseToward(gg, _scatterCorner(gg.type), false));
+      case GhostMode.chase:
+        _moveGhost(g, dtMs, 1.0, false, (gg) => _chooseToward(gg, _targetFor(gg), false));
+    }
+  }
+
+  /// En la casa: rebota arriba/abajo hasta que llega su turno de salir.
+  void _stepHouse(Ghost g, double dtMs) {
+    if (_runWatch.elapsedMilliseconds >= g.releaseAtMs) {
+      g.mode = GhostMode.leaving;
+      g.prog = 0;
+      return;
+    }
+    final top = _maze.house.top;
+    final bottom = _maze.house.bottom;
+    var dist = _speed * 0.4 * dtMs;
+    while (dist > 0) {
+      final toCenter = 1 - g.prog;
+      if (dist < toCenter) {
+        g.prog += dist;
+        dist = 0;
+      } else {
+        dist -= toCenter;
+        g.ty += g.dir.vec.y;
+        g.prog = 0;
+        if (g.ty <= top) {
+          g.dir = PacDir.down;
+        } else if (g.ty >= bottom) {
+          g.dir = PacDir.up;
+        }
+      }
+    }
+  }
+
+  /// Mueve un fantasma [dtMs] ms a [speedScale]× la velocidad base, decidiendo
+  /// la dirección en cada centro con [chooseAtCenter]. [doorOpen] permite cruzar
+  /// la puerta de la casa.
+  void _moveGhost(
+    Ghost g,
+    double dtMs,
+    double speedScale,
+    bool doorOpen,
+    PacDir Function(Ghost) chooseAtCenter,
+  ) {
+    if (g.dir == PacDir.none) g.dir = chooseAtCenter(g);
+    var dist = _speed * speedScale * dtMs;
+    while (dist > 0) {
+      final toCenter = 1 - g.prog;
+      if (dist < toCenter) {
+        g.prog += dist;
+        dist = 0;
+      } else {
+        dist -= toCenter;
+        g.tx = _maze.wrapX(g.tx + g.dir.vec.x, g.ty);
+        g.ty += g.dir.vec.y;
+        g.prog = 0;
+        g.dir = chooseAtCenter(g);
+        if (g.dir == PacDir.none) break;
+      }
+    }
+  }
+
+  /// Vecino caminable (sin retroceder) que minimiza la distancia al objetivo.
+  /// Desempate clásico: arriba, izquierda, abajo, derecha.
+  PacDir _chooseToward(Ghost g, Point<int> target, bool doorOpen) {
+    var best = PacDir.none;
+    var bestD = double.infinity;
+    for (final d in const [PacDir.up, PacDir.left, PacDir.down, PacDir.right]) {
+      if (d == g.dir.opposite) continue;
+      final nx = _maze.wrapX(g.tx + d.vec.x, g.ty);
+      final ny = g.ty + d.vec.y;
+      if (ny < 0 || ny >= _maze.height) continue;
+      if (_ghostBlocked(nx, ny, doorOpen)) continue;
+      final ddx = (nx - target.x).toDouble();
+      final ddy = (ny - target.y).toDouble();
+      final dd = ddx * ddx + ddy * ddy;
+      if (dd < bestD) {
+        bestD = dd;
+        best = d;
+      }
+    }
+    return best == PacDir.none ? g.dir.opposite : best;
+  }
+
+  /// Dirección aleatoria válida (sin retroceder) — modo frightened.
+  PacDir _chooseRandom(Ghost g, bool doorOpen) {
+    final opts = <PacDir>[];
+    for (final d in const [PacDir.up, PacDir.left, PacDir.down, PacDir.right]) {
+      if (d == g.dir.opposite) continue;
+      final nx = _maze.wrapX(g.tx + d.vec.x, g.ty);
+      final ny = g.ty + d.vec.y;
+      if (ny < 0 || ny >= _maze.height) continue;
+      if (_ghostBlocked(nx, ny, doorOpen)) continue;
+      opts.add(d);
+    }
+    if (opts.isEmpty) return g.dir.opposite;
+    return opts[_rng.nextInt(opts.length)];
+  }
+
+  bool _ghostBlocked(int x, int y, bool doorOpen) {
+    if (_maze.isWallForGhost(x, y)) return true;
+    if (_maze.isDoor(x, y)) return !doorOpen;
+    return false;
+  }
+
+  Point<int> _scatterCorner(GhostType t) => switch (t) {
+    GhostType.blinky => Point(_maze.width - 2, 0),
+    GhostType.pinky => const Point(1, 0),
+    GhostType.inky => Point(_maze.width - 2, _maze.height - 1),
+    GhostType.clyde => Point(1, _maze.height - 1),
+  };
+
+  /// Objetivo de persecución según la personalidad del fantasma.
+  Point<int> _targetFor(Ghost g) {
+    final pacDir = _dir == PacDir.none ? PacDir.left : _dir;
+    switch (g.type) {
+      case GhostType.blinky:
+        return Point(_tx, _ty);
+      case GhostType.pinky:
+        return Point(_tx + pacDir.vec.x * 4, _ty + pacDir.vec.y * 4);
+      case GhostType.inky:
+        final p2 = Point(_tx + pacDir.vec.x * 2, _ty + pacDir.vec.y * 2);
+        final b = _ghosts.firstWhere((x) => x.type == GhostType.blinky,
+            orElse: () => g);
+        return Point(2 * p2.x - b.tx, 2 * p2.y - b.ty);
+      case GhostType.clyde:
+        final dx = (g.tx - _tx).toDouble();
+        final dy = (g.ty - _ty).toDouble();
+        return (dx * dx + dy * dy) > 64
+            ? Point(_tx, _ty)
+            : _scatterCorner(GhostType.clyde);
+    }
+  }
+
+  // ---- Colisiones ----------------------------------------------------------
+
+  void _checkCollisions() {
+    final px = _pacPxX();
+    final py = _pacPxY();
+    for (final g in _ghosts) {
+      final dx = g.px - px;
+      final dy = g.py - py;
+      if (dx * dx + dy * dy >= 0.5 * 0.5) continue;
+      if (g.mode == GhostMode.frightened) {
+        _eatGhost(g);
+      } else if (g.mode == GhostMode.scatter || g.mode == GhostMode.chase) {
+        _pacDies();
+        return;
+      }
+    }
+  }
+
+  void _eatGhost(Ghost g) {
+    _score += 200 * (1 << _ghostCombo); // 200/400/800/1600
+    if (_ghostCombo < 3) _ghostCombo++;
+    g.mode = GhostMode.eaten;
+  }
+
+  void _pacDies() {
+    _lives--;
+    if (_lives <= 0) {
+      _lose();
+      return;
+    }
+    _frightenedMs = 0;
+    _resetActors(); // recoloca a Pac y a los fantasmas + pausa de "listo"
+  }
+
   // ---- Entrada -------------------------------------------------------------
 
-  /// Dirección deseada (desde el swipe). Se aplica en el próximo centro válido.
   void setWantDir(PacDir d) {
     if (d == PacDir.none) return;
     _want = d;
@@ -249,16 +598,13 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
 
   void _win() {
     _timer?.cancel();
-    state = state.copyWith(hasWon: true, frame: _frame, pelletsEaten: _pellets);
+    state = _snapshot(hasWon: true);
     _finish();
   }
 
-  // Lo usará la Fase 2 (colisión con fantasmas sin power): perder una vida y,
-  // si llega a 0, terminar la partida.
-  // ignore: unused_element
   void _lose() {
     _timer?.cancel();
-    state = state.copyWith(hasLost: true, frame: _frame);
+    state = _snapshot(hasLost: true);
     _finish();
   }
 
@@ -324,6 +670,46 @@ class PacmanGameNotifier extends StateNotifier<PacmanGameState> {
     startGame(level: state.level);
   }
 
+  /// Construye el estado público desde los campos internos. Los argumentos
+  /// permiten fijar valores de inicio/fin; el resto sale de los internos.
+  PacmanGameState _snapshot({
+    bool? isStarting,
+    PacmanMaze? maze,
+    int? gridWidth,
+    int? gridHeight,
+    int? level,
+    int? targetScore,
+    int? sessionId,
+    bool? hasWon,
+    bool? hasLost,
+  }) {
+    return state.copyWith(
+      isStarting: isStarting,
+      maze: maze,
+      gridWidth: gridWidth,
+      gridHeight: gridHeight,
+      level: level,
+      targetScore: targetScore,
+      sessionId: sessionId,
+      hasWon: hasWon,
+      hasLost: hasLost,
+      pacX: _pacPxX(),
+      pacY: _pacPxY(),
+      pacDir: _dir,
+      mouth: _mouth,
+      score: _score,
+      pelletsEaten: _pellets,
+      lives: _lives,
+      ghosts: List<Ghost>.from(_ghosts),
+      frightenedMs: _frightenedMs,
+      ready: _readyMs > 0,
+      fruitActive: _fruitActive,
+      fruitX: _fruitX,
+      fruitY: _fruitY,
+      frame: _frame,
+    );
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -339,6 +725,16 @@ class PacmanGameState extends Equatable {
   final double pacY;
   final PacDir pacDir;
   final double mouth;
+
+  /// Fantasmas (instantánea por frame; el repintado lo dispara [frame]).
+  final List<Ghost> ghosts;
+  final int frightenedMs;
+  final bool ready;
+
+  /// Fruta bonus (placeholder hasta tener sprite).
+  final bool fruitActive;
+  final int fruitX;
+  final int fruitY;
 
   final int score;
   final int pelletsEaten;
@@ -361,7 +757,7 @@ class PacmanGameState extends Equatable {
   final GameResultEntity? result;
 
   /// Contador de frame: cambia cada tick para forzar el repintado del board
-  /// aunque el laberinto se mute en sitio.
+  /// aunque el laberinto/fantasmas se muten en sitio.
   final int frame;
 
   const PacmanGameState({
@@ -370,6 +766,12 @@ class PacmanGameState extends Equatable {
     this.pacY = 0,
     this.pacDir = PacDir.none,
     this.mouth = 0,
+    this.ghosts = const [],
+    this.frightenedMs = 0,
+    this.ready = false,
+    this.fruitActive = false,
+    this.fruitX = 0,
+    this.fruitY = 0,
     this.score = 0,
     this.pelletsEaten = 0,
     this.lives = _startLives,
@@ -395,6 +797,12 @@ class PacmanGameState extends Equatable {
     double? pacY,
     PacDir? pacDir,
     double? mouth,
+    List<Ghost>? ghosts,
+    int? frightenedMs,
+    bool? ready,
+    bool? fruitActive,
+    int? fruitX,
+    int? fruitY,
     int? score,
     int? pelletsEaten,
     int? lives,
@@ -419,6 +827,12 @@ class PacmanGameState extends Equatable {
       pacY: pacY ?? this.pacY,
       pacDir: pacDir ?? this.pacDir,
       mouth: mouth ?? this.mouth,
+      ghosts: ghosts ?? this.ghosts,
+      frightenedMs: frightenedMs ?? this.frightenedMs,
+      ready: ready ?? this.ready,
+      fruitActive: fruitActive ?? this.fruitActive,
+      fruitX: fruitX ?? this.fruitX,
+      fruitY: fruitY ?? this.fruitY,
       score: score ?? this.score,
       pelletsEaten: pelletsEaten ?? this.pelletsEaten,
       lives: lives ?? this.lives,
@@ -445,6 +859,11 @@ class PacmanGameState extends Equatable {
     pacY,
     pacDir,
     mouth,
+    frightenedMs,
+    ready,
+    fruitActive,
+    fruitX,
+    fruitY,
     score,
     pelletsEaten,
     lives,

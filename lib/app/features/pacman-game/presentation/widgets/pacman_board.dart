@@ -2,50 +2,22 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:pixel_retro_app/app/config/constants/app_colors.dart';
+import 'package:pixel_retro_app/app/features/pacman-game/presentation/logic/pacman_actors.dart';
 import 'package:pixel_retro_app/app/features/pacman-game/presentation/logic/pacman_maze.dart';
 import 'package:pixel_retro_app/app/features/pacman-game/presentation/providers/pacman_game_provider.dart';
 
-/// Tablero de Pac-Man: dibuja el laberinto/pellets/Pac con CustomPaint y captura
-/// el swipe para fijar la dirección deseada. [onSwipe] recibe la dirección.
-class PacmanBoard extends StatefulWidget {
-  const PacmanBoard({
-    super.key,
-    required this.state,
-    required this.onSwipe,
-    this.overlay,
-  });
+/// Tablero de Pac-Man: dibuja el laberinto/pellets/Pac con CustomPaint. El
+/// control por swipe se maneja a nivel de pantalla (para que funcione también
+/// fuera del área del tablero), así que aquí no hay GestureDetector.
+class PacmanBoard extends StatelessWidget {
+  const PacmanBoard({super.key, required this.state, this.overlay});
 
   final PacmanGameState state;
-  final ValueChanged<PacDir> onSwipe;
   final Widget? overlay;
 
   @override
-  State<PacmanBoard> createState() => _PacmanBoardState();
-}
-
-class _PacmanBoardState extends State<PacmanBoard> {
-  Offset? _start;
-  static const double _threshold = 14;
-
-  void _onUpdate(Offset current) {
-    final start = _start;
-    if (start == null) {
-      _start = current;
-      return;
-    }
-    final d = current - start;
-    if (d.dx.abs() < _threshold && d.dy.abs() < _threshold) return;
-    if (d.dx.abs() > d.dy.abs()) {
-      widget.onSwipe(d.dx > 0 ? PacDir.right : PacDir.left);
-    } else {
-      widget.onSwipe(d.dy > 0 ? PacDir.down : PacDir.up);
-    }
-    _start = current; // permite encadenar flicks dentro del mismo arrastre
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final maze = widget.state.maze;
+    final maze = state.maze;
     if (maze == null) return const SizedBox.shrink();
 
     return AspectRatio(
@@ -58,21 +30,13 @@ class _PacmanBoardState extends State<PacmanBoard> {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AppColors.neonPurple, width: 2),
           ),
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onPanDown: (d) => _start = d.localPosition,
-            onPanStart: (d) => _start = d.localPosition,
-            onPanUpdate: (d) => _onUpdate(d.localPosition),
-            onPanEnd: (_) => _start = null,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: CustomPaint(painter: _PacmanPainter(widget.state)),
-                ),
-                if (widget.overlay != null)
-                  Positioned.fill(child: widget.overlay!),
-              ],
-            ),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: CustomPaint(painter: _PacmanPainter(state)),
+              ),
+              if (overlay != null) Positioned.fill(child: overlay!),
+            ],
           ),
         ),
       ),
@@ -146,6 +110,36 @@ class _PacmanPainter extends CustomPainter {
       );
     }
 
+    // Fruta bonus (placeholder: cereza roja con tallo) hasta tener sprite.
+    if (state.fruitActive) {
+      final fx = (state.fruitX + 0.5) * s;
+      final fy = (state.fruitY + 0.5) * s;
+      canvas.drawCircle(
+        Offset(fx - s * 0.12, fy + s * 0.08),
+        s * 0.22,
+        Paint()..color = const Color(0xFFE53935),
+      );
+      canvas.drawCircle(
+        Offset(fx + s * 0.16, fy + s * 0.12),
+        s * 0.18,
+        Paint()..color = const Color(0xFFE53935),
+      );
+      canvas.drawLine(
+        Offset(fx - s * 0.08, fy - s * 0.18),
+        Offset(fx + s * 0.18, fy - s * 0.28),
+        Paint()
+          ..color = const Color(0xFF66BB6A)
+          ..strokeWidth = s * 0.08
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+
+    // Fantasmas (placeholder: cuerpo de domo + ojos; frightened azul/flash;
+    // comido = solo ojos).
+    for (final g in state.ghosts) {
+      _drawGhost(canvas, g, s);
+    }
+
     // Pac-Man (círculo amarillo con boca animada que apunta a su dirección).
     final cx = (state.pacX + 0.5) * s;
     final cy = (state.pacY + 0.5) * s;
@@ -172,6 +166,70 @@ class _PacmanPainter extends CustomPainter {
       )
       ..close();
     canvas.drawPath(path, pac);
+  }
+
+  Color _ghostColor(GhostType t) => switch (t) {
+    GhostType.blinky => const Color(0xFFFF3B3B), // rojo
+    GhostType.pinky => const Color(0xFFFFB8E0), // rosa
+    GhostType.inky => const Color(0xFF49E0E0), // cian
+    GhostType.clyde => const Color(0xFFFFA84A), // naranja
+  };
+
+  void _drawGhost(Canvas canvas, Ghost g, double s) {
+    final cx = (g.px + 0.5) * s;
+    final cy = (g.py + 0.5) * s;
+    final r = s * 0.46;
+    final eaten = g.mode == GhostMode.eaten;
+
+    if (!eaten) {
+      Color body;
+      if (g.mode == GhostMode.frightened) {
+        // Parpadea blanco/azul en los últimos ~2s del frightened.
+        final flashing =
+            state.frightenedMs <= 2000 && ((state.frame ~/ 12) % 2 == 0);
+        body = flashing ? Colors.white : const Color(0xFF2733D6);
+      } else {
+        body = _ghostColor(g.type);
+      }
+      // Cuerpo: domo (semicírculo superior) + base con 3 ondas.
+      final left = cx - r;
+      final right = cx + r;
+      final top = cy - r;
+      final bottom = cy + r;
+      final path = Path()
+        ..moveTo(left, bottom)
+        ..lineTo(left, cy)
+        ..arcTo(Rect.fromLTRB(left, top, right, top + 2 * r), pi, pi, false)
+        ..lineTo(right, bottom);
+      final w = (right - left) / 3;
+      path
+        ..lineTo(right - w * 0.5, bottom - r * 0.35)
+        ..lineTo(right - w, bottom)
+        ..lineTo(right - w * 1.5, bottom - r * 0.35)
+        ..lineTo(left + w, bottom)
+        ..lineTo(left + w * 0.5, bottom - r * 0.35)
+        ..close();
+      canvas.drawPath(path, Paint()..color = body);
+    }
+
+    // Ojos (blancos con pupila desplazada hacia la dirección). Frightened sin
+    // pupila desplazada (mirada "asustada").
+    final ex = g.dir.vec.x * r * 0.22;
+    final ey = g.dir.vec.y * r * 0.22;
+    final eyeR = r * 0.26;
+    final pupR = r * 0.14;
+    for (final sx in [-1.0, 1.0]) {
+      final eyeC = Offset(cx + sx * r * 0.32, cy - r * 0.18);
+      canvas.drawCircle(eyeC, eyeR, Paint()..color = Colors.white);
+      final pupilColor = (g.mode == GhostMode.frightened)
+          ? const Color(0xFF2733D6)
+          : const Color(0xFF1B2A6B);
+      canvas.drawCircle(
+        eyeC + Offset(ex, ey),
+        pupR,
+        Paint()..color = pupilColor,
+      );
+    }
   }
 
   @override
